@@ -16,6 +16,7 @@ import { marketDataRouter } from '../modules/market-data/market-data.routes.js';
 import { replayBacktestRouter } from '../modules/replay-backtest/replay-backtest.routes.js';
 import { executionRouter } from '../modules/execution/execution.routes.js';
 import { tradingViewRouter } from '../modules/tradingview-adapter/tradingview.routes.js';
+import { systemIntegrationRouter } from '../modules/system-integration/systemIntegration.routes.js';
 
 export const apiRouter = Router();
 
@@ -36,3 +37,4 @@ apiRouter.use('/market-data', marketDataRouter);
 apiRouter.use('/replay', replayBacktestRouter);
 apiRouter.use('/execution', executionRouter);
 apiRouter.use('/tradingview', tradingViewRouter);
+apiRouter.use('/system-integration', systemIntegrationRouter);

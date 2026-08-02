@@ -4,6 +4,7 @@ import { DesktopTerminalLayout } from './components/layout/DesktopTerminalLayout
 import { DashboardPage } from './features/dashboard/DashboardPage';
 import { PaperTradingPage } from './features/paper-trading/PaperTradingPage';
 import { LiveTradingPage } from './features/live-trading/LiveTradingPage';
+import { SystemMonitorPage } from './features/system-monitor/SystemMonitorPage';
 import { AnalysisPage } from './features/analysis/AnalysisPage';
 import { TradeJournalPage } from './features/journal/TradeJournalPage';
 import { AnalyticsPage } from './features/analytics/AnalyticsPage';
@@ -20,6 +21,7 @@ export const App: React.FC = () => {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/paper-trading" element={<PaperTradingPage />} />
           <Route path="/live-trading" element={<LiveTradingPage />} />
+          <Route path="/system-monitor" element={<SystemMonitorPage />} />
           <Route path="/analysis" element={<AnalysisPage />} />
           <Route path="/replay" element={<ReplayPage />} />
           <Route path="/backtest" element={<BacktestingPage />} />

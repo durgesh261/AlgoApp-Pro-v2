@@ -41,6 +41,9 @@ import {
   WebhookEventDto,
   WebhookErrorDto,
   TradingViewWebhookPayload,
+  PipelineTraceDto,
+  SystemMonitorOverviewDto,
+  RunPipelineInput,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -254,6 +257,25 @@ export const tradingViewApi = {
   },
   getErrors: async (): Promise<ApiResponse<WebhookErrorDto[]>> => {
     const res = await apiClient.get('/tradingview/errors');
+    return res.data;
+  },
+};
+
+export const systemIntegrationApi = {
+  runPipeline: async (input: RunPipelineInput): Promise<ApiResponse<PipelineTraceDto>> => {
+    const res = await apiClient.post('/system-integration/pipeline/run', input);
+    return res.data;
+  },
+  getTraces: async (): Promise<ApiResponse<PipelineTraceDto[]>> => {
+    const res = await apiClient.get('/system-integration/traces');
+    return res.data;
+  },
+  getTraceById: async (id: string): Promise<ApiResponse<PipelineTraceDto>> => {
+    const res = await apiClient.get(`/system-integration/traces/${id}`);
+    return res.data;
+  },
+  getHealthOverview: async (): Promise<ApiResponse<SystemMonitorOverviewDto>> => {
+    const res = await apiClient.get('/system-integration/health-overview');
     return res.data;
   },
 };

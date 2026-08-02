@@ -458,3 +458,20 @@ model ConnectionHealth {
 
   @@map("connection_health")
 }
+
+model PipelineTrace {
+  id              String   @id @default(uuid())
+  traceId         String   @unique @map("trace_id")
+  symbol          String
+  mode            String   @default("SHADOW")
+  candleJson      String   @map("candle_json")
+  structureJson   String   @map("structure_json")
+  signalJson      String   @map("signal_json")
+  decisionJson    String   @map("decision_json")
+  explanationJson String   @map("explanation_json")
+  executionJson   String   @map("execution_json")
+  totalLatencyMs  Float    @default(0.0) @map("total_latency_ms")
+  timestamp       DateTime @default(now())
+
+  @@map("pipeline_traces")
+}

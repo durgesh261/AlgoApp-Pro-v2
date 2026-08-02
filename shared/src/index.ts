@@ -9,6 +9,7 @@ export * from './types/replay.js';
 export * from './types/backtest.js';
 export * from './types/execution.js';
 export * from './types/tradingview.js';
+export * from './types/pipeline.js';
 export * from './constants/index.js';
 export * from './validation/index.js';
 export * from './validation/paper.js';

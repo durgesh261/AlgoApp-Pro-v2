@@ -10,13 +10,15 @@ import {
   Trophy, 
   Settings,
   RotateCcw,
-  BarChart3
+  BarChart3,
+  Server
 } from 'lucide-react';
 
 const navigationItems = [
   { name: 'Dashboard', path: '/', icon: LayoutDashboard },
   { name: 'Paper Trading', path: '/paper-trading', icon: Wallet },
   { name: 'Live Trading', path: '/live-trading', icon: Activity },
+  { name: 'System Monitor', path: '/system-monitor', icon: Server },
   { name: 'Analysis', path: '/analysis', icon: LineChart },
   { name: 'Replay Terminal', path: '/replay', icon: RotateCcw },
   { name: 'Backtesting', path: '/backtest', icon: BarChart3 },
@@ -62,15 +64,13 @@ export const Sidebar: React.FC = () => {
         ))}
       </nav>
 
-      {/* Connection & Terminal Footer */}
-      <div className="p-3 border-t border-[#1E293B] bg-[#0B0E14]">
-        <div className="flex items-center justify-between text-[10px] text-[#94A3B8] font-mono">
-          <span className="flex items-center space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#00C896] animate-pulse"></span>
-            <span>CONNECTED</span>
-          </span>
-          <span className="text-[#3B82F6]">1H ONLY</span>
+      {/* Footer System Status */}
+      <div className="p-3 border-t border-[#1E293B] bg-[#0B0E14] text-[10px] text-[#94A3B8] flex items-center justify-between font-mono">
+        <div className="flex items-center space-x-1.5">
+          <span className="w-2 h-2 rounded-full bg-[#00C896] animate-pulse"></span>
+          <span>Engine Online</span>
         </div>
+        <span className="text-[#3B82F6]">PAPER</span>
       </div>
     </aside>
   );

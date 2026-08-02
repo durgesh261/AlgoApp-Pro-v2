@@ -1,6 +1,7 @@
 export enum ExecutionMode {
   PAPER = 'PAPER',
   LIVE = 'LIVE',
+  SHADOW = 'SHADOW',
 }
 
 export enum ExecutionStatus {
