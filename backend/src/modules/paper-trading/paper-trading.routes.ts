@@ -1,21 +1,35 @@
 import { Router } from 'express';
-import { ApiResponse, getIsoUtcTimestamp } from '@algoapp/shared';
-import { config } from '../../config/index.js';
+import { asyncHandler } from '../../middleware/asyncHandler.js';
+import {
+  getPaperWallet,
+  getPaperOrders,
+  createPaperOrder,
+  cancelPaperOrder,
+  modifyPaperOrder,
+  getPaperPositions,
+  closePaperPosition,
+  getPaperRiskConfig,
+  updatePaperRiskConfig,
+  getPaperJournal,
+  getPaperAnalytics,
+} from './paper-trading.controller.js';
 
-export const paperTradingRouter = Router();
+const router = Router();
 
-paperTradingRouter.get('/status', (req, res) => {
-  const requestId = (req.headers[config.correlationHeader.toLowerCase()] as string) || 'unknown';
-  const response: ApiResponse<{ module: string; status: string }> = {
-    success: true,
-    data: {
-      module: 'paper-trading',
-      status: 'initialized',
-    },
-    meta: {
-      requestId,
-      timestamp: getIsoUtcTimestamp(),
-    },
-  };
-  res.status(200).json(response);
-});
+router.get('/wallet', asyncHandler(getPaperWallet));
+
+router.get('/orders', asyncHandler(getPaperOrders));
+router.post('/orders', asyncHandler(createPaperOrder));
+router.delete('/orders/:id', asyncHandler(cancelPaperOrder));
+router.patch('/orders/:id', asyncHandler(modifyPaperOrder));
+
+router.get('/positions', asyncHandler(getPaperPositions));
+router.post('/positions/:id/close', asyncHandler(closePaperPosition));
+
+router.get('/risk', asyncHandler(getPaperRiskConfig));
+router.patch('/risk', asyncHandler(updatePaperRiskConfig));
+
+router.get('/journal', asyncHandler(getPaperJournal));
+router.get('/analytics', asyncHandler(getPaperAnalytics));
+
+export const paperTradingRouter = router;

@@ -28,3 +28,81 @@ model SystemSettings {
 
   @@map("system_settings")
 }
+
+model PaperWallet {
+  id              String   @id @default("default-paper-wallet")
+  virtualBalance  Float    @default(50000.0) @map("virtual_balance")
+  availableMargin Float    @default(50000.0) @map("available_margin")
+  usedMargin      Float    @default(0.0) @map("used_margin")
+  realizedPnL     Float    @default(0.0) @map("realized_pnl")
+  unrealizedPnL   Float    @default(0.0) @map("unrealized_pnl")
+  equity          Float    @default(50000.0)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("paper_wallets")
+}
+
+model PaperOrder {
+  id               String   @id @default(uuid())
+  symbol           String
+  side             String
+  orderType        String   @map("order_type")
+  price            Float?
+  stopPrice        Float?   @map("stop_price")
+  quantity         Float
+  filledQuantity   Float    @default(0.0) @map("filled_quantity")
+  status           String   @default("PENDING")
+  stopLoss         Float?   @map("stop_loss")
+  takeProfit       Float?   @map("take_profit")
+  bracketParentId  String?  @map("bracket_parent_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("paper_orders")
+}
+
+model PaperPosition {
+  id              String   @id @default(uuid())
+  symbol          String
+  side            String
+  entryPrice      Float    @map("entry_price")
+  markPrice       Float    @map("mark_price")
+  quantity        Float
+  notionalValue   Float    @map("notional_value")
+  unrealizedPnL   Float    @default(0.0) @map("unrealized_pnl")
+  realizedPnL     Float    @default(0.0) @map("realized_pnl")
+  leverage        Float    @default(10.0)
+  marginAllocated Float    @map("margin_allocated")
+  stopLoss        Float?   @map("stop_loss")
+  takeProfit      Float?   @map("take_profit")
+  openedAt        DateTime @default(now()) @map("opened_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("paper_positions")
+}
+
+model PaperRiskConfig {
+  id                     String   @id @default("default-paper-risk")
+  maxDailyLoss           Float    @default(1000.0) @map("max_daily_loss")
+  maxDrawdownPercent     Float    @default(5.0) @map("max_drawdown_percent")
+  maxOpenPositions       Int      @default(10) @map("max_open_positions")
+  maxRiskPerTradePercent Float    @default(2.0) @map("max_risk_per_trade_percent")
+  isEmergencyStopActive  Boolean  @default(false) @map("is_emergency_stop_active")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  @@map("paper_risk_configs")
+}
+
+model PaperTradeJournal {
+  id           String   @id @default(uuid())
+  eventType    String   @map("event_type")
+  symbol       String?
+  action       String
+  details      String
+  metadataJson String?  @map("metadata_json")
+  timestamp    DateTime @default(now())
+
+  @@map("paper_trade_journals")
+}

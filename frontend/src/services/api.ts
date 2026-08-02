@@ -1,16 +1,81 @@
 import axios from 'axios';
-import { API_VERSION_PREFIX, HTTP_HEADERS } from '@algoapp/shared';
+import {
+  ApiResponse,
+  SystemHealthStatus,
+  SystemSettingsDto,
+  PaperWalletDto,
+  PaperOrderDto,
+  PaperPositionDto,
+  PaperRiskConfigDto,
+  PaperTradeJournalDto,
+  PaperAnalyticsDto,
+  CreatePaperOrderInput,
+} from '@algoapp/shared';
+
+const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
 
 export const apiClient = axios.create({
-  baseURL: API_VERSION_PREFIX,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
 apiClient.interceptors.request.use((config) => {
-  if (!config.headers[HTTP_HEADERS.CORRELATION_ID]) {
-    config.headers[HTTP_HEADERS.CORRELATION_ID] = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }
+  config.headers['X-Request-Id'] = `req-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
   return config;
 });
+
+export const systemApi = {
+  getLiveness: async (): Promise<ApiResponse<{ status: string }>> => {
+    const res = await apiClient.get('/system/liveness');
+    return res.data;
+  },
+  getReadiness: async (): Promise<ApiResponse<SystemHealthStatus>> => {
+    const res = await apiClient.get('/system/readiness');
+    return res.data;
+  },
+  getSettings: async (): Promise<ApiResponse<SystemSettingsDto>> => {
+    const res = await apiClient.get('/system/settings');
+    return res.data;
+  },
+};
+
+export const paperTradingApi = {
+  getWallet: async (): Promise<ApiResponse<PaperWalletDto>> => {
+    const res = await apiClient.get('/paper-trading/wallet');
+    return res.data;
+  },
+  getOrders: async (): Promise<ApiResponse<PaperOrderDto[]>> => {
+    const res = await apiClient.get('/paper-trading/orders');
+    return res.data;
+  },
+  createOrder: async (order: CreatePaperOrderInput): Promise<ApiResponse<PaperOrderDto>> => {
+    const res = await apiClient.post('/paper-trading/orders', order);
+    return res.data;
+  },
+  cancelOrder: async (id: string): Promise<ApiResponse<PaperOrderDto>> => {
+    const res = await apiClient.delete(`/paper-trading/orders/${id}`);
+    return res.data;
+  },
+  getPositions: async (): Promise<ApiResponse<PaperPositionDto[]>> => {
+    const res = await apiClient.get('/paper-trading/positions');
+    return res.data;
+  },
+  closePosition: async (id: string, exitPrice: number): Promise<ApiResponse<PaperPositionDto>> => {
+    const res = await apiClient.post(`/paper-trading/positions/${id}/close`, { exitPrice });
+    return res.data;
+  },
+  getRiskConfig: async (): Promise<ApiResponse<PaperRiskConfigDto>> => {
+    const res = await apiClient.get('/paper-trading/risk');
+    return res.data;
+  },
+  getJournal: async (): Promise<ApiResponse<PaperTradeJournalDto[]>> => {
+    const res = await apiClient.get('/paper-trading/journal');
+    return res.data;
+  },
+  getAnalytics: async (): Promise<ApiResponse<PaperAnalyticsDto>> => {
+    const res = await apiClient.get('/paper-trading/analytics');
+    return res.data;
+  },
+};
