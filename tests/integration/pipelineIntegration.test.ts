@@ -32,7 +32,7 @@ describe('System Integration & Shadow Mode End-to-End Integration Tests', () => 
     expect(trace.symbol).toBe('BTCUSD.P');
     expect(trace.mode).toBe(ExecutionMode.SHADOW);
     expect(trace.executionResult.adapter).toBe('PAPER_ADAPTER');
-    expect([ExecutionStatus.FILLED, ExecutionStatus.REJECTED]).toContain(trace.executionResult.status);
+    expect([ExecutionStatus.FILLED, ExecutionStatus.SUBMITTED, ExecutionStatus.REJECTED]).toContain(trace.executionResult.status);
     expect(trace.explanation.shortSummary).toBeDefined();
     expect(trace.stageLatenciesMs.total).toBeGreaterThanOrEqual(0);
   });

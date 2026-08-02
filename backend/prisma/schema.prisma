@@ -59,6 +59,7 @@ model PaperOrder {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
+  @@index([symbol, status])
   @@map("paper_orders")
 }
 
@@ -79,6 +80,7 @@ model PaperPosition {
   openedAt        DateTime @default(now()) @map("opened_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
+  @@index([symbol])
   @@map("paper_positions")
 }
 
@@ -104,6 +106,7 @@ model PaperTradeJournal {
   metadataJson String?  @map("metadata_json")
   timestamp    DateTime @default(now())
 
+  @@index([symbol, eventType])
   @@map("paper_trade_journals")
 }
 
@@ -122,6 +125,7 @@ model SupplyZone {
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
+  @@index([symbol, status])
   @@map("supply_zones")
 }
 
@@ -140,6 +144,7 @@ model DemandZone {
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
+  @@index([symbol, status])
   @@map("demand_zones")
 }
 
@@ -154,6 +159,7 @@ model StrategySignalLog {
   confidenceScore Float    @default(90.0) @map("confidence_score")
   timestamp       DateTime @default(now())
 
+  @@index([symbol, timestamp])
   @@map("strategy_signal_logs")
 }
 
@@ -168,6 +174,7 @@ model DecisionLog {
   inputSnapshotHash String   @map("input_snapshot_hash")
   timestamp         DateTime @default(now())
 
+  @@index([symbol, decisionState])
   @@map("decision_logs")
 }
 
@@ -182,6 +189,7 @@ model DecisionExplanation {
   detailedSummary String   @map("detailed_summary")
   timestamp       DateTime @default(now())
 
+  @@index([symbol, decisionId])
   @@map("decision_explanations")
 }
 
@@ -194,6 +202,7 @@ model DecisionTimeline {
   description   String
   timestamp     DateTime @default(now())
 
+  @@index([explanationId, stepIndex])
   @@map("decision_timelines")
 }
 
@@ -204,6 +213,7 @@ model DecisionReason {
   humanExplanation String  @map("human_explanation")
   isPassed         Boolean @default(true) @map("is_passed")
 
+  @@index([explanationId])
   @@map("decision_reasons")
 }
 
@@ -257,6 +267,7 @@ model MarketCandle {
   timestamp DateTime
 
   @@unique([symbol, timeframe, timestamp])
+  @@index([symbol, timestamp])
   @@map("market_candles")
 }
 
@@ -280,6 +291,7 @@ model MarketEvent {
   payloadJson String   @map("payload_json")
   timestamp   DateTime @default(now())
 
+  @@index([symbol, timestamp])
   @@map("market_events")
 }
 
@@ -304,6 +316,7 @@ model ReplayEvent {
   payloadJson String   @map("payload_json")
   timestamp   DateTime @default(now())
 
+  @@index([sessionId, timestamp])
   @@map("replay_events")
 }
 
@@ -333,6 +346,7 @@ model BacktestTrade {
   status    String
   timestamp DateTime @default(now())
 
+  @@index([sessionId, symbol])
   @@map("backtest_trades")
 }
 
@@ -368,6 +382,7 @@ model ExecutionSession {
   adapter       String   @default("PAPER_ADAPTER")
   createdAt     DateTime @default(now()) @map("created_at")
 
+  @@index([pair, mode])
   @@map("execution_sessions")
 }
 
@@ -388,6 +403,7 @@ model ExecutionRequest {
   takeProfit     Float?   @map("take_profit")
   timestamp      DateTime @default(now())
 
+  @@index([sessionId, idempotencyKey])
   @@map("execution_requests")
 }
 
@@ -403,6 +419,7 @@ model ExecutionResult {
   message        String?
   timestamp      DateTime @default(now())
 
+  @@index([sessionId, requestId])
   @@map("execution_results")
 }
 
@@ -419,6 +436,7 @@ model ExecutionJournal {
   latencyMs Int      @default(0) @map("latency_ms")
   timestamp DateTime @default(now())
 
+  @@index([sessionId, requestId])
   @@map("execution_journals")
 }
 
@@ -431,6 +449,7 @@ model WebhookEvent {
   status      String   @default("PROCESSED")
   timestamp   DateTime @default(now())
 
+  @@index([symbol, timestamp])
   @@map("webhook_events")
 }
 
@@ -442,6 +461,7 @@ model WebhookError {
   rawPayload String   @map("raw_payload")
   timestamp  DateTime @default(now())
 
+  @@index([timestamp])
   @@map("webhook_errors")
 }
 
@@ -473,5 +493,6 @@ model PipelineTrace {
   totalLatencyMs  Float    @default(0.0) @map("total_latency_ms")
   timestamp       DateTime @default(now())
 
+  @@index([symbol, timestamp])
   @@map("pipeline_traces")
 }
