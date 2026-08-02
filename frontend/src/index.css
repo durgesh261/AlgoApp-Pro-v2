@@ -1,0 +1,58 @@
+@tailwindcss base;
+@tailwindcss components;
+@tailwindcss utilities;
+
+:root {
+  --bg-base: #0B0E14;
+  --bg-surface-1: #161D2A;
+  --bg-surface-2: #1E2638;
+  --bg-surface-3: #28334A;
+  --border-subtle: #1E293B;
+  --border-strong: #334155;
+  
+  --trade-buy: #00C896;
+  --trade-sell: #F6465D;
+  --trade-accent: #3B82F6;
+  --trade-warning: #F59E0B;
+
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Glassmorphism Surface Materials */
+.glass-panel {
+  background: rgba(22, 29, 42, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-header {
+  background: rgba(11, 14, 20, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.8);
+}
+
+/* Custom Scrollbar for Dense Data Tables */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0B0E14;
+}
+::-webkit-scrollbar-thumb {
+  background: #1E293B;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}

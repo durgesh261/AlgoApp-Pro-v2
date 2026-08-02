@@ -1,52 +1,83 @@
 # AlgoApp Pro v2
 
-AlgoApp Pro v2 is the proposed production-grade algorithmic trading platform for research, controlled execution, risk governance, and operational visibility. This repository intentionally contains architecture and delivery documentation only; it contains no application source code.
+AlgoApp Pro v2 is a production-grade single-user algorithmic trading platform for research, risk governance, and operational visibility.
 
-## Table of Contents
+This repository contains the complete Phase 1 single-user software foundation monorepo, design system specifications, and platform architecture documentation.
 
-- [Purpose](#purpose)
-- [Scope](#scope)
-- [Documentation](#documentation)
-- [Product boundaries](#product-boundaries)
-- [Getting started](#getting-started)
-- [Governance](#governance)
-- [Future work](#future-work)
-- [Related documents](#related-documents)
+---
 
-## Purpose
+## Workspace Monorepo Structure
 
-Provide the repository entry point, product boundary, and governed reading path for engineers building AlgoApp Pro v2.
+```text
+AlgoApp-Pro-v2/
+├── frontend/                      # React + TypeScript + Vite + TailwindCSS desktop terminal
+│   └── src/
+│       ├── components/layout/    # DesktopTerminalLayout, Sidebar, Header, Ticker, StatusBar
+│       └── features/             # Feature pages (Dashboard, Paper, Live, Analysis, Journal, etc.)
+├── backend/                       # Express + TypeScript + Prisma + Pino API service
+│   ├── prisma/                   # Single-user PostgreSQL schema
+│   └── src/modules/              # Feature API modules (system, dashboard, paper-trading, etc.)
+├── shared/                        # Shared contracts, Zod schemas, utilities, and constants
+├── docker/                        # Containerization configs (PostgreSQL, Backend, Frontend)
+├── scripts/                       # Startup (`dev.sh`) and build automation scripts
+├── tests/                         # Vitest unit test and Playwright E2E configurations
+└── docs/                          # Platform architecture and Design System specifications
+```
 
-## Scope
+---
 
-This repository defines the platform documentation baseline. It does not contain implementation code, deployment credentials, exchange keys, or financial advice.
+## Quickstart — Single Command Startup
 
-## Documentation
+To launch the entire development environment (Shared, Backend Express API, and Frontend Vite desktop terminal) with a single command:
 
-Start with the [master index](docs/00_MASTER_INDEX.md). For implementation, read the [Implementation Blueprint](docs/23_IMPLEMENTATION_BLUEPRINT.md) after the Product Requirements and Architecture; it defines the agreed cross-cutting contracts and defaults.
+```bash
+# Install dependencies across all workspace packages
+npm install
 
-## Product boundaries
+# Option A: Single npm command
+npm run dev
 
-The platform is designed for authenticated users trading only through approved broker or exchange integrations. It supports strategy research, signal evaluation, paper trading, live trading subject to controls, analytics, and challenges. It is not investment advice, a custody service, or a guarantee of performance.
+# Option B: Single bash script command
+./scripts/dev.sh
+```
 
-## Getting started
+- **Frontend Desktop Terminal**: `http://localhost:3000`
+- **Backend Express API**: `http://localhost:4000/api/v1/system/liveness`
 
-1. Read [PROJECT.md](PROJECT.md) for project governance and decision principles.
-2. Configure only non-secret local settings from [.env.example](.env.example); never commit credentials.
-3. Use [docs/22_MASTER_PROMPT.md](docs/22_MASTER_PROMPT.md) as the implementation-planning guardrail.
+---
 
-## Governance
+## Docker Container Deployment
 
-Changes must preserve the controls in [Security](docs/18_SECURITY.md), [Risk Engine](docs/09_RISK_ENGINE.md), and [Coding Rules](docs/20_CODING_RULES.md). Architecture decisions require documented rationale and review by designated technical and risk owners.
+To launch the full containerized stack (PostgreSQL 16 database, Express Backend, Nginx Frontend):
 
-## Future work
+```bash
+docker compose -f docker/docker-compose.yml up --build
+```
 
-Create source modules only after roadmap gates, threat model, data contracts, and test strategy have been approved.
+---
 
-## Related documents
+## Phase 1 Foundation Scope
+
+This initial software foundation establishes:
+1. **Single-User Architecture**: Clean, zero-overhead baseline without multi-tenant complexity or external dependencies (no Redis, no message brokers, no auth frameworks yet).
+2. **Desktop Trading Terminal Layout**: Top market ticker bar, header with command palette (`Ctrl+K`), collapsible navigation sidebar, main feature page viewports, and live status bar.
+3. **8 Feature Page Surfaces**:
+   - **Dashboard**: System health overview and metric cards.
+   - **Paper Trading**: Simulated execution surface.
+   - **Live Trading**: Production gate and risk limits surface.
+   - **Analysis**: Quantitative research & technical indicator workspace.
+   - **Trade Journal**: Post-trade logging & execution rationale.
+   - **Analytics**: Performance metrics & drawdown analysis.
+   - **Challenge**: Trader challenge rule monitor.
+   - **Settings**: Single-user platform settings & emergency kill switch.
+4. **Feature-Based Backend API Architecture**: Modular Express routes per feature (`/api/v1/system`, `/api/v1/dashboard`, `/api/v1/paper-trading`, etc.).
+
+---
+
+## Related Documentation
 
 - [Master Index](docs/00_MASTER_INDEX.md)
-- [Architecture](docs/03_ARCHITECTURE.md)
-- [Design System](docs/DESIGN_SYSTEM.md)
+- [Architecture Specifications](docs/03_ARCHITECTURE.md)
+- [Design System Specifications](docs/DESIGN_SYSTEM.md)
 - [Project Audit](docs/PROJECT_AUDIT.md)
 - [Roadmap](docs/21_ROADMAP.md)

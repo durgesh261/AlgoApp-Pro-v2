@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Build Outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Environment & Secrets
+.env
+.env.local
+*.pem
+
+# IDE & System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Database & Prisma
+prisma/*.db
+prisma/*.db-journal
+
+# Logs
+logs/
+*.log
+
+# Test Reports
+test-results/
+playwright-report/
+coverage/
