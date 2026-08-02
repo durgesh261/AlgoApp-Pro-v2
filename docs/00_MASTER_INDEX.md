@@ -33,6 +33,12 @@ It covers product, architecture, governance, operations, and delivery documentat
 | Experience | [Dashboard](13_DASHBOARD.md), [Analytics](14_ANALYTICS.md), [Challenge](15_CHALLENGE.md), [Notifications](16_NOTIFICATIONS.md) |
 | Assurance | [Deployment](17_DEPLOYMENT.md), [Security](18_SECURITY.md), [Testing](19_TESTING.md), [Coding Rules](20_CODING_RULES.md) |
 | Delivery | [Master Prompt](22_MASTER_PROMPT.md) |
+| Implementation baseline | [Implementation Blueprint](23_IMPLEMENTATION_BLUEPRINT.md) |
+| Architecture review | [Project Review](PROJECT_REVIEW.md) |
+
+## Document authority
+
+[Implementation Blueprint](23_IMPLEMENTATION_BLUEPRINT.md) is the cross-cutting implementation baseline. Product intent is owned by [Product Vision](01_PRODUCT_VISION.md) and [Product Requirements](02_PRODUCT_REQUIREMENTS.md); concrete interface, persistence, execution, and control decisions are owned by their respective domain documents. Where documents disagree, the order of precedence is: approved ADR, Security/Risk policy, Implementation Blueprint, domain specification, then product document. Ambiguities must be resolved in an ADR before implementation.
 
 ## Future work
 

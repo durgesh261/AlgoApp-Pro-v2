@@ -4,6 +4,8 @@ AlgoApp Pro v2 is the proposed production-grade algorithmic trading platform for
 
 ## Table of Contents
 
+- [Purpose](#purpose)
+- [Scope](#scope)
 - [Documentation](#documentation)
 - [Product boundaries](#product-boundaries)
 - [Getting started](#getting-started)
@@ -11,9 +13,17 @@ AlgoApp Pro v2 is the proposed production-grade algorithmic trading platform for
 - [Future work](#future-work)
 - [Related documents](#related-documents)
 
+## Purpose
+
+Provide the repository entry point, product boundary, and governed reading path for engineers building AlgoApp Pro v2.
+
+## Scope
+
+This repository defines the platform documentation baseline. It does not contain implementation code, deployment credentials, exchange keys, or financial advice.
+
 ## Documentation
 
-Start with the [master index](docs/00_MASTER_INDEX.md). The core reading path is Product Vision, Requirements, Architecture, Security, and Roadmap.
+Start with the [master index](docs/00_MASTER_INDEX.md). For implementation, read the [Implementation Blueprint](docs/23_IMPLEMENTATION_BLUEPRINT.md) after the Product Requirements and Architecture; it defines the agreed cross-cutting contracts and defaults.
 
 ## Product boundaries
 

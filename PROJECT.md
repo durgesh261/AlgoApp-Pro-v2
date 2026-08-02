@@ -27,7 +27,7 @@ The project covers market-data ingestion, strategy lifecycle management, decisio
 
 ## Decision governance
 
-Product owns customer outcomes; Engineering owns technical design; Risk owns limits and kill-switch policy; Security owns threat-model acceptance; Operations owns production readiness. Material changes require a written decision record linked from [Architecture](docs/03_ARCHITECTURE.md).
+Product owns customer outcomes; Engineering owns technical design; Risk owns limits and kill-switch policy; Security owns threat-model acceptance; Operations owns production readiness. Material changes require a written decision record linked from [Architecture](docs/03_ARCHITECTURE.md). The [Implementation Blueprint](docs/23_IMPLEMENTATION_BLUEPRINT.md) is binding until an approved ADR supersedes a decision.
 
 ## Future work
 

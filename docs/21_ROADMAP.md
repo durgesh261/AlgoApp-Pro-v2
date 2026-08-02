@@ -6,6 +6,8 @@
 - [Scope](#scope)
 - [Phased delivery](#phased-delivery)
 - [Release gates](#release-gates)
+- [Definition of done](#definition-of-done)
+- [Dependency order](#dependency-order)
 - [Future work](#future-work)
 - [Related documents](#related-documents)
 
@@ -25,6 +27,14 @@ Phase 0 establishes governance, ADRs, threat model, schemas, and UX prototypes. 
 
 Progression requires documented acceptance criteria, security review, risk-owner approval, test evidence, observability, runbooks, recovery testing, and explicit go/no-go decision. A live pilot additionally requires legal/compliance review and a tested kill switch.
 
+## Definition of done
+
+For each phase, complete the required user workflows in its target environment; publish contracts and data migrations; demonstrate tenant isolation, auditability, and accessibility; operate dashboards and alerts; pass mandatory tests; and record approvals. A phase is not complete merely because UI screens or endpoints exist. Live-pilot completion additionally requires end-to-end sandbox evidence, account reconciliation, credential rotation, incident simulation, and recovery drill evidence.
+
+## Dependency order
+
+Build identity, audit, configuration, and contracts before trading logic. Build strategy registry and signal intake before decisioning; decisioning before risk; risk and order state before execution; execution before analytics based on fills; and operational controls before live enablement. Challenge functionality is last and remains optional. This order prevents user-facing workflows from being built on uncontrolled execution paths.
+
 ## Future work
 
 Add milestones, estimates, dependencies, ownership, budget, and measurable release criteria.
@@ -34,3 +44,4 @@ Add milestones, estimates, dependencies, ownership, budget, and measurable relea
 - [Product Requirements](02_PRODUCT_REQUIREMENTS.md)
 - [Deployment](17_DEPLOYMENT.md)
 - [Master Prompt](22_MASTER_PROMPT.md)
+- [Implementation Blueprint](23_IMPLEMENTATION_BLUEPRINT.md)
