@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTerminalStore } from '../../store/useTerminalStore';
+import { mockMarketPairs } from '../../mock/marketData';
 import { SystemStatus } from '@algoapp/shared';
 import { 
   Search, 
@@ -7,20 +8,26 @@ import {
   Activity, 
   ShieldCheck, 
   PanelLeftClose, 
-  PanelLeft 
+  PanelLeft,
+  ChevronDown
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { 
+    activeSymbol,
+    setActiveSymbol,
     isSidebarCollapsed, 
     toggleSidebar, 
     toggleCommandPalette, 
     systemStatus 
   } = useTerminalStore();
 
+  const currentPair = mockMarketPairs[activeSymbol] ?? mockMarketPairs['BTCUSD.P']!;
+  const pairOptions = Object.keys(mockMarketPairs);
+
   return (
     <header className="h-14 glass-header flex items-center justify-between px-4 z-20">
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-4">
         <button
           onClick={toggleSidebar}
           className="p-1.5 text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#1E2638] rounded-md transition-colors"
@@ -40,8 +47,34 @@ export const Header: React.FC = () => {
           <span className="font-bold tracking-tight text-sm text-[#F8FAFC]">
             AlgoApp <span className="text-[#3B82F6]">Pro</span> v2
           </span>
-          <span className="text-[10px] bg-[#1E2638] text-[#94A3B8] px-1.5 py-0.5 rounded font-mono border border-[#334155]">
-            SINGLE-USER
+        </div>
+
+        <div className="h-4 w-px bg-[#1E293B]" />
+
+        {/* Interactive Trading Pair Selector Dropdown */}
+        <div className="relative flex items-center">
+          <label htmlFor="pair-selector-dropdown" className="sr-only">Select Active Trading Pair</label>
+          <select
+            id="pair-selector-dropdown"
+            aria-label="Select Active Trading Pair"
+            value={activeSymbol}
+            onChange={(e) => setActiveSymbol(e.target.value)}
+            className="appearance-none bg-[#1E2638] hover:bg-[#28334A] border border-[#334155] rounded-md pl-3 pr-8 py-1.5 text-xs font-mono font-bold text-[#F8FAFC] cursor-pointer outline-none transition-colors"
+          >
+            {pairOptions.map((symbol) => (
+              <option key={symbol} value={symbol} className="bg-[#161D2A] text-[#F8FAFC]">
+                {symbol} ({mockMarketPairs[symbol]?.price})
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="w-3.5 h-3.5 text-[#94A3B8] absolute right-2.5 pointer-events-none" />
+        </div>
+
+        {/* Current Pair Stats Summary */}
+        <div className="hidden lg:flex items-center space-x-3 text-xs font-mono">
+          <span className="text-[#94A3B8]">Price: <strong className="text-[#F8FAFC]">{currentPair.price}</strong></span>
+          <span className={currentPair.isPositive ? 'text-[#00C896]' : 'text-[#F6465D]'}>
+            {currentPair.change24h}
           </span>
         </div>
       </div>
