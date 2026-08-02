@@ -34,7 +34,7 @@ It covers product, architecture, governance, operations, and delivery documentat
 | Assurance | [Deployment](17_DEPLOYMENT.md), [Security](18_SECURITY.md), [Testing](19_TESTING.md), [Coding Rules](20_CODING_RULES.md) |
 | Delivery | [Master Prompt](22_MASTER_PROMPT.md) |
 | Implementation baseline | [Implementation Blueprint](23_IMPLEMENTATION_BLUEPRINT.md) |
-| Architecture review | [Project Review](PROJECT_REVIEW.md) |
+| Architecture review | [Project Review](PROJECT_REVIEW.md), [Project Audit](PROJECT_AUDIT.md) |
 
 ## Document authority
 
