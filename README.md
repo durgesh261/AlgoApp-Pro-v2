@@ -1,83 +1,75 @@
-# AlgoApp Pro v2
+# AlgoApp Pro v2.0.0-rc1
 
-AlgoApp Pro v2 is a production-grade single-user algorithmic trading platform for research, risk governance, and operational visibility.
-
-This repository contains the complete Phase 1 single-user software foundation monorepo, design system specifications, and platform architecture documentation.
+**AlgoApp Pro v2** is an enterprise-grade quantitative market structure analysis, deterministic trading rules evaluation, automated strategy signal generation, AI decision explainability, and multi-adapter execution platform.
 
 ---
 
-## Workspace Monorepo Structure
+## 🏗️ Monorepo Structure
 
 ```text
 AlgoApp-Pro-v2/
-├── frontend/                      # React + TypeScript + Vite + TailwindCSS desktop terminal
-│   └── src/
-│       ├── components/layout/    # DesktopTerminalLayout, Sidebar, Header, Ticker, StatusBar
-│       └── features/             # Feature pages (Dashboard, Paper, Live, Analysis, Journal, etc.)
-├── backend/                       # Express + TypeScript + Prisma + Pino API service
-│   ├── prisma/                   # Single-user PostgreSQL schema
-│   └── src/modules/              # Feature API modules (system, dashboard, paper-trading, etc.)
-├── shared/                        # Shared contracts, Zod schemas, utilities, and constants
-├── docker/                        # Containerization configs (PostgreSQL, Backend, Frontend)
-├── scripts/                       # Startup (`dev.sh`) and build automation scripts
-├── tests/                         # Vitest unit test and Playwright E2E configurations
-└── docs/                          # Platform architecture and Design System specifications
+├── shared/             # Type definitions, DTOs, validation schemas, constants
+├── backend/            # Express TypeScript API server, Prisma ORM, 9 engine modules
+├── frontend/           # React 18, Vite, TailwindCSS, Framer Motion, TanStack Query
+├── tests/              # 12 Vitest unit & integration test suites (50 tests)
+├── docs/               # Technical specs, release notes, deployment guides, runbooks
+├── Dockerfile          # Multi-stage Docker build specification
+└── docker-compose.yml  # Multi-container production deployment setup
 ```
 
 ---
 
-## Quickstart — Single Command Startup
+## ⚡ Quickstart Developer Setup
 
-To launch the entire development environment (Shared, Backend Express API, and Frontend Vite desktop terminal) with a single command:
+### 1. Install Dependencies
 
 ```bash
-# Install dependencies across all workspace packages
 npm install
-
-# Option A: Single npm command
-npm run dev
-
-# Option B: Single bash script command
-./scripts/dev.sh
 ```
 
-- **Frontend Desktop Terminal**: `http://localhost:3000`
-- **Backend Express API**: `http://localhost:4000/api/v1/system/liveness`
-
----
-
-## Docker Container Deployment
-
-To launch the full containerized stack (PostgreSQL 16 database, Express Backend, Nginx Frontend):
+### 2. Build Workspaces
 
 ```bash
-docker compose -f docker/docker-compose.yml up --build
+npm run build
+```
+
+### 3. Run Test Suite
+
+```bash
+npx vitest run
+```
+
+### 4. Start Development Servers
+
+```bash
+# Terminal 1: Backend API (http://localhost:4000)
+npm run dev --workspace=backend
+
+# Terminal 2: Frontend Desktop Terminal UI (http://localhost:5173)
+npm run dev --workspace=frontend
 ```
 
 ---
 
-## Phase 1 Foundation Scope
+## 🛡️ Execution Modes
 
-This initial software foundation establishes:
-1. **Single-User Architecture**: Clean, zero-overhead baseline without multi-tenant complexity or external dependencies (no Redis, no message brokers, no auth frameworks yet).
-2. **Desktop Trading Terminal Layout**: Top market ticker bar, header with command palette (`Ctrl+K`), collapsible navigation sidebar, main feature page viewports, and live status bar.
-3. **8 Feature Page Surfaces**:
-   - **Dashboard**: System health overview and metric cards.
-   - **Paper Trading**: Simulated execution surface.
-   - **Live Trading**: Production gate and risk limits surface.
-   - **Analysis**: Quantitative research & technical indicator workspace.
-   - **Trade Journal**: Post-trade logging & execution rationale.
-   - **Analytics**: Performance metrics & drawdown analysis.
-   - **Challenge**: Trader challenge rule monitor.
-   - **Settings**: Single-user platform settings & emergency kill switch.
-4. **Feature-Based Backend API Architecture**: Modular Express routes per feature (`/api/v1/system`, `/api/v1/dashboard`, `/api/v1/paper-trading`, etc.).
+1. **`PAPER`**: Virtual paper trading simulation ($50,000 equity). Default mode with zero financial risk.
+2. **`SANDBOX`**: Delta Exchange Testnet integration (`https://cdn.testnet.delta.exchange`).
+3. **`LIVE`**: Protected live exchange order execution (disabled by default; requires explicit user confirmation and 8-point safety check approval).
 
 ---
 
-## Related Documentation
+## 📚 Documentation
 
-- [Master Index](docs/00_MASTER_INDEX.md)
-- [Architecture Specifications](docs/03_ARCHITECTURE.md)
-- [Design System Specifications](docs/DESIGN_SYSTEM.md)
-- [Project Audit](docs/PROJECT_AUDIT.md)
-- [Roadmap](docs/21_ROADMAP.md)
+- [Release Notes v1.0.0-rc1](file:///c:/Users/durge/OneDrive/Desktop/Antigravity%20App/AlgoApp-Pro-v2/docs/RELEASE_NOTES_v1.0.md)
+- [Known Limitations](file:///c:/Users/durge/OneDrive/Desktop/Antigravity%20App/AlgoApp-Pro-v2/docs/KNOWN_LIMITATIONS.md)
+- [Deployment Guide](file:///c:/Users/durge/OneDrive/Desktop/Antigravity%20App/AlgoApp-Pro-v2/docs/DEPLOYMENT_GUIDE.md)
+- [Operations Runbook](file:///c:/Users/durge/OneDrive/Desktop/Antigravity%20App/AlgoApp-Pro-v2/docs/OPERATIONS_RUNBOOK.md)
+- [Delta Integration Specification](file:///c:/Users/durge/OneDrive/Desktop/Antigravity%20App/AlgoApp-Pro-v2/docs/DELTA_INTEGRATION.md)
+- [Production Readiness Audit](file:///c:/Users/durge/OneDrive/Desktop/Antigravity%20App/AlgoApp-Pro-v2/docs/PRODUCTION_READINESS_REPORT.md)
+
+---
+
+## 📜 License
+
+MIT License. Copyright © 2026 AlgoApp Pro Team.
