@@ -2,8 +2,10 @@ import React from 'react';
 import { TopMarketTicker } from './TopMarketTicker';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
+import { MarketWatchPanel } from './MarketWatchPanel';
 import { StatusBar } from './StatusBar';
 import { CommandPalette } from './CommandPalette';
+import { ToastContainer } from './ToastContainer';
 
 interface DesktopTerminalLayoutProps {
   children: React.ReactNode;
@@ -17,6 +19,7 @@ export const DesktopTerminalLayout: React.FC<DesktopTerminalLayoutProps> = ({ ch
       
       <div className="flex flex-1 overflow-hidden relative">
         <Sidebar />
+        <MarketWatchPanel />
         <main className="flex-1 bg-[#121722] overflow-y-auto p-4 relative">
           {children}
         </main>
@@ -24,6 +27,7 @@ export const DesktopTerminalLayout: React.FC<DesktopTerminalLayoutProps> = ({ ch
 
       <StatusBar />
       <CommandPalette />
+      <ToastContainer />
     </div>
   );
 };

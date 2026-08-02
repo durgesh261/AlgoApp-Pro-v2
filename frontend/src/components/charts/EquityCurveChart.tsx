@@ -1,5 +1,5 @@
-import React from 'react';
-import { mockEquityCurveData } from '../../mock/chartData';
+import React, { useState } from 'react';
+import { mockEquityCurveData, EquityPoint } from '../../mock/chartData';
 import { TrendingUp } from 'lucide-react';
 
 export const EquityCurveChart: React.FC = () => {
@@ -8,7 +8,8 @@ export const EquityCurveChart: React.FC = () => {
   const minEquity = Math.min(...points.map((p) => p.equity));
   const range = maxEquity - minEquity || 1;
 
-  // SVG coordinate transformation
+  const [hoveredPoint, setHoveredPoint] = useState<EquityPoint | null>(null);
+
   const width = 600;
   const height = 180;
   const padding = 20;
@@ -31,9 +32,17 @@ export const EquityCurveChart: React.FC = () => {
             Equity Curve Real-Time Trajectory
           </h3>
         </div>
-        <span className="text-[11px] font-mono text-[#00C896] font-semibold">
-          High: ${maxEquity.toLocaleString()}
-        </span>
+        <div className="flex items-center space-x-3 text-[11px] font-mono">
+          {hoveredPoint ? (
+            <span className="text-[#00C896] font-bold">
+              {hoveredPoint.time}: ${hoveredPoint.equity.toLocaleString()}
+            </span>
+          ) : (
+            <span className="text-[#00C896] font-semibold">
+              High: ${maxEquity.toLocaleString()}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="w-full overflow-hidden relative">
@@ -56,20 +65,25 @@ export const EquityCurveChart: React.FC = () => {
           {/* Equity Line */}
           <path d={dPath} fill="none" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
 
-          {/* Data Points */}
+          {/* Hover Crosshair Point */}
           {points.map((p, idx) => {
             const x = padding + (idx / (points.length - 1)) * (width - 2 * padding);
             const y = height - padding - ((p.equity - minEquity) / range) * (height - 2 * padding);
+            const isHovered = hoveredPoint?.time === p.time;
+
             return (
-              <circle
-                key={p.time}
-                cx={x}
-                cy={y}
-                r="3"
-                className="fill-[#00C896] stroke-[#0B0E14] stroke-2 hover:r-5 transition-all"
-              >
-                <title>{`${p.time} - $${p.equity.toLocaleString()}`}</title>
-              </circle>
+              <g key={p.time}>
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={isHovered ? 6 : 3.5}
+                  onMouseEnter={() => setHoveredPoint(p)}
+                  onMouseLeave={() => setHoveredPoint(null)}
+                  className={`cursor-pointer transition-all ${
+                    isHovered ? 'fill-[#00C896] stroke-white stroke-2' : 'fill-[#00C896] stroke-[#0B0E14] stroke-2'
+                  }`}
+                />
+              </g>
             );
           })}
         </svg>
