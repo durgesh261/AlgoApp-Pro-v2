@@ -1,0 +1,45 @@
+# Documentation Master Index
+
+## Table of Contents
+
+- [Purpose](#purpose)
+- [Scope](#scope)
+- [Reading paths](#reading-paths)
+- [Document catalogue](#document-catalogue)
+- [Future work](#future-work)
+- [Related documents](#related-documents)
+
+## Purpose
+
+This index is the authoritative entry point for the AlgoApp Pro v2 documentation system and defines intended reading order and ownership boundaries.
+
+## Scope
+
+It covers product, architecture, governance, operations, and delivery documentation. It does not replace implementation-level runbooks or formal compliance advice.
+
+## Reading paths
+
+- Executives and product: [Vision](01_PRODUCT_VISION.md) → [Requirements](02_PRODUCT_REQUIREMENTS.md) → [Roadmap](21_ROADMAP.md).
+- Engineers: [Architecture](03_ARCHITECTURE.md) → [Tech Stack](04_TECH_STACK.md) → [API](06_API.md) → [Coding Rules](20_CODING_RULES.md).
+- Risk and operations: [Risk Engine](09_RISK_ENGINE.md) → [Security](18_SECURITY.md) → [Deployment](17_DEPLOYMENT.md) → [Testing](19_TESTING.md).
+
+## Document catalogue
+
+| Area | Documents |
+| --- | --- |
+| Product | [Vision](01_PRODUCT_VISION.md), [Requirements](02_PRODUCT_REQUIREMENTS.md), [UI/UX](12_UI_UX.md), [Roadmap](21_ROADMAP.md) |
+| Platform | [Architecture](03_ARCHITECTURE.md), [Tech Stack](04_TECH_STACK.md), [Database](05_DATABASE.md), [API](06_API.md) |
+| Trading | [Strategy](07_STRATEGY_ENGINE.md), [Decision](08_DECISION_ENGINE.md), [Risk](09_RISK_ENGINE.md), [TradingView](10_TRADINGVIEW_AGENT.md), [Delta](11_DELTA_EXCHANGE.md) |
+| Experience | [Dashboard](13_DASHBOARD.md), [Analytics](14_ANALYTICS.md), [Challenge](15_CHALLENGE.md), [Notifications](16_NOTIFICATIONS.md) |
+| Assurance | [Deployment](17_DEPLOYMENT.md), [Security](18_SECURITY.md), [Testing](19_TESTING.md), [Coding Rules](20_CODING_RULES.md) |
+| Delivery | [Master Prompt](22_MASTER_PROMPT.md) |
+
+## Future work
+
+Add ADRs, service runbooks, incident playbooks, data-retention schedules, and regulatory mappings as the product enters implementation.
+
+## Related documents
+
+- [Project Charter](../PROJECT.md)
+- [Repository README](../README.md)
+- [Architecture](03_ARCHITECTURE.md)
