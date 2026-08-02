@@ -44,20 +44,20 @@ model PaperWallet {
 }
 
 model PaperOrder {
-  id               String   @id @default(uuid())
-  symbol           String
-  side             String
-  orderType        String   @map("order_type")
-  price            Float?
-  stopPrice        Float?   @map("stop_price")
-  quantity         Float
-  filledQuantity   Float    @default(0.0) @map("filled_quantity")
-  status           String   @default("PENDING")
-  stopLoss         Float?   @map("stop_loss")
-  takeProfit       Float?   @map("take_profit")
-  bracketParentId  String?  @map("bracket_parent_id")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+  id              String   @id @default(uuid())
+  symbol          String
+  side            String
+  orderType       String   @map("order_type")
+  price           Float?
+  stopPrice       Float?   @map("stop_price")
+  quantity        Float
+  filledQuantity  Float    @default(0.0) @map("filled_quantity")
+  status          String   @default("PENDING")
+  stopLoss        Float?   @map("stop_loss")
+  takeProfit      Float?   @map("take_profit")
+  bracketParentId String?  @map("bracket_parent_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   @@map("paper_orders")
 }
@@ -105,4 +105,54 @@ model PaperTradeJournal {
   timestamp    DateTime @default(now())
 
   @@map("paper_trade_journals")
+}
+
+model SupplyZone {
+  id         String   @id @default(uuid())
+  symbol     String
+  timeframe  String   @default("1H")
+  upperPrice Float    @map("upper_price")
+  lowerPrice Float    @map("lower_price")
+  source     String   @default("PIT_LITE")
+  strength   Float    @default(80.0)
+  width      Float
+  freshness  Float    @default(100.0)
+  touchCount Int      @default(0) @map("touch_count")
+  status     String   @default("FRESH")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("supply_zones")
+}
+
+model DemandZone {
+  id         String   @id @default(uuid())
+  symbol     String
+  timeframe  String   @default("1H")
+  upperPrice Float    @map("upper_price")
+  lowerPrice Float    @map("lower_price")
+  source     String   @default("PIT_LITE")
+  strength   Float    @default(80.0)
+  width      Float
+  freshness  Float    @default(100.0)
+  touchCount Int      @default(0) @map("touch_count")
+  status     String   @default("FRESH")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("demand_zones")
+}
+
+model StrategySignalLog {
+  id              String   @id @default(uuid())
+  symbol          String
+  timeframe       String   @default("1H")
+  outcome         String
+  price           Float
+  activeZoneId    String?  @map("active_zone_id")
+  rationale       String
+  confidenceScore Float    @default(90.0) @map("confidence_score")
+  timestamp       DateTime @default(now())
+
+  @@map("strategy_signal_logs")
 }

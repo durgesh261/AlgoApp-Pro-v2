@@ -10,6 +10,9 @@ import {
   PaperTradeJournalDto,
   PaperAnalyticsDto,
   CreatePaperOrderInput,
+  ZoneDto,
+  StrategySignalDto,
+  EvaluateStrategySignalInput,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -76,6 +79,21 @@ export const paperTradingApi = {
   },
   getAnalytics: async (): Promise<ApiResponse<PaperAnalyticsDto>> => {
     const res = await apiClient.get('/paper-trading/analytics');
+    return res.data;
+  },
+};
+
+export const strategyApi = {
+  getZones: async (symbol?: string): Promise<ApiResponse<ZoneDto[]>> => {
+    const res = await apiClient.get('/strategy/zones', { params: { symbol } });
+    return res.data;
+  },
+  getSignals: async (): Promise<ApiResponse<StrategySignalDto[]>> => {
+    const res = await apiClient.get('/strategy/signals');
+    return res.data;
+  },
+  evaluateSignal: async (input: EvaluateStrategySignalInput): Promise<ApiResponse<StrategySignalDto>> => {
+    const res = await apiClient.post('/strategy/evaluate', input);
     return res.data;
   },
 };
