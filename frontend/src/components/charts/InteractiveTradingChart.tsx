@@ -8,7 +8,10 @@ import {
   Zap, 
   Target, 
   TrendingUp, 
-  Maximize2
+  Layers,
+  Maximize2,
+  Activity,
+  ShieldCheck
 } from 'lucide-react';
 
 export const InteractiveTradingChart: React.FC = () => {
@@ -17,7 +20,9 @@ export const InteractiveTradingChart: React.FC = () => {
 
   const [showSupplyZones, setShowSupplyZones] = useState(true);
   const [showDemandZones, setShowDemandZones] = useState(true);
+  const [showMergedZones, setShowMergedZones] = useState(true);
   const [showLevels, setShowLevels] = useState(true);
+  const [showDecisionOverlay, setShowDecisionOverlay] = useState(true);
 
   // Simulated 1H Candlestick Data
   const candles = [
@@ -36,14 +41,14 @@ export const InteractiveTradingChart: React.FC = () => {
   const range = maxPrice - minPrice;
 
   const getSvgY = (price: number) => {
-    const height = 280;
+    const height = 300;
     return height - ((price - minPrice) / range) * height;
   };
 
   return (
-    <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl overflow-hidden shadow-sm flex flex-col h-full select-none">
+    <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl overflow-hidden shadow-sm flex flex-col h-full select-none font-mono">
       {/* Chart Toolbar */}
-      <div className="h-11 bg-[#0E121A] border-b border-[#1E293B] px-3 flex items-center justify-between font-mono text-xs shrink-0">
+      <div className="h-11 bg-[#0E121A] border-b border-[#1E293B] px-3 flex items-center justify-between text-xs shrink-0 overflow-x-auto no-scrollbar">
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-1.5 font-bold text-[#F8FAFC]">
             <BarChart2 className="w-4 h-4 text-[#3B82F6]" />
@@ -62,13 +67,13 @@ export const InteractiveTradingChart: React.FC = () => {
           </div>
         </div>
 
-        {/* Layer Toggles */}
-        <div className="flex items-center space-x-2 text-[11px]">
+        {/* TradingView Style Layer Toggles */}
+        <div className="flex items-center space-x-1.5 text-[11px]">
           <button
             onClick={() => setShowSupplyZones(!showSupplyZones)}
-            className={`flex items-center space-x-1 px-2 py-1 rounded border transition-colors ${
+            className={`flex items-center space-x-1 px-2 py-0.5 rounded border transition-colors ${
               showSupplyZones
-                ? 'bg-[#F59E0B]/15 border-[#F59E0B]/50 text-[#F59E0B]'
+                ? 'bg-[#F59E0B]/15 border-[#F59E0B]/50 text-[#F59E0B] font-bold'
                 : 'bg-[#0B0E14] border-[#1E293B] text-[#64748B]'
             }`}
           >
@@ -78,9 +83,9 @@ export const InteractiveTradingChart: React.FC = () => {
 
           <button
             onClick={() => setShowDemandZones(!showDemandZones)}
-            className={`flex items-center space-x-1 px-2 py-1 rounded border transition-colors ${
+            className={`flex items-center space-x-1 px-2 py-0.5 rounded border transition-colors ${
               showDemandZones
-                ? 'bg-[#3B82F6]/15 border-[#3B82F6]/50 text-[#3B82F6]'
+                ? 'bg-[#3B82F6]/15 border-[#3B82F6]/50 text-[#3B82F6] font-bold'
                 : 'bg-[#0B0E14] border-[#1E293B] text-[#64748B]'
             }`}
           >
@@ -89,15 +94,39 @@ export const InteractiveTradingChart: React.FC = () => {
           </button>
 
           <button
+            onClick={() => setShowMergedZones(!showMergedZones)}
+            className={`flex items-center space-x-1 px-2 py-0.5 rounded border transition-colors ${
+              showMergedZones
+                ? 'bg-[#A855F7]/15 border-[#A855F7]/50 text-[#A855F7] font-bold'
+                : 'bg-[#0B0E14] border-[#1E293B] text-[#64748B]'
+            }`}
+          >
+            <Layers className="w-3 h-3" />
+            <span>MERGED ZONE</span>
+          </button>
+
+          <button
             onClick={() => setShowLevels(!showLevels)}
-            className={`flex items-center space-x-1 px-2 py-1 rounded border transition-colors ${
+            className={`flex items-center space-x-1 px-2 py-0.5 rounded border transition-colors ${
               showLevels
-                ? 'bg-[#00C896]/15 border-[#00C896]/50 text-[#00C896]'
+                ? 'bg-[#00C896]/15 border-[#00C896]/50 text-[#00C896] font-bold'
                 : 'bg-[#0B0E14] border-[#1E293B] text-[#64748B]'
             }`}
           >
             <Target className="w-3 h-3" />
             <span>SL/TP LEVELS</span>
+          </button>
+
+          <button
+            onClick={() => setShowDecisionOverlay(!showDecisionOverlay)}
+            className={`flex items-center space-x-1 px-2 py-0.5 rounded border transition-colors ${
+              showDecisionOverlay
+                ? 'bg-[#00C896]/15 border-[#00C896]/50 text-[#00C896] font-bold'
+                : 'bg-[#0B0E14] border-[#1E293B] text-[#64748B]'
+            }`}
+          >
+            <Zap className="w-3 h-3" />
+            <span>DECISION</span>
           </button>
 
           <div className="h-4 w-px bg-[#1E293B]" />
@@ -109,60 +138,82 @@ export const InteractiveTradingChart: React.FC = () => {
       </div>
 
       {/* Main Canvas Area */}
-      <div className="flex-1 relative bg-[#0B0E14] p-3 overflow-hidden min-h-[320px]">
+      <div className="flex-1 relative bg-[#0B0E14] p-3 overflow-hidden min-h-[340px]">
         {/* SVG Chart Layer */}
-        <svg className="w-full h-full" viewBox="0 0 700 280" preserveAspectRatio="none">
+        <svg className="w-full h-full" viewBox="0 0 700 300" preserveAspectRatio="none">
           {/* Background Grid Lines */}
-          <line x1="0" y1="70" x2="700" y2="70" stroke="rgba(255,255,255,0.04)" strokeDasharray="3 3" />
-          <line x1="0" y1="140" x2="700" y2="140" stroke="rgba(255,255,255,0.04)" strokeDasharray="3 3" />
-          <line x1="0" y1="210" x2="700" y2="210" stroke="rgba(255,255,255,0.04)" strokeDasharray="3 3" />
+          <line x1="0" y1="75" x2="700" y2="75" stroke="rgba(255,255,255,0.04)" strokeDasharray="3 3" />
+          <line x1="0" y1="150" x2="700" y2="150" stroke="rgba(255,255,255,0.04)" strokeDasharray="3 3" />
+          <line x1="0" y1="225" x2="700" y2="225" stroke="rgba(255,255,255,0.04)" strokeDasharray="3 3" />
 
-          {/* Supply Zone Band */}
+          {/* 1. Supply Zone (Resistance) Shaded Rectangle */}
           {showSupplyZones && (
             <g>
-              <rect x="0" y={getSvgY(64800)} width="700" height="32" fill="rgba(245, 158, 11, 0.12)" />
-              <line x1="0" y1={getSvgY(64800)} x2="700" y2={getSvgY(64800)} stroke="#F59E0B" strokeWidth="1" strokeDasharray="4 4" />
-              <text x="10" y={getSvgY(64800) + 16} fill="#F59E0B" fontSize="10" fontFamily="monospace" fontWeight="bold">
-                SUPPLY ZONE ($64,650 – $64,800) [CONFIDENCE: 92%]
+              <rect x="0" y={getSvgY(64800)} width="700" height="32" fill="rgba(245, 158, 11, 0.16)" />
+              <line x1="0" y1={getSvgY(64800)} x2="700" y2={getSvgY(64800)} stroke="#F59E0B" strokeWidth="1.5" strokeDasharray="4 4" />
+              <line x1="0" y1={getSvgY(64650)} x2="700" y2={getSvgY(64650)} stroke="#F59E0B" strokeWidth="1" strokeDasharray="2 2" fill="none" />
+              <text x="12" y={getSvgY(64800) + 16} fill="#F59E0B" fontSize="10" fontFamily="monospace" fontWeight="bold">
+                SUPPLY ZONE ($64,650 – $64,800) | STRENGTH: 88/100 | TOUCHES: 2 | STATUS: TESTED
               </text>
             </g>
           )}
 
-          {/* Demand Zone Band */}
+          {/* 2. Merged Zone Shaded Rectangle */}
+          {showMergedZones && (
+            <g>
+              <rect x="0" y={getSvgY(64350)} width="700" height="28" fill="rgba(168, 85, 247, 0.16)" />
+              <line x1="0" y1={getSvgY(64350)} x2="700" y2={getSvgY(64350)} stroke="#A855F7" strokeWidth="1.5" strokeDasharray="4 4" />
+              <text x="12" y={getSvgY(64350) + 16} fill="#A855F7" fontSize="10" fontFamily="monospace" fontWeight="bold">
+                MERGED ZONE ($64,200 – $64,350) | STRENGTH: 91/100 | SOURCE: PIT_LITE + LUXALGO
+              </text>
+            </g>
+          )}
+
+          {/* 3. Demand Zone (Support) Shaded Rectangle */}
           {showDemandZones && (
             <g>
-              <rect x="0" y={getSvgY(63950)} width="700" height="36" fill="rgba(59, 130, 246, 0.12)" />
-              <line x1="0" y1={getSvgY(63770)} x2="700" y2={getSvgY(63770)} stroke="#3B82F6" strokeWidth="1" strokeDasharray="4 4" />
-              <text x="10" y={getSvgY(63950) + 20} fill="#3B82F6" fontSize="10" fontFamily="monospace" fontWeight="bold">
-                DEMAND ZONE ($63,770 – $63,950) [RETEST APPROVED]
+              <rect x="0" y={getSvgY(63950)} width="700" height="38" fill="rgba(59, 130, 246, 0.16)" />
+              <line x1="0" y1={getSvgY(63770)} x2="700" y2={getSvgY(63770)} stroke="#3B82F6" strokeWidth="1.5" strokeDasharray="4 4" />
+              <text x="12" y={getSvgY(63950) + 20} fill="#3B82F6" fontSize="10" fontFamily="monospace" fontWeight="bold">
+                DEMAND ZONE ($63,770 – $63,950) | STRENGTH: 94/100 | TOUCHES: 1 | STATUS: VALIDATED
               </text>
             </g>
           )}
 
-          {/* Order Levels Overlay */}
+          {/* 4. Order Level Overlays */}
           {showLevels && (
             <g>
-              {/* Take Profit */}
+              {/* Take Profit (TP) */}
               <line x1="0" y1={getSvgY(64850)} x2="700" y2={getSvgY(64850)} stroke="#00C896" strokeWidth="1.5" strokeDasharray="5 3" />
-              <text x="580" y={getSvgY(64850) - 4} fill="#00C896" fontSize="10" fontFamily="monospace" fontWeight="bold">
-                TP: $64,850.00
+              <rect x="560" y={getSvgY(64850) - 14} width="130" height="18" fill="#00C896" rx="3" />
+              <text x="566" y={getSvgY(64850) - 1} fill="#0B0E14" fontSize="10" fontFamily="monospace" fontWeight="bold">
+                TP: $64,850.00 (R:R 1:2.8)
+              </text>
+
+              {/* Current Price Line */}
+              <line x1="0" y1={getSvgY(64250)} x2="700" y2={getSvgY(64250)} stroke="#3B82F6" strokeWidth="1.5" />
+              <rect x="560" y={getSvgY(64250) - 14} width="130" height="18" fill="#3B82F6" rx="3" />
+              <text x="566" y={getSvgY(64250) - 1} fill="#FFFFFF" fontSize="10" fontFamily="monospace" fontWeight="bold">
+                MARK: $64,250.00
               </text>
 
               {/* Entry Price */}
-              <line x1="0" y1={getSvgY(64150)} x2="700" y2={getSvgY(64150)} stroke="#3B82F6" strokeWidth="1.5" strokeDasharray="3 3" />
-              <text x="580" y={getSvgY(64150) - 4} fill="#3B82F6" fontSize="10" fontFamily="monospace" fontWeight="bold">
+              <line x1="0" y1={getSvgY(64150)} x2="700" y2={getSvgY(64150)} stroke="#06B6D4" strokeWidth="1.5" strokeDasharray="3 3" />
+              <rect x="560" y={getSvgY(64150) - 14} width="130" height="18" fill="#06B6D4" rx="3" />
+              <text x="566" y={getSvgY(64150) - 1} fill="#0B0E14" fontSize="10" fontFamily="monospace" fontWeight="bold">
                 ENTRY: $64,150.00
               </text>
 
-              {/* Stop Loss */}
+              {/* Stop Loss (SL) */}
               <line x1="0" y1={getSvgY(63650)} x2="700" y2={getSvgY(63650)} stroke="#F6465D" strokeWidth="1.5" strokeDasharray="5 3" />
-              <text x="580" y={getSvgY(63650) - 4} fill="#F6465D" fontSize="10" fontFamily="monospace" fontWeight="bold">
-                SL: $63,650.00
+              <rect x="560" y={getSvgY(63650) - 14} width="130" height="18" fill="#F6465D" rx="3" />
+              <text x="566" y={getSvgY(63650) - 1} fill="#FFFFFF" fontSize="10" fontFamily="monospace" fontWeight="bold">
+                SL: $63,650.00 (1.2%)
               </text>
             </g>
           )}
 
-          {/* Candlesticks */}
+          {/* 5. Candlesticks */}
           {candles.map((c, idx) => {
             const x = 50 + idx * 80;
             const openY = getSvgY(c.open);
@@ -192,21 +243,51 @@ export const InteractiveTradingChart: React.FC = () => {
           })}
         </svg>
 
-        {/* Floating Active Decision Badge */}
-        <div className="absolute top-4 right-4 bg-[#161D2A]/90 backdrop-blur border border-[#00C896]/40 p-2.5 rounded-lg font-mono text-xs space-y-1 shadow-lg">
-          <div className="flex items-center space-x-1.5 text-[#00C896] font-bold">
-            <Zap className="w-3.5 h-3.5 text-[#00C896]" />
-            <span>ACTIVE DECISION: BUY / LONG</span>
+        {/* 6. TradingView Central Decision Workspace Badge Overlay */}
+        {showDecisionOverlay && (
+          <div className="absolute top-4 right-4 bg-[#161D2A]/90 backdrop-blur border border-[#00C896]/40 p-3 rounded-xl font-mono text-xs space-y-2 shadow-xl w-72">
+            <div className="flex items-center justify-between border-b border-[#1E293B] pb-1.5">
+              <div className="flex items-center space-x-1.5 text-[#00C896] font-bold">
+                <Zap className="w-4 h-4 text-[#00C896]" />
+                <span>DECISION WORKSPACE</span>
+              </div>
+              <span className="text-[10px] bg-[#00C896]/20 text-[#00C896] px-1.5 py-0.5 rounded font-bold">
+                BUY / LONG
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <div className="bg-[#0B0E14] border border-[#1E293B] p-1.5 rounded">
+                <span className="text-[10px] text-[#94A3B8] block">CONFIDENCE</span>
+                <span className="font-bold text-[#00C896] font-mono-tabular">94.5%</span>
+              </div>
+              <div className="bg-[#0B0E14] border border-[#1E293B] p-1.5 rounded">
+                <span className="text-[10px] text-[#94A3B8] block">TARGET R:R</span>
+                <span className="font-bold text-[#F8FAFC] font-mono-tabular">1 : 2.8</span>
+              </div>
+              <div className="bg-[#0B0E14] border border-[#1E293B] p-1.5 rounded">
+                <span className="text-[10px] text-[#94A3B8] block">ZONE STRENGTH</span>
+                <span className="font-bold text-[#3B82F6] font-mono-tabular">94 / 100</span>
+              </div>
+              <div className="bg-[#0B0E14] border border-[#1E293B] p-1.5 rounded">
+                <span className="text-[10px] text-[#94A3B8] block">TOUCH COUNT</span>
+                <span className="font-bold text-[#F59E0B] font-mono-tabular">1 TOUCH</span>
+              </div>
+            </div>
+
+            <div className="bg-[#0B0E14] border border-[#1E293B] p-2 rounded text-[10px] space-y-1 text-[#94A3B8]">
+              <span className="text-[#F8FAFC] font-bold block">CONFIRMED RULES:</span>
+              <div className="flex items-center justify-between text-[#00C896]">
+                <span>• FRESH_ZONE_CONFIRMED</span>
+                <ShieldCheck className="w-3 h-3" />
+              </div>
+              <div className="flex items-center justify-between text-[#00C896]">
+                <span>• MOMENTUM_ALIGNED</span>
+                <ShieldCheck className="w-3 h-3" />
+              </div>
+            </div>
           </div>
-          <div className="flex items-center justify-between text-[11px] text-[#94A3B8]">
-            <span>Confidence:</span>
-            <span className="text-[#00C896] font-bold font-mono-tabular">94.5%</span>
-          </div>
-          <div className="flex items-center justify-between text-[11px] text-[#94A3B8]">
-            <span>Target R:R:</span>
-            <span className="text-[#F8FAFC] font-bold font-mono-tabular">1 : 2.8</span>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Chart Footer Status Bar */}
@@ -217,9 +298,12 @@ export const InteractiveTradingChart: React.FC = () => {
           </span>
           <span>|</span>
           <span>VOLUME: 14.2K BTC</span>
+          <span>|</span>
+          <span className="text-[#3B82F6] font-bold">3 ACTIVE ZONES OVERLAID</span>
         </div>
         <div className="flex items-center space-x-2 text-[#F8FAFC]">
-          <span>LAST TICK: 2026-08-03 02:45:00 UTC</span>
+          <Activity className="w-3 h-3 text-[#00C896]" />
+          <span>LAST TICK: 2026-08-03 03:05:00 UTC</span>
         </div>
       </div>
     </div>
