@@ -31,6 +31,11 @@ import {
   ReplayEventDto,
   BacktestSessionDto,
   RunBacktestInput,
+  ExecutionSessionDto,
+  ExecutionRequestDto,
+  ExecutionResultDto,
+  ExecutionJournalDto,
+  SubmitExecutionInput,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -197,6 +202,34 @@ export const backtestApi = {
   },
   runBacktest: async (input: RunBacktestInput): Promise<ApiResponse<BacktestSessionDto>> => {
     const res = await apiClient.post('/replay/backtest/run', input);
+    return res.data;
+  },
+};
+
+export const executionApi = {
+  submitExecution: async (input: SubmitExecutionInput): Promise<ApiResponse<{
+    session: ExecutionSessionDto;
+    request: ExecutionRequestDto;
+    result: ExecutionResultDto;
+    journal: ExecutionJournalDto[];
+  }>> => {
+    const res = await apiClient.post('/execution/submit', input);
+    return res.data;
+  },
+  getSessions: async (): Promise<ApiResponse<ExecutionSessionDto[]>> => {
+    const res = await apiClient.get('/execution/sessions');
+    return res.data;
+  },
+  getRequests: async (): Promise<ApiResponse<ExecutionRequestDto[]>> => {
+    const res = await apiClient.get('/execution/requests');
+    return res.data;
+  },
+  getResults: async (): Promise<ApiResponse<ExecutionResultDto[]>> => {
+    const res = await apiClient.get('/execution/results');
+    return res.data;
+  },
+  getJournal: async (): Promise<ApiResponse<ExecutionJournalDto[]>> => {
+    const res = await apiClient.get('/execution/journal');
     return res.data;
   },
 };

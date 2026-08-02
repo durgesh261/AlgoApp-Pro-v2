@@ -356,3 +356,68 @@ model BacktestMetric {
 
   @@map("backtest_metrics")
 }
+
+model ExecutionSession {
+  id            String   @id @default(uuid())
+  mode          String   @default("PAPER")
+  pair          String
+  timeframe     String   @default("1H")
+  decisionId    String   @map("decision_id")
+  ruleVersion   String   @default("v2.0.0") @map("rule_version")
+  configVersion String   @default("cfg-2026.08.02") @map("config_version")
+  adapter       String   @default("PAPER_ADAPTER")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("execution_sessions")
+}
+
+model ExecutionRequest {
+  id             String   @id @default(uuid())
+  sessionId      String   @map("session_id")
+  idempotencyKey String   @unique @map("idempotency_key")
+  decisionId     String   @map("decision_id")
+  symbol         String
+  side           String
+  mode           String   @default("PAPER")
+  ruleVersion    String   @default("v2.0.0") @map("rule_version")
+  configVersion  String   @default("cfg-2026.08.02") @map("config_version")
+  orderType      String   @default("MARKET") @map("order_type")
+  quantity       Float
+  price          Float?
+  stopLoss       Float?   @map("stop_loss")
+  takeProfit     Float?   @map("take_profit")
+  timestamp      DateTime @default(now())
+
+  @@map("execution_requests")
+}
+
+model ExecutionResult {
+  id             String   @id @default(uuid())
+  requestId      String   @unique @map("request_id")
+  sessionId      String   @map("session_id")
+  adapter        String
+  status         String   @default("QUEUED")
+  fillPrice      Float?   @map("fill_price")
+  filledQuantity Float    @default(0.0) @map("filled_quantity")
+  latencyMs      Int      @default(0) @map("latency_ms")
+  message        String?
+  timestamp      DateTime @default(now())
+
+  @@map("execution_results")
+}
+
+model ExecutionJournal {
+  id        String   @id @default(uuid())
+  sessionId String   @map("session_id")
+  requestId String   @map("request_id")
+  resultId  String   @map("result_id")
+  adapter   String
+  fromState String   @map("from_state")
+  toState   String   @map("to_state")
+  action    String
+  details   String
+  latencyMs Int      @default(0) @map("latency_ms")
+  timestamp DateTime @default(now())
+
+  @@map("execution_journals")
+}

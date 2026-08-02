@@ -14,6 +14,7 @@ import { aiDecisionRouter } from '../modules/ai-decision/ai-decision.routes.js';
 import { rulesRouter } from '../modules/rules/rules.routes.js';
 import { marketDataRouter } from '../modules/market-data/market-data.routes.js';
 import { replayBacktestRouter } from '../modules/replay-backtest/replay-backtest.routes.js';
+import { executionRouter } from '../modules/execution/execution.routes.js';
 
 export const apiRouter = Router();
 
@@ -32,3 +33,4 @@ apiRouter.use('/ai-decision', aiDecisionRouter);
 apiRouter.use('/rules', rulesRouter);
 apiRouter.use('/market-data', marketDataRouter);
 apiRouter.use('/replay', replayBacktestRouter);
+apiRouter.use('/execution', executionRouter);
