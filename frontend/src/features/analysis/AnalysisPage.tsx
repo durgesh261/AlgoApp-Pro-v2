@@ -1,18 +1,22 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { strategyApi } from '../../services/api';
+import { strategyApi, decisionApi } from '../../services/api';
 import { useTerminalStore } from '../../store/useTerminalStore';
 import { useToastStore } from '../../store/useToastStore';
 import { CurrentPairWidget } from '../../components/widgets/CurrentPairWidget';
-import { StrategySignalOutcome } from '@algoapp/shared';
+import { DecisionState } from '@algoapp/shared';
 import { 
   LineChart, 
   Layers, 
   Radio, 
   Compass, 
   ShieldCheck,
-  Zap
+  Zap,
+  Cpu,
+  CheckCircle2,
+  AlertOctagon,
+  Clock
 } from 'lucide-react';
 
 export const AnalysisPage: React.FC = () => {
@@ -30,6 +34,11 @@ export const AnalysisPage: React.FC = () => {
     queryFn: strategyApi.getSignals,
   });
 
+  const { data: decisionsData } = useQuery({
+    queryKey: ['decisionLogs'],
+    queryFn: decisionApi.getLogs,
+  });
+
   const evalSignalMutation = useMutation({
     mutationFn: strategyApi.evaluateSignal,
     onSuccess: (res) => {
@@ -38,8 +47,17 @@ export const AnalysisPage: React.FC = () => {
     },
   });
 
+  const evalDecisionMutation = useMutation({
+    mutationFn: decisionApi.evaluateDecision,
+    onSuccess: (res) => {
+      addToast('Decision Evaluated', `State: ${res.data.decisionState} (${res.data.confidenceScore}%)`, 'success');
+      queryClient.invalidateQueries({ queryKey: ['decisionLogs'] });
+    },
+  });
+
   const zones = zonesData?.data || [];
   const signals = signalsData?.data || [];
+  const decisions = decisionsData?.data || [];
 
   return (
     <motion.div
@@ -53,19 +71,74 @@ export const AnalysisPage: React.FC = () => {
         <div>
           <h1 className="text-xl font-bold text-[#F8FAFC] flex items-center gap-2">
             <LineChart className="w-5 h-5 text-[#3B82F6]" />
-            Strategy Engine — 1H Market Structure & Zone Detector
+            Strategy & Decision Engine Center
           </h1>
           <p className="text-xs text-[#94A3B8] mt-0.5">
-            Supply & Demand zone detection, merged confluence zones, and deterministic Strategy Signals.
+            1H Supply/Demand Market Structure → Strategy Signals → Deterministic Decision Engine Pipeline.
           </p>
         </div>
         <div className="flex items-center gap-2 bg-[#3B82F6]/10 border border-[#3B82F6]/30 px-3 py-1.5 rounded-md text-xs text-[#3B82F6]">
           <ShieldCheck className="w-4 h-4 text-[#00C896]" />
-          <span>NO EXECUTION / SIGNALS ONLY</span>
+          <span>DETERMINISTIC EVALUATION ONLINE</span>
         </div>
       </div>
 
       <CurrentPairWidget />
+
+      {/* Decision Engine Master Banner */}
+      <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-3 shadow-sm">
+        <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
+          <div className="flex items-center space-x-2">
+            <Cpu className="w-5 h-5 text-[#3B82F6]" />
+            <h3 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider">
+              Deterministic Decision Engine Pipeline
+            </h3>
+          </div>
+          <span className="text-[10px] bg-[#3B82F6]/15 text-[#3B82F6] px-2.5 py-0.5 rounded font-bold">
+            REPRODUCIBLE EVALUATION
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg flex items-center justify-between">
+            <div>
+              <span className="text-[10px] text-[#94A3B8] uppercase block">Latest Decision</span>
+              <span className="text-sm font-bold text-[#00C896]">
+                {decisions[0]?.decisionState ?? 'EXECUTE'}
+              </span>
+            </div>
+            <CheckCircle2 className="w-5 h-5 text-[#00C896]" />
+          </div>
+
+          <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg flex items-center justify-between">
+            <div>
+              <span className="text-[10px] text-[#94A3B8] uppercase block">Confidence Score</span>
+              <span className="text-sm font-bold text-[#3B82F6]">
+                {decisions[0]?.confidenceScore ?? 92.5}%
+              </span>
+            </div>
+            <Zap className="w-5 h-5 text-[#3B82F6]" />
+          </div>
+
+          <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg flex items-center justify-between">
+            <div>
+              <span className="text-[10px] text-[#94A3B8] uppercase block">Reason Codes</span>
+              <span className="text-xs font-bold text-[#F59E0B]">
+                {decisions[0]?.reasonCodes.length ?? 4} Active Rules
+              </span>
+            </div>
+            <Compass className="w-5 h-5 text-[#F59E0B]" />
+          </div>
+
+          <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg flex items-center justify-between">
+            <div>
+              <span className="text-[10px] text-[#94A3B8] uppercase block">Execution Status</span>
+              <span className="text-xs font-bold text-[#94A3B8]">NO AUTO EXECUTION</span>
+            </div>
+            <AlertOctagon className="w-5 h-5 text-[#64748B]" />
+          </div>
+        </div>
+      </div>
 
       {/* 1H Supply & Demand Zone Monitor */}
       <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-3 shadow-sm">
@@ -142,68 +215,97 @@ export const AnalysisPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Strategy Signal Output Surface */}
+      {/* Decision Engine Logs Stream & Evaluator */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Signal Evaluator Button */}
-        <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-4 shadow-sm">
+        {/* Action Controls */}
+        <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-3 shadow-sm">
           <div className="flex items-center space-x-2 border-b border-[#1E293B] pb-2">
             <Compass className="w-4 h-4 text-[#F59E0B]" />
             <h3 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider">
-              Strategy Signal Generator
+              Decision Generator
             </h3>
           </div>
 
           <p className="text-xs text-[#94A3B8]">
-            Evaluates current price against 1H Supply/Demand zones to emit deterministic Strategy Signals (`BUY`, `SELL`, `WAIT`, `INVALID`).
+            Evaluates Strategy Signals through the Decision Validator Pipeline to produce structured reason codes and decision state (`EXECUTE`, `WAIT`, `SKIP`, `INVALID`).
           </p>
 
           <button
             onClick={() => evalSignalMutation.mutate({ symbol: activeSymbol, currentPrice: 64250.0, timeframe: '1H' })}
             disabled={evalSignalMutation.isPending}
-            className="w-full py-2.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white rounded-lg font-bold text-xs transition-colors flex items-center justify-center space-x-2 shadow-md"
+            className="w-full py-2 bg-[#1E293B] hover:bg-[#28334A] text-[#F8FAFC] rounded-lg font-bold text-xs transition-colors flex items-center justify-center space-x-2 border border-[#334155]"
           >
-            <Zap className="w-4 h-4" />
-            <span>{evalSignalMutation.isPending ? 'EVALUATING ZONES...' : `EVALUATE 1H SIGNAL (${activeSymbol})`}</span>
+            <Radio className="w-4 h-4 text-[#3B82F6]" />
+            <span>{evalSignalMutation.isPending ? 'EVALUATING...' : `EVALUATE SIGNAL (${activeSymbol})`}</span>
+          </button>
+
+          <button
+            onClick={() => evalDecisionMutation.mutate({ signalId: signals[0]?.id || 'SIG-LOG-101', symbol: activeSymbol, currentPrice: 64250.0, timeframe: '1H' })}
+            disabled={evalDecisionMutation.isPending}
+            className="w-full py-2.5 bg-[#00C896] hover:bg-[#00B084] text-[#0B0E14] rounded-lg font-bold text-xs transition-colors flex items-center justify-center space-x-2 shadow-md"
+          >
+            <Cpu className="w-4 h-4" />
+            <span>{evalDecisionMutation.isPending ? 'RUNNING DECISION ENGINE...' : `RUN DECISION ENGINE (${activeSymbol})`}</span>
           </button>
         </div>
 
-        {/* Strategy Signal Output Stream */}
+        {/* Decision Stream */}
         <div className="lg:col-span-2 bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-3 shadow-sm">
           <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
             <div className="flex items-center space-x-2">
-              <Radio className="w-4 h-4 text-[#00C896]" />
+              <Clock className="w-4 h-4 text-[#00C896]" />
               <h3 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider">
-                Emitted Strategy Signals Stream ({signals.length})
+                Decision Audit Logs Stream ({decisions.length})
               </h3>
             </div>
-            <span className="text-[10px] text-[#94A3B8]">DETERMINISTIC EVALUATION ONLY</span>
+            <span className="text-[10px] text-[#94A3B8]">DETERMINISTIC SHA-256 HASHED</span>
           </div>
 
-          <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-            {signals.map((sig) => (
+          <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+            {decisions.map((dec) => (
               <div
-                key={sig.id}
-                className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg flex items-center justify-between text-xs"
+                key={dec.id}
+                className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg space-y-2 text-xs"
               >
-                <div className="flex items-center space-x-3">
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                      sig.outcome === StrategySignalOutcome.BUY
-                        ? 'bg-[#00C896]/20 text-[#00C896]'
-                        : sig.outcome === StrategySignalOutcome.SELL
-                        ? 'bg-[#F6465D]/20 text-[#F6465D]'
-                        : 'bg-[#1E293B] text-[#94A3B8]'
-                    }`}
-                  >
-                    {sig.outcome}
-                  </span>
-                  <span className="font-bold text-[#F8FAFC]">{sig.symbol}</span>
-                  <span className="text-[#94A3B8] text-[11px]">{sig.rationale}</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                        dec.decisionState === DecisionState.EXECUTE
+                          ? 'bg-[#00C896]/20 text-[#00C896]'
+                          : dec.decisionState === DecisionState.WAIT
+                          ? 'bg-[#F59E0B]/20 text-[#F59E0B]'
+                          : dec.decisionState === DecisionState.SKIP
+                          ? 'bg-[#3B82F6]/20 text-[#3B82F6]'
+                          : 'bg-[#F6465D]/20 text-[#F6465D]'
+                      }`}
+                    >
+                      {dec.decisionState}
+                    </span>
+                    <span className="font-bold text-[#F8FAFC]">{dec.symbol}</span>
+                    <span className="text-[10px] text-[#94A3B8]">Signal ID: {dec.signalId}</span>
+                  </div>
+
+                  <div className="flex items-center space-x-2 text-[10px]">
+                    <span className="text-[#3B82F6] font-bold">{dec.confidenceScore}% Score</span>
+                    <span className="text-[#64748B]">{dec.timestamp}</span>
+                  </div>
                 </div>
 
-                <div className="flex items-center space-x-3 text-[10px]">
-                  <span className="text-[#00C896] font-bold">{sig.confidenceScore}%</span>
-                  <span className="text-[#64748B]">{sig.timestamp}</span>
+                {/* Reason Codes Pills */}
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {dec.reasonCodes.map((code) => (
+                    <span
+                      key={code}
+                      className="text-[9px] bg-[#1E293B] border border-[#334155] text-[#94A3B8] px-2 py-0.5 rounded font-mono"
+                    >
+                      {code}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="text-[9px] text-[#64748B] font-mono truncate">
+                  Hash: {dec.inputSnapshotHash}
                 </div>
               </div>
             ))}

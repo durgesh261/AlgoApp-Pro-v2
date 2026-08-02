@@ -9,6 +9,7 @@ import { analyticsRouter } from '../modules/analytics/analytics.routes.js';
 import { challengeRouter } from '../modules/challenge/challenge.routes.js';
 import { settingsRouter } from '../modules/settings/settings.routes.js';
 import { strategyRouter } from '../modules/strategy/strategy.routes.js';
+import { decisionRouter } from '../modules/decision/decision.routes.js';
 
 export const apiRouter = Router();
 
@@ -22,3 +23,4 @@ apiRouter.use('/analytics', analyticsRouter);
 apiRouter.use('/challenge', challengeRouter);
 apiRouter.use('/settings', settingsRouter);
 apiRouter.use('/strategy', strategyRouter);
+apiRouter.use('/decision', decisionRouter);

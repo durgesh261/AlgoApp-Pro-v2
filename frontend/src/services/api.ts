@@ -13,6 +13,8 @@ import {
   ZoneDto,
   StrategySignalDto,
   EvaluateStrategySignalInput,
+  DecisionDto,
+  EvaluateDecisionInput,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -94,6 +96,17 @@ export const strategyApi = {
   },
   evaluateSignal: async (input: EvaluateStrategySignalInput): Promise<ApiResponse<StrategySignalDto>> => {
     const res = await apiClient.post('/strategy/evaluate', input);
+    return res.data;
+  },
+};
+
+export const decisionApi = {
+  getLogs: async (): Promise<ApiResponse<DecisionDto[]>> => {
+    const res = await apiClient.get('/decision/logs');
+    return res.data;
+  },
+  evaluateDecision: async (input: EvaluateDecisionInput): Promise<ApiResponse<DecisionDto>> => {
+    const res = await apiClient.post('/decision/evaluate', input);
     return res.data;
   },
 };

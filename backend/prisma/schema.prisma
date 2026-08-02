@@ -156,3 +156,17 @@ model StrategySignalLog {
 
   @@map("strategy_signal_logs")
 }
+
+model DecisionLog {
+  id                String   @id @default(uuid())
+  signalId          String   @map("signal_id")
+  symbol            String
+  timeframe         String   @default("1H")
+  decisionState     String   @map("decision_state")
+  confidenceScore   Float    @map("confidence_score")
+  reasonCodesJson   String   @map("reason_codes_json")
+  inputSnapshotHash String   @map("input_snapshot_hash")
+  timestamp         DateTime @default(now())
+
+  @@map("decision_logs")
+}
