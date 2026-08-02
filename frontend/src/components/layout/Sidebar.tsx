@@ -1,86 +1,75 @@
 import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useTerminalStore } from '../../store/useTerminalStore';
-import { TerminalPage } from '@algoapp/shared';
-import {
-  LucideIcon,
-  LayoutDashboard,
-  FileCode,
-  Zap,
-  LineChart,
-  BookOpen,
-  PieChart,
-  Trophy,
+import { NavLink } from 'react-router-dom';
+import { 
+  LayoutDashboard, 
+  Wallet, 
+  Activity, 
+  LineChart, 
+  BookOpen, 
+  BarChart2, 
+  Trophy, 
   Settings,
-  Shield
+  RotateCcw,
+  BarChart3
 } from 'lucide-react';
 
-interface NavItem {
-  page: TerminalPage;
-  label: string;
-  route: string;
-  icon: LucideIcon;
-}
-
-const navItems: NavItem[] = [
-  { page: TerminalPage.DASHBOARD, label: 'Dashboard', route: '/', icon: LayoutDashboard },
-  { page: TerminalPage.PAPER_TRADING, label: 'Paper Trading', route: '/paper-trading', icon: FileCode },
-  { page: TerminalPage.LIVE_TRADING, label: 'Live Trading', route: '/live-trading', icon: Zap },
-  { page: TerminalPage.ANALYSIS, label: 'Analysis', route: '/analysis', icon: LineChart },
-  { page: TerminalPage.TRADE_JOURNAL, label: 'Trade Journal', route: '/journal', icon: BookOpen },
-  { page: TerminalPage.ANALYTICS, label: 'Analytics', route: '/analytics', icon: PieChart },
-  { page: TerminalPage.CHALLENGE, label: 'Challenge', route: '/challenge', icon: Trophy },
-  { page: TerminalPage.SETTINGS, label: 'Settings', route: '/settings', icon: Settings },
+const navigationItems = [
+  { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+  { name: 'Paper Trading', path: '/paper-trading', icon: Wallet },
+  { name: 'Live Trading', path: '/live-trading', icon: Activity },
+  { name: 'Analysis', path: '/analysis', icon: LineChart },
+  { name: 'Replay Terminal', path: '/replay', icon: RotateCcw },
+  { name: 'Backtesting', path: '/backtest', icon: BarChart3 },
+  { name: 'Trade Journal', path: '/journal', icon: BookOpen },
+  { name: 'Analytics', path: '/analytics', icon: BarChart2 },
+  { name: 'Challenge', path: '/challenge', icon: Trophy },
+  { name: 'Settings', path: '/settings', icon: Settings },
 ];
 
 export const Sidebar: React.FC = () => {
-  const { isSidebarCollapsed, setActivePage } = useTerminalStore();
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  const handleNavigate = (item: NavItem) => {
-    setActivePage(item.page);
-    navigate(item.route);
-  };
-
   return (
-    <aside
-      className={`bg-[#161D2A] border-r border-[#1E293B] flex flex-col transition-all duration-200 z-10 ${
-        isSidebarCollapsed ? 'w-16' : 'w-60'
-      }`}
-    >
-      <div className="flex-1 py-3 space-y-1 px-2">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = location.pathname === item.route;
-
-          return (
-            <button
-              key={item.page}
-              onClick={() => handleNavigate(item)}
-              className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-md text-xs font-medium transition-colors ${
-                isActive
-                  ? 'bg-[#3B82F6]/15 text-[#3B82F6] border-l-2 border-[#3B82F6]'
-                  : 'text-[#94A3B8] hover:bg-[#1E2638] hover:text-[#F8FAFC]'
-              } ${isSidebarCollapsed ? 'justify-center px-0' : ''}`}
-              title={isSidebarCollapsed ? item.label : undefined}
-            >
-              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#3B82F6]' : 'text-[#94A3B8]'}`} />
-              {!isSidebarCollapsed && <span className="truncate">{item.label}</span>}
-            </button>
-          );
-        })}
+    <aside className="w-56 bg-[#161D2A] border-r border-[#1E293B] flex flex-col select-none">
+      {/* App Branding Header */}
+      <div className="h-14 px-4 flex items-center space-x-2 border-b border-[#1E293B]">
+        <div className="w-7 h-7 bg-[#3B82F6] rounded flex items-center justify-center font-bold text-white text-sm shadow-md">
+          A
+        </div>
+        <div className="flex flex-col">
+          <span className="text-sm font-bold text-[#F8FAFC] tracking-wide leading-none">
+            AlgoApp <span className="text-[#3B82F6]">Pro</span>
+          </span>
+          <span className="text-[10px] text-[#94A3B8] font-mono mt-0.5">v2.0.0 Terminal</span>
+        </div>
       </div>
 
-      <div className="p-3 border-t border-[#1E293B] bg-[#0E121A]">
-        <div className="flex items-center space-x-2">
-          <Shield className="w-4 h-4 text-[#00C896] shrink-0" />
-          {!isSidebarCollapsed && (
-            <div className="text-[11px] font-mono leading-tight truncate">
-              <div className="text-[#F8FAFC] font-semibold">AlgoApp Core</div>
-              <div className="text-[#64748B]">v2.0.0 Stable</div>
-            </div>
-          )}
+      {/* Navigation Links */}
+      <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto">
+        {navigationItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) =>
+              `flex items-center space-x-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                isActive
+                  ? 'bg-[#3B82F6]/15 text-[#3B82F6] font-semibold border border-[#3B82F6]/30'
+                  : 'text-[#94A3B8] hover:bg-[#1E293B] hover:text-[#F8FAFC]'
+              }`
+            }
+          >
+            <item.icon className="w-4 h-4" />
+            <span>{item.name}</span>
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* Connection & Terminal Footer */}
+      <div className="p-3 border-t border-[#1E293B] bg-[#0B0E14]">
+        <div className="flex items-center justify-between text-[10px] text-[#94A3B8] font-mono">
+          <span className="flex items-center space-x-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#00C896] animate-pulse"></span>
+            <span>CONNECTED</span>
+          </span>
+          <span className="text-[#3B82F6]">1H ONLY</span>
         </div>
       </div>
     </aside>

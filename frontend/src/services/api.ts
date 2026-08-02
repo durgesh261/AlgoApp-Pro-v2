@@ -26,6 +26,11 @@ import {
   MarketSnapshotDto,
   MarketEventDto,
   IngestCandleInput,
+  ReplaySessionDto,
+  ReplayControlAction,
+  ReplayEventDto,
+  BacktestSessionDto,
+  RunBacktestInput,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -163,6 +168,35 @@ export const marketDataApi = {
   },
   getEvents: async (): Promise<ApiResponse<MarketEventDto[]>> => {
     const res = await apiClient.get('/market-data/events');
+    return res.data;
+  },
+};
+
+export const replayApi = {
+  getSession: async (symbol?: string): Promise<ApiResponse<ReplaySessionDto>> => {
+    const res = await apiClient.get('/replay/session', { params: { symbol } });
+    return res.data;
+  },
+  control: async (
+    action: ReplayControlAction,
+    payload?: { speedMultiplier?: number; targetIndex?: number }
+  ): Promise<ApiResponse<ReplaySessionDto>> => {
+    const res = await apiClient.post('/replay/control', { action, ...payload });
+    return res.data;
+  },
+  getEvents: async (): Promise<ApiResponse<ReplayEventDto[]>> => {
+    const res = await apiClient.get('/replay/events');
+    return res.data;
+  },
+};
+
+export const backtestApi = {
+  getSessions: async (): Promise<ApiResponse<BacktestSessionDto[]>> => {
+    const res = await apiClient.get('/replay/backtest/sessions');
+    return res.data;
+  },
+  runBacktest: async (input: RunBacktestInput): Promise<ApiResponse<BacktestSessionDto>> => {
+    const res = await apiClient.post('/replay/backtest/run', input);
     return res.data;
   },
 };

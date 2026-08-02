@@ -219,16 +219,16 @@ model ReplayMetadata {
 }
 
 model TradingRuleConfig {
-  id                String   @id @default("default-trading-rules")
-  ruleVersion       String   @default("v2.0.0") @map("rule_version")
-  configVersion     String   @default("cfg-2026.08.02") @map("config_version")
-  supportedPairsJson String  @default("[\"BTCUSD.P\",\"ETHUSD.P\",\"SOLUSD.P\",\"XRPUSD.P\"]") @map("supported_pairs_json")
-  supportedTimeframe String  @default("1H") @map("supported_timeframe")
-  bonusesJson       String   @map("bonuses_json")
-  riskRulesJson     String   @map("risk_rules_json")
-  challengeRulesJson String  @map("challenge_rules_json")
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
+  id                 String   @id @default("default-trading-rules")
+  ruleVersion        String   @default("v2.0.0") @map("rule_version")
+  configVersion      String   @default("cfg-2026.08.02") @map("config_version")
+  supportedPairsJson  String   @default("[\"BTCUSD.P\",\"ETHUSD.P\",\"SOLUSD.P\",\"XRPUSD.P\"]") @map("supported_pairs_json")
+  supportedTimeframe String   @default("1H") @map("supported_timeframe")
+  bonusesJson        String   @map("bonuses_json")
+  riskRulesJson      String   @map("risk_rules_json")
+  challengeRulesJson String   @map("challenge_rules_json")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
   @@map("trading_rule_configs")
 }
@@ -281,4 +281,78 @@ model MarketEvent {
   timestamp   DateTime @default(now())
 
   @@map("market_events")
+}
+
+model ReplaySession {
+  id                 String   @id @default(uuid())
+  symbol             String
+  timeframe          String   @default("1H")
+  currentCandleIndex Int      @default(0) @map("current_candle_index")
+  totalCandles       Int      @default(100) @map("total_candles")
+  status             String   @default("IDLE")
+  speedMultiplier    Float    @default(1.0) @map("speed_multiplier")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@map("replay_sessions")
+}
+
+model ReplayEvent {
+  id          String   @id @default(uuid())
+  sessionId   String   @map("session_id")
+  eventType   String   @map("event_type")
+  payloadJson String   @map("payload_json")
+  timestamp   DateTime @default(now())
+
+  @@map("replay_events")
+}
+
+model BacktestSession {
+  id            String   @id @default(uuid())
+  symbol        String
+  timeframe     String   @default("1H")
+  ruleVersion   String   @default("v2.0.0") @map("rule_version")
+  configVersion String   @default("cfg-2026.08.02") @map("config_version")
+  startDate     DateTime @map("start_date")
+  endDate       DateTime @map("end_date")
+  status        String   @default("COMPLETED")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("backtest_sessions")
+}
+
+model BacktestTrade {
+  id        String   @id @default(uuid())
+  sessionId String   @map("session_id")
+  symbol    String
+  side      String
+  entryPrice Float   @map("entry_price")
+  exitPrice  Float   @map("exit_price")
+  quantity   Float
+  pnl       Float
+  status    String
+  timestamp DateTime @default(now())
+
+  @@map("backtest_trades")
+}
+
+model BacktestMetric {
+  id            String   @id @default(uuid())
+  sessionId     String   @unique @map("session_id")
+  totalTrades   Int      @map("total_trades")
+  winningTrades Int      @map("winning_trades")
+  losingTrades  Int      @map("losing_trades")
+  winRate       Float    @map("win_rate")
+  lossRate      Float    @map("loss_rate")
+  profitFactor  Float    @map("profit_factor")
+  averageRR     Float    @map("average_rr")
+  netPnL        Float    @map("net_pnl")
+  maxDrawdown   Float    @map("max_drawdown")
+  bestTradePnL  Float    @map("best_trade_pnl")
+  worstTradePnL Float    @map("worst_trade_pnl")
+  skippedTrades Int      @map("skipped_trades")
+  invalidTrades Int      @map("invalid_trades")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("backtest_metrics")
 }
