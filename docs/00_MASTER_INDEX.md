@@ -27,7 +27,7 @@ It covers product, architecture, governance, operations, and delivery documentat
 
 | Area | Documents |
 | --- | --- |
-| Product | [Vision](01_PRODUCT_VISION.md), [Requirements](02_PRODUCT_REQUIREMENTS.md), [UI/UX](12_UI_UX.md), [Roadmap](21_ROADMAP.md) |
+| Product | [Vision](01_PRODUCT_VISION.md), [Requirements](02_PRODUCT_REQUIREMENTS.md), [UI/UX](12_UI_UX.md), [Design System](DESIGN_SYSTEM.md), [Roadmap](21_ROADMAP.md) |
 | Platform | [Architecture](03_ARCHITECTURE.md), [Tech Stack](04_TECH_STACK.md), [Database](05_DATABASE.md), [API](06_API.md) |
 | Trading | [Strategy](07_STRATEGY_ENGINE.md), [Decision](08_DECISION_ENGINE.md), [Risk](09_RISK_ENGINE.md), [TradingView](10_TRADINGVIEW_AGENT.md), [Delta](11_DELTA_EXCHANGE.md) |
 | Experience | [Dashboard](13_DASHBOARD.md), [Analytics](14_ANALYTICS.md), [Challenge](15_CHALLENGE.md), [Notifications](16_NOTIFICATIONS.md) |

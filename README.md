@@ -47,5 +47,6 @@ Create source modules only after roadmap gates, threat model, data contracts, an
 
 - [Master Index](docs/00_MASTER_INDEX.md)
 - [Architecture](docs/03_ARCHITECTURE.md)
+- [Design System](docs/DESIGN_SYSTEM.md)
 - [Project Audit](docs/PROJECT_AUDIT.md)
 - [Roadmap](docs/21_ROADMAP.md)
