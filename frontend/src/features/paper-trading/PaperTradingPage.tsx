@@ -8,10 +8,7 @@ import { PaperOrderSide, PaperOrderType } from '@algoapp/shared';
 import { 
   FileCode, 
   ShieldCheck, 
-  ArrowUpRight, 
-  ArrowDownRight, 
   PlusCircle, 
-  XCircle, 
   Layers, 
   BookOpen
 } from 'lucide-react';
@@ -44,11 +41,6 @@ export const PaperTradingPage: React.FC = () => {
     queryFn: paperTradingApi.getOrders,
   });
 
-  const { data: journalData } = useQuery({
-    queryKey: ['paperJournal'],
-    queryFn: paperTradingApi.getJournal,
-  });
-
   const createOrderMutation = useMutation({
     mutationFn: paperTradingApi.createOrder,
     onSuccess: (res) => {
@@ -58,15 +50,12 @@ export const PaperTradingPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['paperPositions'] });
       queryClient.invalidateQueries({ queryKey: ['paperJournal'] });
     },
-    onError: (err: any) => {
-      addToast('Order Rejected', err?.response?.data?.error?.message || 'Order rejected by Paper Risk Engine', 'danger');
-    },
   });
 
   const cancelOrderMutation = useMutation({
-    mutationFn: paperTradingApi.cancelOrder,
+    mutationFn: (id: string) => paperTradingApi.cancelOrder(id),
     onSuccess: (res) => {
-      addToast('Order Cancelled', `Paper order ${res.data.id} cancelled`, 'info');
+      addToast('Paper Order Cancelled', `Order ${res.data.id} cancelled`, 'warning');
       queryClient.invalidateQueries({ queryKey: ['paperOrders'] });
       queryClient.invalidateQueries({ queryKey: ['paperJournal'] });
     },
@@ -76,7 +65,7 @@ export const PaperTradingPage: React.FC = () => {
     mutationFn: ({ id, exitPrice }: { id: string; exitPrice: number }) =>
       paperTradingApi.closePosition(id, exitPrice),
     onSuccess: (res) => {
-      addToast('Position Closed', `Position closed with PnL: $${res.data.realizedPnL}`, 'success');
+      addToast('Position Closed', `Closed position ${res.data.id} @ $${res.data.entryPrice}`, 'info');
       queryClient.invalidateQueries({ queryKey: ['paperWallet'] });
       queryClient.invalidateQueries({ queryKey: ['paperPositions'] });
       queryClient.invalidateQueries({ queryKey: ['paperJournal'] });
@@ -100,7 +89,6 @@ export const PaperTradingPage: React.FC = () => {
   const wallet = walletData?.data;
   const positions = positionsData?.data || [];
   const orders = ordersData?.data || [];
-  const journal = journalData?.data || [];
 
   return (
     <motion.div
@@ -109,6 +97,7 @@ export const PaperTradingPage: React.FC = () => {
       transition={{ duration: 0.25 }}
       className="space-y-5 max-w-7xl mx-auto pb-6 font-mono select-none"
     >
+      {/* Header Bar */}
       <div className="flex items-center justify-between border-b border-[#1E293B] pb-3">
         <div>
           <h1 className="text-xl font-bold text-[#F8FAFC] flex items-center gap-2">
@@ -119,57 +108,60 @@ export const PaperTradingPage: React.FC = () => {
             Modular simulation engine, margin calculation, bracket order matching, and risk safety limits.
           </p>
         </div>
-        <div className="flex items-center gap-2 bg-[#3B82F6]/10 border border-[#3B82F6]/30 px-3 py-1.5 rounded-md text-xs text-[#3B82F6]">
+        <div className="flex items-center gap-2 bg-[#3B82F6]/10 border border-[#3B82F6]/30 px-3 py-1.5 rounded-md text-xs text-[#3B82F6] font-bold">
           <ShieldCheck className="w-4 h-4 text-[#00C896]" />
           <span>REAL APPLICATION STATE ONLINE</span>
         </div>
       </div>
 
+      {/* Wallet Metrics Grid with Accent Borders */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-        <div className="bg-[#161D2A] border border-[#1E293B] p-3 rounded-xl">
+        <div className="bg-[#161D2A] border border-[#1E293B] card-accent-paper p-3 rounded-xl">
           <span className="text-[10px] text-[#94A3B8] uppercase block">Virtual Balance</span>
-          <div className="text-lg font-bold text-[#F8FAFC] mt-0.5">
-            ${wallet?.virtualBalance.toLocaleString() ?? '50,000.00'}
+          <div className="text-lg font-bold text-[#F8FAFC] mt-0.5 font-mono-tabular">
+            ${wallet?.virtualBalance ? wallet.virtualBalance.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '50,000.00'}
           </div>
         </div>
 
-        <div className="bg-[#161D2A] border border-[#1E293B] p-3 rounded-xl">
+        <div className="bg-[#161D2A] border border-[#1E293B] card-accent-paper p-3 rounded-xl">
           <span className="text-[10px] text-[#94A3B8] uppercase block">Account Equity</span>
-          <div className="text-lg font-bold text-[#00C896] mt-0.5">
-            ${wallet?.equity.toLocaleString() ?? '54,956.50'}
+          <div className="text-lg font-bold text-[#00C896] mt-0.5 font-mono-tabular">
+            ${wallet?.equity ? wallet.equity.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '54,956.50'}
           </div>
         </div>
 
-        <div className="bg-[#161D2A] border border-[#1E293B] p-3 rounded-xl">
+        <div className="bg-[#161D2A] border border-[#1E293B] card-accent-paper p-3 rounded-xl">
           <span className="text-[10px] text-[#94A3B8] uppercase block">Available Margin</span>
-          <div className="text-lg font-bold text-[#3B82F6] mt-0.5">
-            ${wallet?.availableMargin.toLocaleString() ?? '45,581.20'}
+          <div className="text-lg font-bold text-[#3B82F6] mt-0.5 font-mono-tabular">
+            ${wallet?.availableMargin ? wallet.availableMargin.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '45,581.20'}
           </div>
         </div>
 
-        <div className="bg-[#161D2A] border border-[#1E293B] p-3 rounded-xl">
+        <div className="bg-[#161D2A] border border-[#1E293B] card-accent-paper p-3 rounded-xl">
           <span className="text-[10px] text-[#94A3B8] uppercase block">Used Margin</span>
-          <div className="text-lg font-bold text-[#F59E0B] mt-0.5">
-            ${wallet?.usedMargin.toLocaleString() ?? '9,375.30'}
+          <div className="text-lg font-bold text-[#F59E0B] mt-0.5 font-mono-tabular">
+            ${wallet?.usedMargin ? wallet.usedMargin.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '9,375.30'}
           </div>
         </div>
 
-        <div className="bg-[#161D2A] border border-[#1E293B] p-3 rounded-xl">
+        <div className="bg-[#161D2A] border border-[#1E293B] card-accent-paper p-3 rounded-xl">
           <span className="text-[10px] text-[#94A3B8] uppercase block">Realized P&L</span>
-          <div className="text-lg font-bold text-[#00C896] mt-0.5">
-            +${wallet?.realizedPnL.toLocaleString() ?? '3,840.50'}
+          <div className="text-lg font-bold text-[#00C896] mt-0.5 font-mono-tabular">
+            +${wallet?.realizedPnL ? wallet.realizedPnL.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '3,840.50'}
           </div>
         </div>
 
-        <div className="bg-[#161D2A] border border-[#1E293B] p-3 rounded-xl">
+        <div className="bg-[#161D2A] border border-[#1E293B] card-accent-paper p-3 rounded-xl">
           <span className="text-[10px] text-[#94A3B8] uppercase block">Unrealized P&L</span>
-          <div className="text-lg font-bold text-[#00C896] mt-0.5">
-            +${wallet?.unrealizedPnL.toLocaleString() ?? '1,116.00'}
+          <div className="text-lg font-bold text-[#00C896] mt-0.5 font-mono-tabular">
+            +${wallet?.unrealizedPnL ? wallet.unrealizedPnL.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '1,116.00'}
           </div>
         </div>
       </div>
 
+      {/* Main Order Form & Position Tables Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Order Ticket Form */}
         <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-4 shadow-sm">
           <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
             <h2 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider flex items-center gap-2">
@@ -188,7 +180,7 @@ export const PaperTradingPage: React.FC = () => {
                 onClick={() => setSide(PaperOrderSide.BUY)}
                 className={`py-2 rounded font-bold transition-all border ${
                   side === PaperOrderSide.BUY
-                    ? 'bg-[#00C896] text-[#0B0E14] border-[#00C896]'
+                    ? 'bg-[#00C896] text-[#0B0E14] border-[#00C896] glow-buy'
                     : 'bg-[#0B0E14] text-[#94A3B8] border-[#334155] hover:text-[#F8FAFC]'
                 }`}
               >
@@ -199,7 +191,7 @@ export const PaperTradingPage: React.FC = () => {
                 onClick={() => setSide(PaperOrderSide.SELL)}
                 className={`py-2 rounded font-bold transition-all border ${
                   side === PaperOrderSide.SELL
-                    ? 'bg-[#F6465D] text-white border-[#F6465D]'
+                    ? 'bg-[#F6465D] text-white border-[#F6465D] glow-sell'
                     : 'bg-[#0B0E14] text-[#94A3B8] border-[#334155] hover:text-[#F8FAFC]'
                 }`}
               >
@@ -208,266 +200,223 @@ export const PaperTradingPage: React.FC = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-[#94A3B8] block text-[11px]">Order Type</label>
-              <div className="grid grid-cols-3 gap-1">
-                {[PaperOrderType.MARKET, PaperOrderType.LIMIT, PaperOrderType.BRACKET].map((type) => (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => setOrderType(type)}
-                    className={`py-1.5 rounded text-[10px] font-bold border transition-colors ${
-                      orderType === type
-                        ? 'bg-[#1E2638] text-[#3B82F6] border-[#3B82F6]'
-                        : 'bg-[#0B0E14] text-[#94A3B8] border-[#334155] hover:text-[#F8FAFC]'
-                    }`}
-                  >
-                    {type}
-                  </button>
-                ))}
-              </div>
+              <label className="text-[10px] text-[#94A3B8] uppercase block">Order Type</label>
+              <select
+                value={orderType}
+                onChange={(e) => setOrderType(e.target.value as PaperOrderType)}
+                className="w-full bg-[#0B0E14] border border-[#334155] text-[#F8FAFC] rounded p-2 focus:border-[#3B82F6] focus:outline-none font-mono"
+              >
+                <option value={PaperOrderType.MARKET}>MARKET ORDER</option>
+                <option value={PaperOrderType.LIMIT}>LIMIT ORDER</option>
+                <option value={PaperOrderType.STOP_LIMIT}>STOP LIMIT ORDER</option>
+                <option value={PaperOrderType.BRACKET}>BRACKET ORDER</option>
+              </select>
             </div>
 
             {orderType !== PaperOrderType.MARKET && (
               <div className="space-y-1">
-                <label className="text-[#94A3B8] block text-[11px]">Price ($)</label>
+                <label className="text-[10px] text-[#94A3B8] uppercase block">Limit Price ($)</label>
                 <input
                   type="number"
-                  step="any"
+                  step="0.01"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  className="w-full bg-[#0B0E14] border border-[#334155] rounded px-3 py-1.5 text-[#F8FAFC] font-mono outline-none"
-                  required
+                  className="w-full bg-[#0B0E14] border border-[#334155] text-[#F8FAFC] rounded p-2 focus:border-[#3B82F6] focus:outline-none font-mono-tabular"
                 />
               </div>
             )}
 
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <label className="text-[#94A3B8] block text-[11px]">Quantity</label>
+                <label className="text-[10px] text-[#94A3B8] uppercase block">Quantity</label>
                 <input
                   type="number"
-                  step="any"
+                  step="0.01"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
-                  className="w-full bg-[#0B0E14] border border-[#334155] rounded px-3 py-1.5 text-[#F8FAFC] font-mono outline-none"
-                  required
+                  className="w-full bg-[#0B0E14] border border-[#334155] text-[#F8FAFC] rounded p-2 focus:border-[#3B82F6] focus:outline-none font-mono-tabular"
                 />
               </div>
-
               <div className="space-y-1">
-                <label className="text-[#94A3B8] block text-[11px]">Leverage (x)</label>
+                <label className="text-[10px] text-[#94A3B8] uppercase block">Leverage (x)</label>
                 <input
                   type="number"
                   value={leverage}
                   onChange={(e) => setLeverage(e.target.value)}
-                  className="w-full bg-[#0B0E14] border border-[#334155] rounded px-3 py-1.5 text-[#F8FAFC] font-mono outline-none"
-                  required
+                  className="w-full bg-[#0B0E14] border border-[#334155] text-[#F8FAFC] rounded p-2 focus:border-[#3B82F6] focus:outline-none font-mono-tabular"
                 />
               </div>
             </div>
 
-            {(orderType === PaperOrderType.BRACKET || stopLoss || takeProfit) && (
-              <div className="grid grid-cols-2 gap-2 border-t border-[#1E293B] pt-2">
-                <div className="space-y-1">
-                  <label className="text-[#F6465D] block text-[11px]">Stop Loss ($)</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={stopLoss}
-                    onChange={(e) => setStopLoss(e.target.value)}
-                    placeholder="Optional SL"
-                    className="w-full bg-[#0B0E14] border border-[#334155] rounded px-2.5 py-1 text-[#F8FAFC] font-mono outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[#00C896] block text-[11px]">Take Profit ($)</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={takeProfit}
-                    onChange={(e) => setTakeProfit(e.target.value)}
-                    placeholder="Optional TP"
-                    className="w-full bg-[#0B0E14] border border-[#334155] rounded px-2.5 py-1 text-[#F8FAFC] font-mono outline-none"
-                  />
-                </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-[10px] text-[#94A3B8] uppercase block">Stop Loss ($)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="Optional"
+                  value={stopLoss}
+                  onChange={(e) => setStopLoss(e.target.value)}
+                  className="w-full bg-[#0B0E14] border border-[#334155] text-[#F8FAFC] rounded p-2 focus:border-[#3B82F6] focus:outline-none font-mono-tabular"
+                />
               </div>
-            )}
+              <div className="space-y-1">
+                <label className="text-[10px] text-[#94A3B8] uppercase block">Take Profit ($)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="Optional"
+                  value={takeProfit}
+                  onChange={(e) => setTakeProfit(e.target.value)}
+                  className="w-full bg-[#0B0E14] border border-[#334155] text-[#F8FAFC] rounded p-2 focus:border-[#3B82F6] focus:outline-none font-mono-tabular"
+                />
+              </div>
+            </div>
 
             <button
               type="submit"
               disabled={createOrderMutation.isPending}
-              className={`w-full py-2.5 rounded-lg font-bold text-xs transition-all shadow-md mt-2 ${
+              className={`w-full py-2.5 rounded font-bold transition-all text-xs border ${
                 side === PaperOrderSide.BUY
-                  ? 'bg-[#00C896] hover:bg-[#00B084] text-[#0B0E14]'
-                  : 'bg-[#F6465D] hover:bg-[#E03E53] text-white'
+                  ? 'bg-[#00C896] hover:bg-[#00B084] text-[#0B0E14] border-[#00C896] glow-buy'
+                  : 'bg-[#F6465D] hover:bg-[#E03A50] text-white border-[#F6465D] glow-sell'
               }`}
             >
-              {createOrderMutation.isPending ? 'MATCHING PAPER ORDER...' : `EXECUTE PAPER ${side}`}
+              {createOrderMutation.isPending ? 'EXECUTING...' : `SUBMIT ${side} ORDER`}
             </button>
           </form>
         </div>
 
+        {/* Positions & Orders Tabs / Table */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl overflow-hidden shadow-sm">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[#1E293B] bg-[#0E121A]">
-              <div className="flex items-center space-x-2">
-                <Layers className="w-4 h-4 text-[#00C896]" />
-                <h3 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider">
-                  Paper Open Positions ({positions.length})
-                </h3>
-              </div>
-              <span className="text-[10px] text-[#94A3B8]">DETERMINISTIC P&L ENGINE</span>
+          {/* Active Positions Table */}
+          <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-3 shadow-sm">
+            <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
+              <h2 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider flex items-center gap-2">
+                <Layers className="w-4 h-4 text-[#3B82F6]" />
+                Open Positions ({positions.length})
+              </h2>
+              <span className="text-[10px] text-[#94A3B8]">REALTIME P&L TRACKING</span>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-xs select-none">
+              <table className="w-full text-left text-xs font-mono">
                 <thead>
-                  <tr className="bg-[#1E2638] text-[#94A3B8] uppercase text-[10px] border-b border-[#1E293B] h-9">
-                    <th className="px-3 text-left">Symbol</th>
-                    <th className="px-3 text-left">Side</th>
-                    <th className="px-3 text-right">Entry</th>
-                    <th className="px-3 text-right">Mark</th>
-                    <th className="px-3 text-right">Qty</th>
-                    <th className="px-3 text-right">Unrealized P&L</th>
-                    <th className="px-3 text-center">Leverage</th>
-                    <th className="px-3 text-center">Action</th>
+                  <tr className="bg-[#1E2638] text-[#94A3B8] text-[11px] uppercase border-b border-[#1E293B]">
+                    <th className="p-2">Symbol</th>
+                    <th className="p-2">Side</th>
+                    <th className="p-2 text-right">Entry Price</th>
+                    <th className="p-2 text-right">Mark Price</th>
+                    <th className="p-2 text-right">Size</th>
+                    <th className="p-2 text-right">Margin</th>
+                    <th className="p-2 text-right">Unrealized P&L</th>
+                    <th className="p-2 text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1E293B]">
-                  {positions.length === 0 ? (
-                    <tr>
-                      <td colSpan={8} className="p-4 text-center text-[#64748B]">No open paper positions.</td>
-                    </tr>
-                  ) : (
-                    positions.map((pos) => (
-                      <tr key={pos.id} className="hover:bg-[#28334A] h-10 transition-colors">
-                        <td className="px-3 font-bold text-[#F8FAFC]">{pos.symbol}</td>
-                        <td className="px-3">
+                  {positions.map((pos) => {
+                    const isLong = pos.side === 'LONG';
+                    const isProfit = pos.unrealizedPnL >= 0;
+
+                    return (
+                      <tr key={pos.id} className="hover:bg-[#1E2638] transition-colors">
+                        <td className="p-2 font-bold text-[#F8FAFC]">{pos.symbol}</td>
+                        <td className="p-2">
                           <span
-                            className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                              pos.side === 'LONG'
-                                ? 'bg-[#00C896]/15 text-[#00C896]'
-                                : 'bg-[#F6465D]/15 text-[#F6465D]'
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                              isLong ? 'bg-[#00C896]/15 text-[#00C896]' : 'bg-[#F6465D]/15 text-[#F6465D]'
                             }`}
                           >
-                            {pos.side === 'LONG' ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
                             {pos.side}
                           </span>
                         </td>
-                        <td className="px-3 text-right text-[#F8FAFC]">${pos.entryPrice.toLocaleString()}</td>
-                        <td className="px-3 text-right text-[#F8FAFC]">${pos.markPrice.toLocaleString()}</td>
-                        <td className="px-3 text-right text-[#94A3B8]">{pos.quantity}</td>
-                        <td className="px-3 text-right font-bold text-[#00C896]">
-                          +${pos.unrealizedPnL.toLocaleString()}
+                        <td className="p-2 text-right font-mono-tabular">${pos.entryPrice.toFixed(2)}</td>
+                        <td className="p-2 text-right font-mono-tabular">${pos.markPrice.toFixed(2)}</td>
+                        <td className="p-2 text-right font-mono-tabular">{pos.quantity}</td>
+                        <td className="p-2 text-right font-mono-tabular">${pos.marginAllocated.toFixed(2)}</td>
+                        <td
+                          className={`p-2 text-right font-bold font-mono-tabular ${
+                            isProfit ? 'text-[#00C896]' : 'text-[#F6465D]'
+                          }`}
+                        >
+                          {isProfit ? '+' : ''}${pos.unrealizedPnL.toFixed(2)}
                         </td>
-                        <td className="px-3 text-center">
-                          <span className="bg-[#1E293B] text-[#94A3B8] px-1.5 py-0.5 rounded text-[10px]">
-                            {pos.leverage}x
-                          </span>
-                        </td>
-                        <td className="px-3 text-center">
+                        <td className="p-2 text-center">
                           <button
-                            onClick={() => closePositionMutation.mutate({ id: pos.id, exitPrice: pos.markPrice })}
-                            className="bg-[#F6465D]/15 hover:bg-[#F6465D]/30 text-[#F6465D] border border-[#F6465D]/40 px-2 py-0.5 rounded text-[10px] font-bold transition-colors"
+                            onClick={() =>
+                              closePositionMutation.mutate({ id: pos.id, exitPrice: pos.markPrice })
+                            }
+                            disabled={closePositionMutation.isPending}
+                            className="px-2 py-1 bg-[#EF4444]/20 hover:bg-[#EF4444]/30 text-[#EF4444] rounded text-[10px] font-bold border border-[#EF4444]/40"
                           >
                             CLOSE
                           </button>
                         </td>
                       </tr>
-                    ))
-                  )}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           </div>
 
-          <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl overflow-hidden shadow-sm">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[#1E293B] bg-[#0E121A]">
-              <div className="flex items-center space-x-2">
-                <FileCode className="w-4 h-4 text-[#3B82F6]" />
-                <h3 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider">
-                  Pending Limit / Stop Orders ({orders.length})
-                </h3>
-              </div>
+          {/* Pending Orders Table */}
+          <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-3 shadow-sm">
+            <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
+              <h2 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-[#3B82F6]" />
+                Pending Orders ({orders.length})
+              </h2>
+              <span className="text-[10px] text-[#94A3B8]">LIMIT & BRACKET ORDERS</span>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-xs select-none">
+              <table className="w-full text-left text-xs font-mono">
                 <thead>
-                  <tr className="bg-[#1E2638] text-[#94A3B8] uppercase text-[10px] border-b border-[#1E293B] h-9">
-                    <th className="px-3 text-left">Order ID</th>
-                    <th className="px-3 text-left">Symbol</th>
-                    <th className="px-3 text-left">Type</th>
-                    <th className="px-3 text-left">Side</th>
-                    <th className="px-3 text-right">Price</th>
-                    <th className="px-3 text-right">Quantity</th>
-                    <th className="px-3 text-center">Status</th>
-                    <th className="px-3 text-center">Action</th>
+                  <tr className="bg-[#1E2638] text-[#94A3B8] text-[11px] uppercase border-b border-[#1E293B]">
+                    <th className="p-2">Order ID</th>
+                    <th className="p-2">Symbol</th>
+                    <th className="p-2">Side</th>
+                    <th className="p-2">Type</th>
+                    <th className="p-2 text-right">Price</th>
+                    <th className="p-2 text-right">Quantity</th>
+                    <th className="p-2">Status</th>
+                    <th className="p-2 text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1E293B]">
-                  {orders.length === 0 ? (
-                    <tr>
-                      <td colSpan={8} className="p-4 text-center text-[#64748B]">No pending paper orders.</td>
+                  {orders.map((ord) => (
+                    <tr key={ord.id} className="hover:bg-[#1E2638] transition-colors">
+                      <td className="p-2 text-[#94A3B8] text-[11px]">{ord.id}</td>
+                      <td className="p-2 font-bold text-[#F8FAFC]">{ord.symbol}</td>
+                      <td className="p-2">
+                        <span
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                            ord.side === 'BUY' ? 'bg-[#00C896]/15 text-[#00C896]' : 'bg-[#F6465D]/15 text-[#F6465D]'
+                          }`}
+                        >
+                          {ord.side}
+                        </span>
+                      </td>
+                      <td className="p-2 text-[#94A3B8]">{ord.orderType}</td>
+                      <td className="p-2 text-right font-mono-tabular">${ord.price ? ord.price.toFixed(2) : 'MARKET'}</td>
+                      <td className="p-2 text-right font-mono-tabular">{ord.quantity}</td>
+                      <td className="p-2 font-bold text-[#3B82F6]">{ord.status}</td>
+                      <td className="p-2 text-center">
+                        <button
+                          onClick={() => cancelOrderMutation.mutate(ord.id)}
+                          disabled={cancelOrderMutation.isPending}
+                          className="px-2 py-1 bg-[#1E293B] hover:bg-[#334155] text-[#94A3B8] hover:text-[#F8FAFC] rounded text-[10px] font-bold"
+                        >
+                          CANCEL
+                        </button>
+                      </td>
                     </tr>
-                  ) : (
-                    orders.map((ord) => (
-                      <tr key={ord.id} className="hover:bg-[#28334A] h-10 transition-colors">
-                        <td className="px-3 font-bold text-[#F8FAFC]">{ord.id}</td>
-                        <td className="px-3 text-[#F8FAFC] font-semibold">{ord.symbol}</td>
-                        <td className="px-3 text-[#3B82F6]">{ord.orderType}</td>
-                        <td className="px-3 font-bold text-[#00C896]">{ord.side}</td>
-                        <td className="px-3 text-right text-[#F8FAFC]">${ord.price || ord.stopPrice || 'MKT'}</td>
-                        <td className="px-3 text-right text-[#94A3B8]">{ord.quantity}</td>
-                        <td className="px-3 text-center">
-                          <span className="bg-[#1E293B] text-[#F59E0B] px-1.5 py-0.5 rounded text-[10px] font-bold">
-                            {ord.status}
-                          </span>
-                        </td>
-                        <td className="px-3 text-center">
-                          <button
-                            onClick={() => cancelOrderMutation.mutate(ord.id)}
-                            className="p-1 text-[#94A3B8] hover:text-[#F6465D] rounded transition-colors"
-                            title="Cancel Order"
-                          >
-                            <XCircle className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
+                  ))}
                 </tbody>
               </table>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-3 shadow-sm">
-        <div className="flex items-center space-x-2 border-b border-[#1E293B] pb-2">
-          <BookOpen className="w-4 h-4 text-[#3B82F6]" />
-          <h3 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider">
-            Paper Engine Real-Time Audit Journal
-          </h3>
-        </div>
-
-        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-          {journal.map((j) => (
-            <div
-              key={j.id}
-              className="bg-[#0B0E14] border border-[#1E293B] p-2.5 rounded-lg flex items-center justify-between text-xs"
-            >
-              <div className="flex items-center space-x-3">
-                <span className="text-[10px] bg-[#1E293B] text-[#3B82F6] px-2 py-0.5 rounded font-bold">
-                  {j.eventType}
-                </span>
-                <span className="font-bold text-[#F8FAFC]">{j.action}</span>
-                <span className="text-[#94A3B8]">{j.details}</span>
-              </div>
-              <span className="text-[10px] text-[#64748B]">{j.timestamp}</span>
-            </div>
-          ))}
         </div>
       </div>
     </motion.div>

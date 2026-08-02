@@ -13,7 +13,6 @@ import {
   Play, 
   ShieldCheck, 
   Cpu, 
-  CheckCircle2, 
   List,
   Zap,
   ArrowRight
@@ -58,21 +57,22 @@ export const LiveTradingPage: React.FC = () => {
     },
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     submitExecutionMutation.mutate({
-      decisionId: `DEC-LIVE-${Date.now()}`,
+      decisionId: `DEC-MAN-${Date.now().toString().slice(-4)}`,
       symbol: activeSymbol,
       side,
       mode,
-      quantity: parseFloat(quantity) || 0.1,
+      quantity: parseFloat(quantity),
     });
   };
 
   const sessions = sessionsData?.data || [];
   const results = resultsData?.data || [];
   const journal = journalData?.data || [];
-  const activeSession = sessions[0];
 
+  const activeSession = sessions[0];
   const stateMachineSteps = ['QUEUED', 'VALIDATED', 'SUBMITTED', 'FILLED'];
 
   return (
@@ -93,7 +93,7 @@ export const LiveTradingPage: React.FC = () => {
             Realtime TradingView data ingestion & Delta Exchange Adapter specifications.
           </p>
         </div>
-        <div className="flex items-center gap-2 bg-[#3B82F6]/10 border border-[#3B82F6]/30 px-3 py-1.5 rounded-md text-xs text-[#3B82F6]">
+        <div className="flex items-center gap-2 bg-[#3B82F6]/10 border border-[#3B82F6]/30 px-3 py-1.5 rounded-md text-xs text-[#3B82F6] font-bold">
           <ShieldCheck className="w-4 h-4 text-[#00C896]" />
           <span>SESSION ID: {activeSession?.id ?? 'NO_ACTIVE_SESSION'}</span>
         </div>
@@ -108,7 +108,7 @@ export const LiveTradingPage: React.FC = () => {
       <DeltaConnectionPanel />
 
       {/* State Machine Transition Diagram */}
-      <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-3 shadow-sm">
+      <div className="bg-[#161D2A] border border-[#1E293B] card-accent-live rounded-xl p-4 space-y-3 shadow-sm">
         <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
           <div className="flex items-center space-x-2">
             <Zap className="w-4 h-4 text-[#3B82F6]" />
@@ -122,7 +122,7 @@ export const LiveTradingPage: React.FC = () => {
         <div className="flex items-center justify-around bg-[#0B0E14] border border-[#1E293B] p-3 rounded-xl text-xs font-bold">
           {stateMachineSteps.map((step, idx) => (
             <React.Fragment key={step}>
-              <div className="px-3 py-1 bg-[#1E293B] text-[#F8FAFC] rounded border border-[#3B82F6]/30 flex items-center gap-1.5">
+              <div className="px-3 py-1 bg-[#1E293B] text-[#F8FAFC] rounded border border-[#3B82F6]/30 flex items-center gap-1.5 font-mono">
                 <span className="w-2 h-2 rounded-full bg-[#00C896] animate-pulse"></span>
                 <span>{step}</span>
               </div>
@@ -143,7 +143,7 @@ export const LiveTradingPage: React.FC = () => {
               Execution Session Dispatcher — {activeSymbol}
             </h3>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 font-bold">
             <button
               onClick={() => setMode(ExecutionMode.PAPER)}
               className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${
@@ -167,108 +167,115 @@ export const LiveTradingPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
           <div>
             <label className="text-[10px] text-[#94A3B8] uppercase block mb-1">Order Side</label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setSide('LONG')}
-                className={`py-1.5 font-bold rounded border text-xs ${
+                className={`py-2 font-bold rounded border text-xs transition-all ${
                   side === 'LONG'
-                    ? 'bg-[#00C896]/20 border-[#00C896] text-[#00C896]'
+                    ? 'bg-[#00C896] text-[#0B0E14] border-[#00C896] glow-buy'
                     : 'bg-[#0B0E14] border-[#1E293B] text-[#94A3B8]'
                 }`}
               >
-                LONG
+                BUY / LONG
               </button>
               <button
                 type="button"
                 onClick={() => setSide('SHORT')}
-                className={`py-1.5 font-bold rounded border text-xs ${
+                className={`py-2 font-bold rounded border text-xs transition-all ${
                   side === 'SHORT'
-                    ? 'bg-[#EF4444]/20 border-[#EF4444] text-[#EF4444]'
+                    ? 'bg-[#F6465D] text-white border-[#F6465D] glow-sell'
                     : 'bg-[#0B0E14] border-[#1E293B] text-[#94A3B8]'
                 }`}
               >
-                SHORT
+                SELL / SHORT
               </button>
             </div>
           </div>
 
           <div>
-            <label className="text-[10px] text-[#94A3B8] uppercase block mb-1">Quantity (Contracts / Units)</label>
+            <label className="text-[10px] text-[#94A3B8] uppercase block mb-1">Quantity (Units)</label>
             <input
               type="number"
               step="0.01"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              className="w-full bg-[#0B0E14] border border-[#1E293B] rounded px-3 py-1.5 text-[#F8FAFC] font-mono focus:outline-none focus:border-[#3B82F6]"
+              className="w-full bg-[#0B0E14] border border-[#334155] text-[#F8FAFC] rounded p-2 focus:border-[#3B82F6] focus:outline-none font-mono-tabular"
             />
           </div>
 
           <div className="flex items-end">
             <button
-              onClick={handleSubmit}
+              type="submit"
               disabled={submitExecutionMutation.isPending}
-              className="w-full py-2 bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold rounded transition-colors flex items-center justify-center space-x-2 text-xs"
+              className="w-full py-2.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold rounded text-xs transition-colors flex items-center justify-center gap-1.5 shadow-md"
             >
-              <Play className="w-4 h-4 fill-current" />
+              <Play className="w-3.5 h-3.5" />
               <span>{submitExecutionMutation.isPending ? 'DISPATCHING...' : 'DISPATCH EXECUTION SESSION'}</span>
             </button>
           </div>
-        </div>
+        </form>
       </div>
 
-      {/* Execution Results Monitor */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Results List */}
+      {/* Execution Results & Audit Log Table */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Results Stream */}
         <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-3 shadow-sm">
           <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
-            <div className="flex items-center space-x-2">
-              <CheckCircle2 className="w-4 h-4 text-[#00C896]" />
-              <h3 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider">
-                Execution Results ({results.length})
-              </h3>
-            </div>
-            <span className="text-[10px] text-[#94A3B8]">IDEMPOTENT LOG</span>
+            <h3 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider flex items-center gap-2">
+              <List className="w-4 h-4 text-[#3B82F6]" />
+              Execution Results Stream ({results.length})
+            </h3>
+            <span className="text-[10px] text-[#94A3B8]">ADAPTER LATENCY TELEMETRY</span>
           </div>
 
-          <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
             {results.map((res) => (
-              <div key={res.id} className="bg-[#0B0E14] border border-[#1E293B] p-2.5 rounded-lg text-xs space-y-1">
+              <div key={res.id} className="bg-[#0B0E14] border border-[#1E293B] p-2.5 rounded-lg text-xs space-y-1 font-mono">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-[#F8FAFC]">{res.adapter} — {res.status}</span>
-                  <span className="text-[10px] text-[#3B82F6] font-mono">{res.observability?.totalLifecycleTimeMs ?? 0}ms</span>
+                  <span className="font-bold text-[#F8FAFC]">{res.id}</span>
+                  <span
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                      res.status === 'FILLED'
+                        ? 'bg-[#00C896]/15 text-[#00C896]'
+                        : res.status === 'SUBMITTED'
+                        ? 'bg-[#3B82F6]/15 text-[#3B82F6]'
+                        : 'bg-[#EF4444]/15 text-[#EF4444]'
+                    }`}
+                  >
+                    {res.status}
+                  </span>
                 </div>
-                <div className="text-[10px] text-[#94A3B8]">{res.message}</div>
-                <div className="text-[9px] text-[#64748B]">Request: {res.requestId}</div>
+                <div className="text-[10px] text-[#94A3B8] flex items-center justify-between">
+                  <span>Adapter: {res.adapter}</span>
+                  <span className="font-mono-tabular">Total Latency: {res.observability.totalLifecycleTimeMs}ms</span>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* State Machine Journal Stream */}
+        {/* Execution Journal */}
         <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-3 shadow-sm">
           <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
-            <div className="flex items-center space-x-2">
-              <List className="w-4 h-4 text-[#3B82F6]" />
-              <h3 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider">
-                State Machine Journal Audit ({journal.length})
-              </h3>
-            </div>
-            <span className="text-[10px] text-[#94A3B8]">TRANSITION STREAM</span>
+            <h3 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider flex items-center gap-2">
+              <Activity className="w-4 h-4 text-[#3B82F6]" />
+              Execution Audit Log ({journal.length})
+            </h3>
+            <span className="text-[10px] text-[#94A3B8]">IMMUTABLE AUDIT TRAIL</span>
           </div>
 
-          <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
             {journal.map((j) => (
-              <div key={j.id} className="bg-[#0B0E14] border border-[#1E293B] p-2.5 rounded-lg text-xs space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-[#3B82F6]">{j.action}</span>
-                  <span className="text-[10px] text-[#00C896]">{j.fromState} → {j.toState}</span>
+              <div key={j.id} className="bg-[#0B0E14] border border-[#1E293B] p-2.5 rounded-lg text-xs space-y-1 font-mono">
+                <div className="flex items-center justify-between text-[#F8FAFC] font-bold">
+                  <span>{j.action}</span>
+                  <span className="text-[10px] text-[#94A3B8] font-mono-tabular">{j.timestamp.slice(11, 19)}</span>
                 </div>
-                <div className="text-[10px] text-[#94A3B8]">{j.details}</div>
-                <div className="text-[9px] text-[#64748B]">{j.timestamp}</div>
+                <p className="text-[11px] text-[#94A3B8]">{j.details}</p>
               </div>
             ))}
           </div>

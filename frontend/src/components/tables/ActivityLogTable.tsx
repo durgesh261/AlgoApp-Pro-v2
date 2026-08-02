@@ -4,7 +4,7 @@ import { ShieldCheck, Activity } from 'lucide-react';
 
 export const ActivityLogTable: React.FC = () => {
   return (
-    <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl overflow-hidden shadow-sm">
+    <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl overflow-hidden shadow-sm select-none">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#1E293B] bg-[#0E121A]">
         <div className="flex items-center space-x-2">
           <Activity className="w-4 h-4 text-[#00C896]" />
@@ -16,7 +16,7 @@ export const ActivityLogTable: React.FC = () => {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-xs font-mono select-none">
+        <table className="w-full text-xs font-mono">
           <thead>
             <tr className="bg-[#1E2638] text-[#94A3B8] uppercase text-[10px] tracking-wider border-b border-[#1E293B] h-9">
               <th className="px-3 text-left">Event ID</th>
@@ -32,7 +32,7 @@ export const ActivityLogTable: React.FC = () => {
               <tr key={act.id} className="hover:bg-[#28334A] transition-colors h-10">
                 <td className="px-3 font-bold text-[#F8FAFC]">{act.id}</td>
                 <td className="px-3">
-                  <span className="bg-[#1E293B] text-[#3B82F6] px-1.5 py-0.5 rounded text-[10px] font-semibold">
+                  <span className="bg-[#1E293B] text-[#3B82F6] px-1.5 py-0.5 rounded text-[10px] font-bold border border-[#3B82F6]/30">
                     {act.category}
                   </span>
                 </td>
@@ -44,7 +44,7 @@ export const ActivityLogTable: React.FC = () => {
                     {act.status}
                   </span>
                 </td>
-                <td className="px-3 text-right text-[#64748B] text-[11px]">{act.timestamp}</td>
+                <td className="px-3 text-right text-[#94A3B8] font-mono-tabular text-[11px]">{act.timestamp}</td>
               </tr>
             ))}
           </tbody>

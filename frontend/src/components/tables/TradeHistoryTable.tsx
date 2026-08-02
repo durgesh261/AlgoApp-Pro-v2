@@ -4,7 +4,7 @@ import { History, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 export const TradeHistoryTable: React.FC = () => {
   return (
-    <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl overflow-hidden shadow-sm">
+    <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl overflow-hidden shadow-sm select-none">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[#1E293B] bg-[#0E121A]">
         <div className="flex items-center space-x-2">
           <History className="w-4 h-4 text-[#3B82F6]" />
@@ -16,7 +16,7 @@ export const TradeHistoryTable: React.FC = () => {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-xs font-mono select-none">
+        <table className="w-full text-xs font-mono">
           <thead>
             <tr className="bg-[#1E2638] text-[#94A3B8] uppercase text-[10px] tracking-wider border-b border-[#1E293B] h-9">
               <th className="px-3 text-left">Fill ID</th>
@@ -49,18 +49,18 @@ export const TradeHistoryTable: React.FC = () => {
                     {trade.side}
                   </span>
                 </td>
-                <td className="px-3 text-right text-[#F8FAFC]">{trade.fillPrice}</td>
-                <td className="px-3 text-right text-[#94A3B8]">{trade.quantity}</td>
+                <td className="px-3 text-right text-[#F8FAFC] font-mono-tabular">{trade.fillPrice}</td>
+                <td className="px-3 text-right text-[#94A3B8] font-mono-tabular">{trade.quantity}</td>
                 <td
-                  className={`px-3 text-right font-bold ${
+                  className={`px-3 text-right font-bold font-mono-tabular ${
                     trade.isPositive ? 'text-[#00C896]' : 'text-[#F6465D]'
                   }`}
                 >
                   {trade.realizedPnL}
                 </td>
-                <td className="px-3 text-right text-[#94A3B8]">{trade.fee}</td>
-                <td className="px-3 text-[#3B82F6] font-medium">{trade.strategyName}</td>
-                <td className="px-3 text-right text-[#64748B] text-[11px]">{trade.executedAt}</td>
+                <td className="px-3 text-right text-[#94A3B8] font-mono-tabular">{trade.fee}</td>
+                <td className="px-3 text-[#3B82F6] font-semibold">{trade.strategyName}</td>
+                <td className="px-3 text-right text-[#94A3B8] font-mono-tabular text-[11px]">{trade.executedAt}</td>
               </tr>
             ))}
           </tbody>
