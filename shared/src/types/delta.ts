@@ -45,6 +45,33 @@ export interface DeltaConfigDto {
   isMockMode: boolean;
 }
 
+export interface DeltaSyncStatusDto {
+  isSynchronized: boolean;
+  lastSyncAt: string;
+  ordersCount: number;
+  positionsCount: number;
+  balanceUsd: number;
+  availableMarginUsd: number;
+}
+
+export interface DeltaStateReconciliationDto {
+  matched: boolean;
+  localOrdersCount: number;
+  remoteOrdersCount: number;
+  localPositionsCount: number;
+  remotePositionsCount: number;
+  mismatches: Array<{ id: string; type: string; details: string }>;
+  timestamp: string;
+}
+
+export interface DeltaRecoveryTestDto {
+  scenario: 'WS_DISCONNECT' | 'DUPLICATE_MESSAGE' | 'DELAYED_ACK';
+  success: boolean;
+  recoveryTimeMs: number;
+  details: string;
+  timestamp: string;
+}
+
 export interface IDeltaExecutionAdapter {
   connect(): Promise<boolean>;
   disconnect(): Promise<boolean>;

@@ -10,7 +10,9 @@ import {
   ShieldAlert, 
   CheckCircle2, 
   RefreshCcw,
-  Activity
+  Activity,
+  RotateCcw,
+  CheckCheck
 } from 'lucide-react';
 
 export const DeltaConnectionPanel: React.FC = () => {
@@ -23,6 +25,12 @@ export const DeltaConnectionPanel: React.FC = () => {
     refetchInterval: 3000,
   });
 
+  const { data: syncData } = useQuery({
+    queryKey: ['deltaSyncStatus'],
+    queryFn: deltaApi.getSyncStatus,
+    refetchInterval: 5000,
+  });
+
   const connectMutation = useMutation({
     mutationFn: (env: DeltaEnvironment) => deltaApi.connect(env),
     onSuccess: (res) => {
@@ -32,6 +40,7 @@ export const DeltaConnectionPanel: React.FC = () => {
         'success'
       );
       queryClient.invalidateQueries({ queryKey: ['deltaHealth'] });
+      queryClient.invalidateQueries({ queryKey: ['deltaSyncStatus'] });
     },
   });
 
@@ -56,7 +65,34 @@ export const DeltaConnectionPanel: React.FC = () => {
     },
   });
 
+  const reconcileMutation = useMutation({
+    mutationFn: deltaApi.reconcileState,
+    onSuccess: (res) => {
+      const isMatched = res.data.matched;
+      addToast(
+        isMatched ? 'State Reconciliation PASSED' : 'State Mismatch Detected',
+        isMatched
+          ? `Local Engine & Sandbox matched (${res.data.localOrdersCount} orders, ${res.data.localPositionsCount} positions)`
+          : `Found ${res.data.mismatches.length} state mismatches.`,
+        isMatched ? 'success' : 'danger'
+      );
+    },
+  });
+
+  const simulateRecoveryMutation = useMutation({
+    mutationFn: (scenario: string) => deltaApi.simulateRecovery(scenario),
+    onSuccess: (res) => {
+      addToast(
+        `Recovery Scenario: ${res.data.scenario}`,
+        `${res.data.details} (${res.data.recoveryTimeMs}ms)`,
+        'info'
+      );
+      queryClient.invalidateQueries({ queryKey: ['deltaHealth'] });
+    },
+  });
+
   const health = healthData?.data;
+  const sync = syncData?.data;
 
   const isConnected = health?.connectionState === DeltaConnectionState.CONNECTED;
   const isKillSwitchActive = health?.isKillSwitchActive ?? false;
@@ -68,9 +104,9 @@ export const DeltaConnectionPanel: React.FC = () => {
         <div className="flex items-center space-x-2">
           <Zap className="w-5 h-5 text-[#3B82F6]" />
           <div>
-            <h3 className="font-bold text-[#F8FAFC] text-sm">Delta Exchange Adapter Specification Panel</h3>
+            <h3 className="font-bold text-[#F8FAFC] text-sm">Delta Exchange Sandbox Testnet Specification</h3>
             <p className="text-[10px] text-[#94A3B8]">
-              Supports SANDBOX testnet & PRODUCTION configuration via IDeltaExecutionAdapter abstraction.
+              Target: https://cdn.testnet.delta.exchange | Authenticated via HMAC-SHA256 headers.
             </p>
           </div>
         </div>
@@ -157,9 +193,10 @@ export const DeltaConnectionPanel: React.FC = () => {
         </div>
 
         <div className="bg-[#0B0E14] border border-[#1E293B] p-2.5 rounded-lg">
-          <span className="text-[9px] text-[#94A3B8] uppercase block">WS Latency</span>
-          <div className="text-xs font-bold text-[#3B82F6] mt-0.5">
-            {health?.wsLatencyMs ?? 0}ms
+          <span className="text-[9px] text-[#94A3B8] uppercase block">State Synchronization</span>
+          <div className="text-xs font-bold text-[#00C896] flex items-center gap-1 mt-0.5">
+            <CheckCheck className="w-3 h-3 text-[#00C896]" />
+            <span>{sync?.isSynchronized ? 'SYNCHRONIZED' : 'PENDING'}</span>
           </div>
         </div>
 
@@ -177,6 +214,45 @@ export const DeltaConnectionPanel: React.FC = () => {
             <RefreshCcw className="w-3 h-3 text-[#94A3B8]" />
             <span>{health?.reconnectCount ?? 0}</span>
           </div>
+        </div>
+      </div>
+
+      {/* State Reconciliation & Failure Simulator Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-[#0B0E14] border border-[#1E293B] p-3 rounded-xl">
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => reconcileMutation.mutate()}
+            disabled={reconcileMutation.isPending}
+            className="px-3 py-1.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold rounded text-xs transition-colors flex items-center gap-1.5"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>{reconcileMutation.isPending ? 'RECONCILING...' : 'RECONCILE STATE'}</span>
+          </button>
+          <span className="text-[10px] text-[#94A3B8]">
+            Compares Execution Engine state vs Sandbox Testnet state.
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-[#94A3B8] font-bold">RECOVERY SIMULATOR:</span>
+          <button
+            onClick={() => simulateRecoveryMutation.mutate('WS_DISCONNECT')}
+            className="px-2 py-1 bg-[#1E293B] hover:bg-[#334155] text-[#F8FAFC] rounded text-[10px] font-bold"
+          >
+            WS DROP
+          </button>
+          <button
+            onClick={() => simulateRecoveryMutation.mutate('DUPLICATE_MESSAGE')}
+            className="px-2 py-1 bg-[#1E293B] hover:bg-[#334155] text-[#F8FAFC] rounded text-[10px] font-bold"
+          >
+            DUPLICATE MSG
+          </button>
+          <button
+            onClick={() => simulateRecoveryMutation.mutate('DELAYED_ACK')}
+            className="px-2 py-1 bg-[#1E293B] hover:bg-[#334155] text-[#F8FAFC] rounded text-[10px] font-bold"
+          >
+            DELAYED ACK
+          </button>
         </div>
       </div>
     </div>

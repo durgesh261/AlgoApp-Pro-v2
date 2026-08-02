@@ -46,6 +46,9 @@ import {
   RunPipelineInput,
   DeltaHealthDto,
   DeltaEnvironment,
+  DeltaSyncStatusDto,
+  DeltaStateReconciliationDto,
+  DeltaRecoveryTestDto,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -297,6 +300,18 @@ export const deltaApi = {
   },
   toggleKillSwitch: async (active: boolean): Promise<ApiResponse<{ isKillSwitchActive: boolean }>> => {
     const res = await apiClient.post('/execution/delta/kill-switch', { active });
+    return res.data;
+  },
+  getSyncStatus: async (): Promise<ApiResponse<DeltaSyncStatusDto>> => {
+    const res = await apiClient.get('/execution/delta/sync');
+    return res.data;
+  },
+  reconcileState: async (): Promise<ApiResponse<DeltaStateReconciliationDto>> => {
+    const res = await apiClient.post('/execution/delta/reconcile');
+    return res.data;
+  },
+  simulateRecovery: async (scenario: string): Promise<ApiResponse<DeltaRecoveryTestDto>> => {
+    const res = await apiClient.post('/execution/delta/simulate-recovery', { scenario });
     return res.data;
   },
 };

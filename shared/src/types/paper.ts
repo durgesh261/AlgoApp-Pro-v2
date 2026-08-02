@@ -28,6 +28,7 @@ export enum PaperJournalEventType {
   ORDER_CANCEL = 'ORDER_CANCEL',
   SKIPPED_OPPORTUNITY = 'SKIPPED_OPPORTUNITY',
   RISK_EVENT = 'RISK_EVENT',
+  SYSTEM_EVENT = 'SYSTEM_EVENT',
 }
 
 export interface PaperWalletDto {
@@ -38,7 +39,7 @@ export interface PaperWalletDto {
   realizedPnL: number;
   unrealizedPnL: number;
   equity: number;
-  updatedAt: string;
+  updatedAt?: string | undefined;
 }
 
 export interface PaperOrderDto {
@@ -83,7 +84,7 @@ export interface PaperRiskConfigDto {
   maxOpenPositions: number;
   maxRiskPerTradePercent: number;
   isEmergencyStopActive: boolean;
-  updatedAt: string;
+  updatedAt?: string | undefined;
 }
 
 export interface PaperTradeJournalDto {
@@ -97,13 +98,20 @@ export interface PaperTradeJournalDto {
 }
 
 export interface PaperAnalyticsDto {
-  winRatePercent: number;
-  profitFactor: number;
-  averageRR: number;
-  totalTrades: number;
-  winningTrades: number;
-  losingTrades: number;
-  maxDrawdownPercent: number;
-  equityCurve: Array<{ time: string; equity: number }>;
-  pairPerformance: Array<{ symbol: string; winRate: number; totalPnL: number }>;
+  totalTrades?: number | undefined;
+  winningTrades?: number | undefined;
+  losingTrades?: number | undefined;
+  winRate?: number | undefined;
+  winRatePercent?: number | undefined;
+  profitFactor?: number | undefined;
+  averageWin?: number | undefined;
+  averageLoss?: number | undefined;
+  averageRR?: number | undefined;
+  maxDrawdown?: number | undefined;
+  maxDrawdownPercent?: number | undefined;
+  sharpeRatio?: number | undefined;
+  expectedValue?: number | undefined;
+  netPnL?: number | undefined;
+  equityCurve?: Array<{ time?: string | undefined; timestamp?: string | undefined; equity: number }> | undefined;
+  pairPerformance?: Array<{ symbol: string; winRate: number; totalPnL: number }> | undefined;
 }

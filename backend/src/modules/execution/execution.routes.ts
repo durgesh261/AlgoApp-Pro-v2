@@ -12,6 +12,9 @@ import {
   connectDelta,
   disconnectDelta,
   toggleKillSwitch,
+  getDeltaSyncStatus,
+  reconcileDeltaState,
+  simulateDeltaRecovery,
 } from './delta.controller.js';
 
 const router = Router();
@@ -27,5 +30,8 @@ router.get('/delta/health', asyncHandler(getDeltaHealth));
 router.post('/delta/connect', asyncHandler(connectDelta));
 router.post('/delta/disconnect', asyncHandler(disconnectDelta));
 router.post('/delta/kill-switch', asyncHandler(toggleKillSwitch));
+router.get('/delta/sync', asyncHandler(getDeltaSyncStatus));
+router.post('/delta/reconcile', asyncHandler(reconcileDeltaState));
+router.post('/delta/simulate-recovery', asyncHandler(simulateDeltaRecovery));
 
 export const executionRouter = router;

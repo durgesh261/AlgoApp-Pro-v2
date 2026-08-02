@@ -12,12 +12,15 @@ import {
   PaperOrderType,
   PaperOrderStatus,
   PaperPositionSide,
+  PaperJournalEventType,
 } from '@algoapp/shared';
 
 import { DeltaConnectionManager } from './deltaConnectionManager.js';
 import { DeltaHealthMonitor } from './deltaHealthMonitor.js';
 import { EmergencyKillSwitch } from './emergencyKillSwitch.js';
 import { DeltaRetryPolicy } from './deltaRetryPolicy.js';
+import { DeltaSandboxClient } from './deltaSandboxClient.js';
+import { PaperJournalService } from '../../../paper-trading/services/paperJournal.service.js';
 
 let mockOrders: PaperOrderDto[] = [];
 let mockPositions: PaperPositionDto[] = [];
@@ -25,12 +28,18 @@ let mockPositions: PaperPositionDto[] = [];
 export class DeltaAdapter implements IDeltaExecutionAdapter {
   private environment: DeltaEnvironment;
   private connectionManager: DeltaConnectionManager;
+  private sandboxClient: DeltaSandboxClient;
   public isMockMode: boolean;
 
   constructor(environment: DeltaEnvironment = DeltaEnvironment.SANDBOX, isMockMode: boolean = true) {
     this.environment = environment;
     this.connectionManager = new DeltaConnectionManager();
+    this.sandboxClient = new DeltaSandboxClient();
     this.isMockMode = isMockMode;
+  }
+
+  public getConnectionManager(): DeltaConnectionManager {
+    return this.connectionManager;
   }
 
   public async connect(): Promise<boolean> {
@@ -38,11 +47,23 @@ export class DeltaAdapter implements IDeltaExecutionAdapter {
     await new Promise((r) => setTimeout(r, 10));
     this.connectionManager.transitionTo(DeltaConnectionState.CONNECTED);
     DeltaHealthMonitor.updateHeartbeat();
+    await PaperJournalService.logEntry(
+      PaperJournalEventType.SYSTEM_EVENT,
+      'DELTA_SANDBOX_CONNECT',
+      `Connected to Delta Exchange ${this.environment} Testnet`,
+      'BTCUSD.P'
+    );
     return true;
   }
 
   public async disconnect(): Promise<boolean> {
     this.connectionManager.transitionTo(DeltaConnectionState.DISCONNECTED);
+    await PaperJournalService.logEntry(
+      PaperJournalEventType.SYSTEM_EVENT,
+      'DELTA_SANDBOX_DISCONNECT',
+      `Disconnected from Delta Exchange ${this.environment}`,
+      'BTCUSD.P'
+    );
     return true;
   }
 
@@ -56,7 +77,7 @@ export class DeltaAdapter implements IDeltaExecutionAdapter {
 
   public async submitOrder(input: SubmitExecutionInput): Promise<ExecutionResultDto> {
     if (EmergencyKillSwitch.isKillSwitchActive()) {
-      return {
+      const rejectedResult: ExecutionResultDto = {
         id: `DLT-RES-${Date.now()}`,
         requestId: `REQ-${Date.now()}`,
         sessionId: `SESS-${Date.now()}`,
@@ -72,6 +93,15 @@ export class DeltaAdapter implements IDeltaExecutionAdapter {
         message: 'REJECTED: Platform Emergency Kill Switch is ACTIVE.',
         timestamp: new Date().toISOString(),
       };
+
+      await PaperJournalService.logEntry(
+        PaperJournalEventType.RISK_EVENT,
+        'SUBMIT_ORDER_REJECTED',
+        'Order rejected due to active Emergency Kill Switch',
+        input.symbol
+      );
+
+      return rejectedResult;
     }
 
     return DeltaRetryPolicy.executeWithRetry(async () => {
@@ -110,6 +140,13 @@ export class DeltaAdapter implements IDeltaExecutionAdapter {
       };
       mockPositions.push(position);
 
+      await PaperJournalService.logEntry(
+        PaperJournalEventType.ORDER_FILL,
+        'SUBMIT_ORDER',
+        `Submitted market order ${orderId} for ${input.quantity} ${input.symbol} @ $${fillPrice}`,
+        input.symbol
+      );
+
       return {
         id: `DLT-RES-${Date.now()}`,
         requestId: `REQ-${Date.now()}`,
@@ -135,6 +172,12 @@ export class DeltaAdapter implements IDeltaExecutionAdapter {
     if (order && input.price) {
       order.price = input.price;
     }
+    await PaperJournalService.logEntry(
+      PaperJournalEventType.SYSTEM_EVENT,
+      'MODIFY_ORDER',
+      `Modified order ${orderId} price to $${input.price}`,
+      order?.symbol || 'BTCUSD.P'
+    );
     return {
       id: `DLT-RES-MOD-${Date.now()}`,
       requestId: `REQ-${Date.now()}`,
@@ -153,6 +196,12 @@ export class DeltaAdapter implements IDeltaExecutionAdapter {
     if (order) {
       order.status = PaperOrderStatus.CANCELLED;
     }
+    await PaperJournalService.logEntry(
+      PaperJournalEventType.SYSTEM_EVENT,
+      'CANCEL_ORDER',
+      `Cancelled order ${orderId}`,
+      order?.symbol || 'BTCUSD.P'
+    );
     return {
       id: `DLT-RES-CNC-${Date.now()}`,
       requestId: `REQ-${Date.now()}`,
@@ -168,6 +217,12 @@ export class DeltaAdapter implements IDeltaExecutionAdapter {
 
   public async closePosition(symbol: string): Promise<ExecutionResultDto> {
     mockPositions = mockPositions.filter((p) => p.symbol !== symbol);
+    await PaperJournalService.logEntry(
+      PaperJournalEventType.SYSTEM_EVENT,
+      'CLOSE_POSITION',
+      `Closed position for ${symbol}`,
+      symbol
+    );
     return {
       id: `DLT-RES-CLS-${Date.now()}`,
       requestId: `REQ-${Date.now()}`,
@@ -190,6 +245,13 @@ export class DeltaAdapter implements IDeltaExecutionAdapter {
   }
 
   public async sync(): Promise<boolean> {
-    return true;
+    const syncStatus = await this.sandboxClient.fetchSyncStatus();
+    await PaperJournalService.logEntry(
+      PaperJournalEventType.SYSTEM_EVENT,
+      'SYNC',
+      `Synchronized Sandbox state (Orders: ${syncStatus.ordersCount}, Positions: ${syncStatus.positionsCount})`,
+      'BTCUSD.P'
+    );
+    return syncStatus.isSynchronized;
   }
 }
