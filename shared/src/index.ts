@@ -11,6 +11,7 @@ export * from './types/execution.js';
 export * from './types/tradingview.js';
 export * from './types/pipeline.js';
 export * from './types/delta.js';
+export * from './types/production.js';
 export * from './constants/index.js';
 export * from './validation/index.js';
 export * from './validation/paper.js';

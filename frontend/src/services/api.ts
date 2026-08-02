@@ -49,6 +49,9 @@ import {
   DeltaSyncStatusDto,
   DeltaStateReconciliationDto,
   DeltaRecoveryTestDto,
+  ProductionOverviewDto,
+  ExecutionMode,
+  BackupStatusDto,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -312,6 +315,21 @@ export const deltaApi = {
   },
   simulateRecovery: async (scenario: string): Promise<ApiResponse<DeltaRecoveryTestDto>> => {
     const res = await apiClient.post('/execution/delta/simulate-recovery', { scenario });
+    return res.data;
+  },
+};
+
+export const productionApi = {
+  getOverview: async (): Promise<ApiResponse<ProductionOverviewDto>> => {
+    const res = await apiClient.get('/production/overview');
+    return res.data;
+  },
+  setMode: async (mode: ExecutionMode, userConfirmed: boolean = false): Promise<ApiResponse<{ activeExecutionMode: ExecutionMode }>> => {
+    const res = await apiClient.post('/production/mode', { mode, userConfirmed });
+    return res.data;
+  },
+  triggerBackup: async (): Promise<ApiResponse<BackupStatusDto>> => {
+    const res = await apiClient.post('/production/backup');
     return res.data;
   },
 };

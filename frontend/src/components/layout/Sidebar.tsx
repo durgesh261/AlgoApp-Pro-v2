@@ -11,7 +11,8 @@ import {
   Settings,
   RotateCcw,
   BarChart3,
-  Server
+  Server,
+  ShieldAlert
 } from 'lucide-react';
 
 const navigationItems = [
@@ -19,6 +20,7 @@ const navigationItems = [
   { name: 'Paper Trading', path: '/paper-trading', icon: Wallet },
   { name: 'Live Trading', path: '/live-trading', icon: Activity },
   { name: 'System Monitor', path: '/system-monitor', icon: Server },
+  { name: 'Production', path: '/production-dashboard', icon: ShieldAlert },
   { name: 'Analysis', path: '/analysis', icon: LineChart },
   { name: 'Replay Terminal', path: '/replay', icon: RotateCcw },
   { name: 'Backtesting', path: '/backtest', icon: BarChart3 },

@@ -1,5 +1,6 @@
 export enum ExecutionMode {
   PAPER = 'PAPER',
+  SANDBOX = 'SANDBOX',
   LIVE = 'LIVE',
   SHADOW = 'SHADOW',
 }
@@ -45,8 +46,9 @@ export interface ExecutionRequestDto {
   ruleVersion: string;
   configVersion: string;
   orderType: 'MARKET' | 'LIMIT';
-  quantity: number;
   price?: number | undefined;
+  stopPrice?: number | undefined;
+  quantity: number;
   stopLoss?: number | undefined;
   takeProfit?: number | undefined;
   timestamp: string;
@@ -69,7 +71,7 @@ export interface ExecutionJournalDto {
   id: string;
   sessionId: string;
   requestId: string;
-  resultId: string;
+  resultId?: string | undefined;
   adapter: string;
   fromState: ExecutionStatus;
   toState: ExecutionStatus;
@@ -84,9 +86,9 @@ export interface SubmitExecutionInput {
   symbol: string;
   side: 'LONG' | 'SHORT';
   mode?: ExecutionMode | undefined;
+  idempotencyKey?: string | undefined;
   quantity: number;
   price?: number | undefined;
   stopLoss?: number | undefined;
   takeProfit?: number | undefined;
-  idempotencyKey?: string | undefined;
 }

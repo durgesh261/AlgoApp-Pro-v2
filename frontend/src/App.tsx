@@ -5,6 +5,7 @@ import { DashboardPage } from './features/dashboard/DashboardPage';
 import { PaperTradingPage } from './features/paper-trading/PaperTradingPage';
 import { LiveTradingPage } from './features/live-trading/LiveTradingPage';
 import { SystemMonitorPage } from './features/system-monitor/SystemMonitorPage';
+import { ProductionDashboardPage } from './features/production/ProductionDashboardPage';
 import { AnalysisPage } from './features/analysis/AnalysisPage';
 import { TradeJournalPage } from './features/journal/TradeJournalPage';
 import { AnalyticsPage } from './features/analytics/AnalyticsPage';
@@ -22,6 +23,7 @@ export const App: React.FC = () => {
           <Route path="/paper-trading" element={<PaperTradingPage />} />
           <Route path="/live-trading" element={<LiveTradingPage />} />
           <Route path="/system-monitor" element={<SystemMonitorPage />} />
+          <Route path="/production-dashboard" element={<ProductionDashboardPage />} />
           <Route path="/analysis" element={<AnalysisPage />} />
           <Route path="/replay" element={<ReplayPage />} />
           <Route path="/backtest" element={<BacktestingPage />} />
