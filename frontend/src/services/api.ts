@@ -15,6 +15,8 @@ import {
   EvaluateStrategySignalInput,
   DecisionDto,
   EvaluateDecisionInput,
+  DecisionExplanationDto,
+  ExplainDecisionInput,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -107,6 +109,13 @@ export const decisionApi = {
   },
   evaluateDecision: async (input: EvaluateDecisionInput): Promise<ApiResponse<DecisionDto>> => {
     const res = await apiClient.post('/decision/evaluate', input);
+    return res.data;
+  },
+};
+
+export const aiDecisionApi = {
+  explainDecision: async (input: ExplainDecisionInput): Promise<ApiResponse<DecisionExplanationDto>> => {
+    const res = await apiClient.post('/ai-decision/explain', input);
     return res.data;
   },
 };

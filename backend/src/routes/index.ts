@@ -10,6 +10,7 @@ import { challengeRouter } from '../modules/challenge/challenge.routes.js';
 import { settingsRouter } from '../modules/settings/settings.routes.js';
 import { strategyRouter } from '../modules/strategy/strategy.routes.js';
 import { decisionRouter } from '../modules/decision/decision.routes.js';
+import { aiDecisionRouter } from '../modules/ai-decision/ai-decision.routes.js';
 
 export const apiRouter = Router();
 
@@ -24,3 +25,4 @@ apiRouter.use('/challenge', challengeRouter);
 apiRouter.use('/settings', settingsRouter);
 apiRouter.use('/strategy', strategyRouter);
 apiRouter.use('/decision', decisionRouter);
+apiRouter.use('/ai-decision', aiDecisionRouter);

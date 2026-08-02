@@ -170,3 +170,50 @@ model DecisionLog {
 
   @@map("decision_logs")
 }
+
+model DecisionExplanation {
+  id              String   @id @default(uuid())
+  decisionId      String   @unique @map("decision_id")
+  symbol          String
+  decisionState   String   @map("decision_state")
+  confidenceScore Float    @map("confidence_score")
+  shortSummary    String   @map("short_summary")
+  mediumSummary   String   @map("medium_summary")
+  detailedSummary String   @map("detailed_summary")
+  timestamp       DateTime @default(now())
+
+  @@map("decision_explanations")
+}
+
+model DecisionTimeline {
+  id            String   @id @default(uuid())
+  explanationId String   @map("explanation_id")
+  stepIndex     Int      @map("step_index")
+  stage         String
+  status        String
+  description   String
+  timestamp     DateTime @default(now())
+
+  @@map("decision_timelines")
+}
+
+model DecisionReason {
+  id              String  @id @default(uuid())
+  explanationId   String  @map("explanation_id")
+  reasonCode      String  @map("reason_code")
+  humanExplanation String @map("human_explanation")
+  isPassed        Boolean @default(true) @map("is_passed")
+
+  @@map("decision_reasons")
+}
+
+model ReplayMetadata {
+  id              String   @id @default(uuid())
+  explanationId   String   @unique @map("explanation_id")
+  snapshotHash    String   @map("snapshot_hash")
+  confidenceScore Float    @map("confidence_score")
+  metadataJson    String   @map("metadata_json")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("replay_metadata")
+}
