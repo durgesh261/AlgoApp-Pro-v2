@@ -22,6 +22,10 @@ import {
   CalculateLeverageInput,
   LeverageOutputDto,
   UpdateTradingRuleConfigInput,
+  CandleDto,
+  MarketSnapshotDto,
+  MarketEventDto,
+  IngestCandleInput,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -140,6 +144,25 @@ export const tradingRulesApi = {
   },
   getRegistry: async (): Promise<ApiResponse<RuleMetadataDto[]>> => {
     const res = await apiClient.get('/rules/registry');
+    return res.data;
+  },
+};
+
+export const marketDataApi = {
+  getSnapshot: async (symbol?: string): Promise<ApiResponse<MarketSnapshotDto>> => {
+    const res = await apiClient.get('/market-data/snapshot', { params: { symbol } });
+    return res.data;
+  },
+  getCandles: async (symbol: string, limit: number = 50): Promise<ApiResponse<CandleDto[]>> => {
+    const res = await apiClient.get('/market-data/candles', { params: { symbol, limit } });
+    return res.data;
+  },
+  ingestCandle: async (input: IngestCandleInput): Promise<ApiResponse<CandleDto>> => {
+    const res = await apiClient.post('/market-data/candles', input);
+    return res.data;
+  },
+  getEvents: async (): Promise<ApiResponse<MarketEventDto[]>> => {
+    const res = await apiClient.get('/market-data/events');
     return res.data;
   },
 };

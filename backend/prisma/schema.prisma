@@ -244,3 +244,41 @@ model TradingRuleAudit {
 
   @@map("trading_rule_audits")
 }
+
+model MarketCandle {
+  id        String   @id @default(uuid())
+  symbol    String
+  timeframe String   @default("1H")
+  open      Float
+  high      Float
+  low       Float
+  close     Float
+  volume    Float
+  timestamp DateTime
+
+  @@unique([symbol, timeframe, timestamp])
+  @@map("market_candles")
+}
+
+model MarketSnapshot {
+  id           String   @id @default(uuid())
+  symbol       String   @unique
+  currentPrice Float    @map("current_price")
+  spread       Float
+  session      String   @default("NEW_YORK")
+  trend        String   @default("BULLISH")
+  volatility   String   @default("MEDIUM")
+  timestamp    DateTime @default(now())
+
+  @@map("market_snapshots")
+}
+
+model MarketEvent {
+  id          String   @id @default(uuid())
+  symbol      String
+  eventType   String   @map("event_type")
+  payloadJson String   @map("payload_json")
+  timestamp   DateTime @default(now())
+
+  @@map("market_events")
+}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { strategyApi, decisionApi, aiDecisionApi } from '../../services/api';
+import { strategyApi, decisionApi, aiDecisionApi, marketDataApi } from '../../services/api';
 import { useTerminalStore } from '../../store/useTerminalStore';
 import { useToastStore } from '../../store/useToastStore';
 import { CurrentPairWidget } from '../../components/widgets/CurrentPairWidget';
@@ -18,7 +18,8 @@ import {
   AlertOctagon,
   Clock,
   BookOpen,
-  Search
+  Search,
+  Database
 } from 'lucide-react';
 
 export const AnalysisPage: React.FC = () => {
@@ -27,6 +28,16 @@ export const AnalysisPage: React.FC = () => {
   const { addToast } = useToastStore();
 
   const [selectedDecisionId, setSelectedDecisionId] = useState<string | null>(null);
+
+  const { data: snapshotData } = useQuery({
+    queryKey: ['marketSnapshot', activeSymbol],
+    queryFn: () => marketDataApi.getSnapshot(activeSymbol),
+  });
+
+  const { data: candlesData } = useQuery({
+    queryKey: ['marketCandles', activeSymbol],
+    queryFn: () => marketDataApi.getCandles(activeSymbol, 20),
+  });
 
   const { data: zonesData } = useQuery({
     queryKey: ['strategyZones', activeSymbol],
@@ -66,6 +77,8 @@ export const AnalysisPage: React.FC = () => {
     },
   });
 
+  const snapshot = snapshotData?.data;
+  const candles = candlesData?.data || [];
   const zones = zonesData?.data || [];
   const signals = signalsData?.data || [];
   const decisions = decisionsData?.data || [];
@@ -76,26 +89,97 @@ export const AnalysisPage: React.FC = () => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      className="space-y-5 max-[#7xl] mx-auto pb-6 font-mono select-none"
+      className="space-y-5 max-w-7xl mx-auto pb-6 font-mono select-none"
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[#1E293B] pb-3">
         <div>
           <h1 className="text-xl font-bold text-[#F8FAFC] flex items-center gap-2">
             <LineChart className="w-5 h-5 text-[#3B82F6]" />
-            AI Decision Center & Explanation Inspector
+            Market Data & Decision Inspector Terminal
           </h1>
           <p className="text-xs text-[#94A3B8] mt-0.5">
-            1H Market Structure → Strategy Signals → Deterministic Decision Engine → AI Explanation Inspector.
+            Normalized Market Data (1H) → 1H Market Structure → Strategy Signals → Decision Engine → AI Inspector.
           </p>
         </div>
         <div className="flex items-center gap-2 bg-[#3B82F6]/10 border border-[#3B82F6]/30 px-3 py-1.5 rounded-md text-xs text-[#3B82F6]">
           <ShieldCheck className="w-4 h-4 text-[#00C896]" />
-          <span>DETERMINISTIC EXPLANATION ENGINE</span>
+          <span>CANONICAL 1H MARKET DATA ONLINE</span>
         </div>
       </div>
 
       <CurrentPairWidget />
+
+      {/* Market Data Inspector Banner */}
+      <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-3 shadow-sm">
+        <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
+          <div className="flex items-center space-x-2">
+            <Database className="w-4 h-4 text-[#3B82F6]" />
+            <h3 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider">
+              Market Data Snapshot — {activeSymbol}
+            </h3>
+          </div>
+          <span className="text-[10px] bg-[#1E293B] text-[#3B82F6] px-2 py-0.5 rounded font-bold">
+            SESSION: {snapshot?.session ?? 'NEW_YORK'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+          <div className="bg-[#0B0E14] border border-[#1E293B] p-2.5 rounded-lg">
+            <span className="text-[10px] text-[#94A3B8] block">Current Mark Price</span>
+            <span className="text-sm font-bold text-[#F8FAFC]">${snapshot?.currentPrice.toLocaleString() ?? '64,250.00'}</span>
+          </div>
+
+          <div className="bg-[#0B0E14] border border-[#1E293B] p-2.5 rounded-lg">
+            <span className="text-[10px] text-[#94A3B8] block">Spread</span>
+            <span className="text-sm font-bold text-[#00C896]">${snapshot?.spread ?? 0.5}</span>
+          </div>
+
+          <div className="bg-[#0B0E14] border border-[#1E293B] p-2.5 rounded-lg">
+            <span className="text-[10px] text-[#94A3B8] block">Trend Bias</span>
+            <span className="text-sm font-bold text-[#3B82F6]">{snapshot?.trend ?? 'BULLISH'}</span>
+          </div>
+
+          <div className="bg-[#0B0E14] border border-[#1E293B] p-2.5 rounded-lg">
+            <span className="text-[10px] text-[#94A3B8] block">Volatility</span>
+            <span className="text-sm font-bold text-[#F59E0B]">{snapshot?.volatility ?? 'MEDIUM'}</span>
+          </div>
+        </div>
+
+        {/* Historical Candle Table */}
+        <div className="overflow-x-auto pt-1">
+          <table className="w-full text-xs select-none">
+            <thead>
+              <tr className="bg-[#1E2638] text-[#94A3B8] uppercase text-[10px] border-b border-[#1E293B] h-8">
+                <th className="px-3 text-left">Timestamp</th>
+                <th className="px-3 text-right">Open</th>
+                <th className="px-3 text-right">High</th>
+                <th className="px-3 text-right">Low</th>
+                <th className="px-3 text-right">Close</th>
+                <th className="px-3 text-right">Volume</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#1E293B]">
+              {candles.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-3 text-center text-[#64748B]">No 1H candles loaded.</td>
+                </tr>
+              ) : (
+                candles.map((c) => (
+                  <tr key={c.id} className="hover:bg-[#28334A] h-8 transition-colors text-[11px]">
+                    <td className="px-3 text-[#94A3B8]">{c.timestamp}</td>
+                    <td className="px-3 text-right text-[#F8FAFC]">${c.open.toLocaleString()}</td>
+                    <td className="px-3 text-right text-[#00C896]">${c.high.toLocaleString()}</td>
+                    <td className="px-3 text-right text-[#F6465D]">${c.low.toLocaleString()}</td>
+                    <td className="px-3 text-right font-bold text-[#F8FAFC]">${c.close.toLocaleString()}</td>
+                    <td className="px-3 text-right text-[#94A3B8]">{c.volume.toLocaleString()}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {/* Decision Inspector Panel (If selected) */}
       {explanation && (
