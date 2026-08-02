@@ -1,486 +1,387 @@
-# AlgoApp Pro v2 — Design System Specification
+# AlgoApp Pro v2 — Master Design System Specification
 
 ## Table of Contents
 
-- [1. Overview & Aesthetic Vision](#1-overview--aesthetic-vision)
+- [1. Design Philosophy](#1-design-philosophy)
 - [2. Color Palette](#2-color-palette)
-- [3. Typography & Financial Number Formatting](#3-typography--financial-number-formatting)
-- [4. Spacing & Grid System](#4-spacing--grid-system)
-- [5. Shadows & Elevation](#5-shadows--elevation)
-- [6. Glassmorphism & Surface Materials](#6-glassmorphism--surface-materials)
-- [7. Card Components & Containers](#7-card-components--containers)
-- [8. Financial Data Grids & Tables](#8-financial-data-grids--tables)
-- [9. Buttons & Interactive Controls](#9-buttons--interactive-controls)
-- [10. Inputs & Form Controls](#10-inputs--form-controls)
-- [11. Dropdowns, Selects & Context Menus](#11-dropdowns-selects--context-menus)
-- [12. Sidebar Navigation](#12-sidebar-navigation)
-- [13. Top Navbar & Header](#13-top-navbar--header)
-- [14. Financial Charts & Visualizations](#14-financial-charts--visualizations)
-- [15. Status Colors & Execution Badges](#15-status-colors--execution-badges)
-- [16. Iconography Guidelines](#16-iconography-guidelines)
-- [17. Notifications & Alert Toast System](#17-notifications--alert-toast-system)
-- [18. Empty States](#18-empty-states)
-- [19. Loading States & Skeletons](#19-loading-states--skeletons)
-- [20. Error States & Fail-Closed Alerts](#20-error-states--fail-closed-alerts)
-- [21. Responsive Breakpoints & Adaptability](#21-responsive-breakpoints--adaptability)
-- [22. Animation Guidelines & Micro-Interactions](#22-animation-guidelines--micro-interactions)
-- [23. Design Tokens & CSS Custom Properties](#23-design-tokens--css-custom-properties)
+- [3. Typography](#3-typography)
+- [4. Layout System](#4-layout-system)
+- [5. Components](#5-components)
+- [6. Charts](#6-charts)
+- [7. Icons](#7-icons)
+- [8. Loading States](#8-loading-states)
+- [9. Empty States](#9-empty-states)
+- [10. Error States](#10-error-states)
+- [11. Animation Guidelines](#11-animation-guidelines)
+- [12. Mobile Design](#12-mobile-design)
+- [13. Desktop Design](#13-desktop-design)
+- [14. Tablet Design](#14-tablet-design)
+- [15. Accessibility](#15-accessibility)
+- [16. Theme Tokens](#16-theme-tokens)
+- [17. Design Rules](#17-design-rules)
+- [18. UI Do's and Don'ts](#18-ui-dos-and-donts)
 
 ---
 
-## 1. Overview & Aesthetic Vision
+## 1. Design Philosophy
 
-The **AlgoApp Pro v2 Design System** defines the visual, structural, and behavioral standards for the web platform. Designed explicitly for high-frequency trading research, risk monitoring, signal evaluation, and automated execution, the design language bridges four major design influences:
+The **AlgoApp Pro v2 Design System** is the single source of truth for the application's visual language, component architecture, and interaction patterns. 
 
-1. **TradingView Desktop**: High-contrast dark workspaces, high data density, precise financial charting, and unmistakable state badges.
-2. **Binance Desktop**: Rapid visual scannability, clear order book/fill typography, explicit buy/sell color contrasts, and compact action controls.
-3. **Bloomberg Terminal**: Zero-clutter information architecture, tabular numeric alignment, zero decorative latency, and functional density.
-4. **Modern Premium SaaS**: Sleek glassmorphism accents, refined dark-mode surface elevation layers, subtle micro-animations, and accessible WCAG 2.2 AA contrast ratios.
+Designed for high-frequency algorithmic research, controlled automated execution, risk governance, and live operational monitoring, the system synthesizes four iconic inspirations:
 
-### Core Principles
-- **Clarity Over Ornamentation**: Information hierarchy must always elevate execution safety, risk utilization, and data freshness above visual decoration.
-- **Unmistakable Mode Distinction**: Live trading environments, paper simulation modes, and emergency kill-switch states must be instantly recognizable via distinct visual headers and borders.
-- **Tabular Precision**: Every price, quantity, profit/loss (P&L), and timestamp metric uses monospace font variants with aligned decimals to prevent layout jitter during live market updates.
+1. **TradingView Desktop**: Precision financial charting, dark workspace contrast, high data density, clear drawing overlays, and unambiguous indicator badges.
+2. **Binance Desktop**: Rapid visual scannability, explicit buy/sell color contrasts, compact order-book typography, and high-frequency fill visibility.
+3. **Bloomberg Terminal**: Functional data density, tabular numeric alignment, zero visual latency, and clutter-free information hierarchy.
+4. **Modern SaaS Quality**: Sleek glassmorphism accents, stacked dark surface elevation, smooth micro-interactions, and accessible WCAG 2.2 AA compliance.
+
+### Core Architectural Principles
+- **Dark Theme First**: Engineered from the ground up for low-eyestrain dark environments used by active quantitative traders.
+- **Safety Precedes Decoration**: Visual elements prioritize live execution safety, risk utilization, and data freshness above aesthetic flair.
+- **Unmistakable Mode Distinction**: Live trading environments, paper simulation modes, and emergency kill-switch states are immediately distinguishable by high-contrast environment bars and distinct border accents.
+- **Tabular Decimal Precision**: Every financial number, price, quantity, P&L value, and timestamp uses monospace font variants with fixed decimal alignment to prevent layout jitter during live market stream updates.
 
 ---
 
 ## 2. Color Palette
 
-The color system uses curated HSL values built for dark-mode financial interfaces. Binary floating-point visual ambiguity is eliminated by pairing semantic colors with high-contrast text tokens.
+The color system uses curated HSL values built for dark-mode financial interfaces.
 
-### Surface & Neutral Palette
+### Background Colors
 | Token Name | Hex Code | HSL Value | Description / Usage |
 | --- | --- | --- | --- |
 | `--bg-base` | `#0B0E14` | `hsl(222, 28%, 6%)` | Root application background |
-| `--bg-surface-1` | `#121722` | `hsl(220, 31%, 10%)` | Primary container & panel background |
-| `--bg-surface-2` | `#1A2130` | `hsl(220, 30%, 15%)` | Elevated cards, dropdowns, and modals |
-| `--bg-surface-3` | `#242E42` | `hsl(220, 29%, 20%)` | Hover states, active tabs, search bars |
-| `--border-subtle` | `#1E293B` | `hsl(217, 33%, 17%)` | Primary structural grid lines & dividers |
-| `--border-strong` | `#334155` | `hsl(215, 25%, 27%)` | Interactive control borders, focus rings |
+| `--bg-root` | `#0E121A` | `hsl(220, 27%, 8%)` | Main viewport container background |
+| `--bg-app` | `#121722` | `hsl(220, 31%, 10%)` | Application workspace background |
 
-### Financial & Trading Action Palette
+### Surface & Card Colors
 | Token Name | Hex Code | HSL Value | Description / Usage |
 | --- | --- | --- | --- |
-| `--trade-buy` | `#00C896` | `hsl(165, 100%, 39%)` | Buy / Long orders, positive P&L, bullish bars |
-| `--trade-buy-bg` | `rgba(0, 200, 150, 0.12)` | `hsla(165, 100%, 39%, 0.12)` | Buy button hover background, profit highlights |
-| `--trade-sell` | `#F6465D` | `hsl(352, 90%, 62%)` | Sell / Short orders, negative P&L, bearish bars |
-| `--trade-sell-bg` | `rgba(246, 70, 93, 0.12)` | `hsla(352, 90%, 62%, 0.12)` | Sell button hover background, loss highlights |
-| `--trade-accent` | `#3B82F6` | `hsl(217, 91%, 60%)` | Primary action buttons, active navigation items |
-| `--trade-warning` | `#F59E0B` | `hsl(38, 92%, 50%)` | Risk limit warnings, deferred state, stale data |
+| `--bg-surface-1` | `#161D2A` | `hsl(220, 31%, 12%)` | Primary panel & sidebar background |
+| `--bg-surface-2` | `#1E2638` | `hsl(220, 29%, 17%)` | Elevated cards, dropdowns, and popovers |
+| `--bg-surface-3` | `#28334A` | `hsl(220, 30%, 22%)` | Active row hover states, search bars |
+| `--bg-card-default`| `#161D2A` | `hsl(220, 31%, 12%)` | Default container card fill |
+| `--bg-card-hover`  | `#1E2638` | `hsl(220, 29%, 17%)` | Interactive card hover fill |
+| `--bg-card-active` | `#243046` | `hsl(220, 32%, 21%)` | Selected card fill |
 
-### Semantic Text Tokens
-| Token Name | Hex Code | Usage |
-| --- | --- | --- |
-| `--text-primary` | `#F8FAFC` | Main headings, primary values, active tab titles |
-| `--text-secondary` | `#94A3B8` | Subtitles, field labels, metadata headers |
-| `--text-muted` | `#64748B` | Disabled labels, historical timestamps, hints |
-| `--text-inverse` | `#0F172A` | Text on high-light backgrounds (e.g. badges) |
+### Border Colors
+| Token Name | Hex Code | HSL Value | Description / Usage |
+| --- | --- | --- | --- |
+| `--border-subtle` | `#1E293B` | `hsl(217, 33%, 17%)` | Divider lines & table grid borders |
+| `--border-strong` | `#334155` | `hsl(215, 25%, 27%)` | Input borders, card outlines |
+| `--border-focus`  | `#3B82F6` | `hsl(217, 91%, 60%)` | Active input focus rings |
+| `--border-accent` | `#60A5FA` | `hsl(217, 91%, 68%)` | Selected element highlight borders |
+
+### Functional & Trading Colors
+| Token Name | Hex Code | HSL Value | Usage |
+| --- | --- | --- | --- |
+| `--color-accent-primary` | `#3B82F6` | `hsl(217, 91%, 60%)` | Primary actions, links, active tabs |
+| `--color-success` | `#10B981` | `hsl(160, 84%, 39%)` | System health OK, confirmation badges |
+| `--color-warning` | `#F59E0B` | `hsl(38, 92%, 50%)` | Risk warning thresholds, stale data |
+| `--color-danger`  | `#EF4444` | `hsl(0, 84%, 60%)` | Kill-switch, errors, execution halts |
+| `--color-info`    | `#06B6D4` | `hsl(189, 94%, 43%)` | Informational callouts, telemetry |
+| `--trade-profit`  | `#00C896` | `hsl(165, 100%, 39%)` | Buy/Long orders, positive P&L |
+| `--trade-profit-bg`| `rgba(0, 200, 150, 0.12)` | `hsla(165, 100%, 39%, 0.12)` | Positive P&L cell background |
+| `--trade-loss`    | `#F6465D` | `hsl(352, 90%, 62%)` | Sell/Short orders, negative P&L |
+| `--trade-loss-bg`  | `rgba(246, 70, 93, 0.12)` | `hsla(352, 90%, 62%, 0.12)` | Negative P&L cell background |
+
+### Zone & Confidence Colors
+| Token Name | Hex Code | HSL Value | Usage |
+| --- | --- | --- | --- |
+| `--zone-overbought` | `#F59E0B` | `hsl(38, 92%, 50%)` | Chart overbought indicator zone |
+| `--zone-oversold`   | `#3B82F6` | `hsl(217, 91%, 60%)` | Chart oversold indicator zone |
+| `--zone-neutral`    | `#64748B` | `hsl(215, 16%, 47%)` | Neutral strategy range |
+| `--confidence-high` | `#00C896` | `hsl(165, 100%, 39%)` | High decision confidence indicator |
+| `--confidence-mid`  | `#F59E0B` | `hsl(38, 92%, 50%)` | Medium decision confidence |
+| `--confidence-low`  | `#F97316` | `hsl(24, 95%, 53%)` | Low decision confidence warning |
+| `--confidence-invalid`| `#64748B`| `hsl(215, 16%, 47%)` | Invalid / expired signal state |
 
 ---
 
-## 3. Typography & Financial Number Formatting
+## 3. Typography
 
 ### Font Families
-- **Primary Interface Font**: `Inter`, `-apple-system`, `BlinkMacSystemFont`, `Segoe UI`, `sans-serif` — Used for headings, labels, navigation, and body copy.
-- **Monospace & Financial Data Font**: `JetBrains Mono`, `Fira Code`, `Consolas`, `monospace` — Used for prices, quantities, order IDs, JSON payloads, and timestamps.
+- **Primary Interface Font**: `Inter`, `-apple-system`, `BlinkMacSystemFont`, `Segoe UI`, `Roboto`, `sans-serif` — Used for navigation, labels, page titles, and body copy.
+- **Monospace Financial Font**: `JetBrains Mono`, `Fira Code`, `Consolas`, `monospace` — Mandatory for all financial values, prices, quantities, order IDs, JSON payloads, and timestamps.
 
-### Type Scale & Hierarchy
-| Level | Font Size | Line Height | Weight | Font Family | Usage |
+### Type Hierarchy
+| Scale Name | Size (px / rem) | Line Height | Weight | Family | Application |
 | --- | --- | --- | --- | --- | --- |
-| **Display 1** | `28px (1.75rem)` | `34px` | `700` | Primary | Major metrics, Dashboard P&L summaries |
-| **Heading 1** | `22px (1.375rem)`| `28px` | `600` | Primary | Page titles, Section headers |
-| **Heading 2** | `18px (1.125rem)`| `24px` | `600` | Primary | Card titles, Modal headers |
-| **Subheading** | `15px (0.9375rem)`| `20px` | `500` | Primary | Form group labels, Tab titles |
-| **Body Primary**| `14px (0.875rem)` | `20px` | `400` | Primary | Standard table text, Descriptions |
-| **Body Compact**| `13px (0.8125rem)`| `18px` | `400` | Primary/Mono | Dense table rows, Grid cell text |
-| **Caption / Badge**| `11px (0.6875rem)`| `14px` | `600` | Primary/Mono | Badges, Field hints, Timestamps |
+| **Display 1** | `28px (1.75rem)` | `34px` | `700` | Primary | Major Metric Cards, P&L Summaries |
+| **Heading 1** | `22px (1.375rem)`| `28px` | `600` | Primary | Page Titles, Main Dashboard Header |
+| **Heading 2** | `18px (1.125rem)`| `24px` | `600` | Primary | Section Headers, Card Titles |
+| **Subheading**| `15px (0.9375rem)`| `20px` | `500` | Primary | Modal Headers, Tab Titles |
+| **Body Primary**| `14px (0.875rem)` | `20px` | `400` | Primary | Form Labels, Descriptions |
+| **Body Compact**| `13px (0.8125rem)`| `18px` | `400` | Primary/Mono | Table Rows, Data Grids |
+| **Caption / Badge**| `11px (0.6875rem)`| `14px` | `600` | Primary/Mono | Badges, Timestamps, Table Headers |
 
-### Monospace Financial Formatting Rules
-1. **Decimal Alignment**: Financial tables must right-align numeric cells (`text-align: right`) and enable `font-variant-numeric: tabular-nums lining-nums`.
-2. **Explicit Signs**: Positive financial values always prefix with explicit `+` (e.g., `+$1,245.50`), rendered in `--trade-buy`. Negative values prefix with `-` (e.g., `-$430.12`), rendered in `--trade-sell`.
-3. **Zero State**: Zero value P&L renders as `0.00000000` in `--text-muted`.
+### Numeric Display & Monospace Formatting Rules
+1. **Tabular Numerals**: Monospace numeric text must include `font-variant-numeric: tabular-nums lining-nums`.
+2. **Explicit Financial Signs**: Positive values prefix with `+` (e.g. `+$1,450.00`) in `--trade-profit`. Negative values prefix with `-` (e.g. `-$210.50`) in `--trade-loss`. Zero values render as `0.00000000` in `--text-muted`.
+3. **Cell Alignment**: Numeric columns in tables are strictly right-aligned (`text-align: right`).
 
 ---
 
-## 4. Spacing & Grid System
+## 4. Layout System
 
-The design system is built on a **4px / 8px baseline grid**.
-
-### Spacing Scale Tokens
-| Token | Value | Common Application |
+### Spatial Metrics
+| Layout Token | Value | Description |
 | --- | --- | --- |
-| `--space-1` | `4px (0.25rem)` | Tight icon-to-text gap, badge padding |
-| `--space-2` | `8px (0.50rem)` | Button inline padding, input icon offsets |
-| `--space-3` | `12px (0.75rem)` | Card internal element gaps, table cell vertical padding |
-| `--space-4` | `16px (1.00rem)` | Standard card padding, grid gap baseline |
-| `--space-6` | `24px (1.50rem)` | Page section padding, container margins |
-| `--space-8` | `32px (2.00rem)` | Major layout split gaps, modal inner margins |
+| `--sidebar-width-expanded` | `240px` | Full navigation sidebar width |
+| `--sidebar-width-collapsed` | `64px` | Icon-only collapsed sidebar width |
+| `--header-height` | `56px` | Top navbar height |
+| `--card-spacing-tight` | `12px` | Dense data grid card gaps |
+| `--card-spacing-standard`| `16px` | Standard dashboard layout spacing |
+| `--card-spacing-loose` | `24px` | Detailed admin / settings spacing |
 
-### Layout Container Widths
-- **Full Trading Layout**: `100%` viewport width with fixed sidebars.
-- **Standard Dashboard**: `max-width: 1600px` centered.
-- **Focused Admin / Identity Container**: `max-width: 1024px` centered.
+### Baseline Grid & Spacing Scale
+The spatial model uses an **8px baseline grid** (with a 4px sub-grid for badges and tight controls):
+- `4px`, `8px`, `12px`, `16px`, `24px`, `32px`, `48px`, `64px`.
 
----
-
-## 5. Shadows & Elevation
-
-Dark mode relies on subtle borders and stacked surface colors combined with elevation shadows.
-
-```css
-/* Elevation 1: Embedded panels & subtle card surfaces */
---shadow-elevation-1: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
-
-/* Elevation 2: Floating cards, dropdown menus, context popovers */
---shadow-elevation-2: 0 4px 12px -2px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-
-/* Elevation 3: Modals, slide-over panels, critical alerts */
---shadow-elevation-3: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
-
-/* Glow Effects for Execution States */
---shadow-glow-buy: 0 0 12px rgba(0, 200, 150, 0.25);
---shadow-glow-sell: 0 0 12px rgba(246, 70, 93, 0.25);
---shadow-glow-focus: 0 0 0 2px rgba(59, 130, 246, 0.5);
-```
+### Responsive Breakpoints
+| Breakpoint | Min Width | Target Device | Layout Behavior |
+| --- | --- | --- | --- |
+| `sm` | `640px` | Mobile (Landscape) | Single column stacked layout |
+| `md` | `768px` | Tablet (Portrait) | Collapsed sidebar, 2-column grid |
+| `lg` | `1024px` | Tablet (Landscape) / Laptop | 2-column layout with tabbed drawers |
+| `xl` | `1280px` | Standard Desktop | 3-column workstation layout |
+| `2xl` | `1440px` | Large Workstation | Full 3-column layout + execution panel |
+| `3xl` | `1920px` | Multi-Monitor Setup | 4-column multi-pane trading layout |
 
 ---
 
-## 6. Glassmorphism & Surface Materials
+## 5. Components
 
-Glassmorphism provides visual depth for top navigation bars, overlay panels, and active floating controls.
+### 5.1 Buttons
+- **Primary Button**: Background `--color-accent-primary`, hover `hsl(217, 91%, 52%)`, white text, 6px border radius.
+- **Buy / Long Button**: Background `--trade-profit` (`#00C896`), dark text (`#0B0E14`), hover glow `--shadow-glow-buy`.
+- **Sell / Short Button**: Background `--trade-loss` (`#F6465D`), white text, hover glow `--shadow-glow-sell`.
+- **Danger / Kill-Switch Button**: Background `#DC2626`, bold text, red glow (`0 0 14px rgba(220,38,38,0.4)`).
+- **Secondary / Outline**: Background `--bg-surface-2`, border `--border-strong`, hover `--bg-surface-3`.
+- **Sizes**: Small (`28px` height, `11px` text), Medium (`36px` height, `13px` text), Large (`44px` height, `15px` text).
 
-```css
-/* Glass Card Material */
-.glass-panel {
-  background: rgba(18, 23, 34, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
+### 5.2 Cards
+- **Container Card**: `--bg-surface-1`, `1px solid --border-subtle`, `border-radius: 8px`.
+- **Environment Card Accents**:
+  - **Paper Mode**: Top border `3px solid #3B82F6` (Blue).
+  - **Live Mode**: Top border `3px solid #F59E0B` (Amber) with "LIVE TRADING" tag.
 
-/* Floating Glass Header */
-.glass-header {
-  background: rgba(11, 14, 20, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(30, 41, 59, 0.8);
-}
-```
+### 5.3 Tables & Data Grids
+- **Header Row**: Height `36px`, background `--bg-surface-2`, uppercase `11px` caption text in `--text-secondary`, border bottom `1px solid --border-strong`.
+- **Data Rows**: Height `40px` (dense) or `48px` (standard), hover fill `--bg-surface-3`, cursor `pointer`.
+- **Numeric Cells**: Right-aligned, monospace font, tabular numerals.
 
----
+### 5.4 Forms & Inputs
+- **Input Field**: Height `36px`, fill `--bg-base`, border `1px solid --border-strong`, text `--text-primary`, focus ring `0 0 0 2px rgba(59, 130, 246, 0.4)`.
+- **Number Input with Stepper**: Integrated `+` / `-` stepper buttons with exact decimal scale validation.
 
-## 7. Card Components & Containers
+### 5.5 Dropdowns & Selects
+- **Menu Panel**: Surface `--bg-surface-2`, border `1px solid --border-strong`, shadow `var(--shadow-elevation-2)`.
+- **Searchable Select**: Search input pinned to top of dropdown list.
 
-Cards group trading metrics, risk utilization gauges, and strategy controls.
+### 5.6 Tabs & Segmented Controls
+- **Underline Tabs**: Active tab displays `--color-accent-primary` bottom bar (`2px`).
+- **Pill Tabs**: Active tab displays fill `--bg-surface-3` with white text.
 
-### Card Variants
-1. **Standard Card**: Dark surface (`--bg-surface-1`), 1px subtle border (`--border-subtle`), 8px border radius (`border-radius: 8px`).
-2. **Glass Card**: Semi-transparent background with backdrop-filter blur for header widgets.
-3. **Interactive / Selectable Card**: Hover state transition brightening background to `--bg-surface-2` with `--trade-accent` border highlighting.
-4. **Environment-Gated Card**:
-   - **Paper Mode**: Top border accent `3px solid #3B82F6` (Blue).
-   - **Live Mode**: Top border accent `3px solid #F59E0B` (Amber) with "LIVE TRADING" badge.
+### 5.7 Badges & Status Chips
+- **Strategy State Badges**:
+  - `draft`: Muted gray (`#94A3B8`).
+  - `validated`: Blue (`#3B82F6`).
+  - `paper_enabled`: Emerald green (`#00C896`).
+  - `live_approved`: Amber alert (`#F59E0B`).
+  - `paused`: Orange (`#F97316`).
 
----
+### 5.8 Tooltips
+- Surface `--bg-surface-3`, border `1px solid --border-strong`, text `12px` `--text-primary`, z-index `9999`.
 
-## 8. Financial Data Grids & Tables
+### 5.9 Dialogs & Modals
+- Backdrop fill `rgba(11, 14, 20, 0.75)` with `backdrop-filter: blur(8px)`.
+- Container `--bg-surface-1`, border `1px solid --border-strong`, max-width `560px` for standard modals, shadow `var(--shadow-elevation-3)`.
 
-Financial tables require extreme readability, zero visual clutter, sticky headers, and compact padding.
+### 5.10 Drawers & Slide-Over Panels
+- Slide from `right`, width `480px`, surface `--bg-surface-1`, border-left `1px solid --border-strong`.
 
-### Table Specifications
-- **Header Row**: Height `36px`, background `--bg-surface-2`, font size `12px`, uppercase, bold (`600`), text color `--text-secondary`, border bottom `1px solid --border-strong`.
-- **Data Rows**: Height `40px` (dense mode) or `48px` (standard mode), hover background `--bg-surface-3`.
-- **Zebra Striping**: Optional alternate row background `rgba(255, 255, 255, 0.015)`.
-- **Cell Alignment**: Text fields left-aligned; Numeric/Financial fields right-aligned; Status badges centered.
-
----
-
-## 9. Buttons & Interactive Controls
-
-Buttons are high-contrast, touch-friendly, and provide clear active/hover/disabled states.
-
-### Button Variants & CSS Specifications
-
-```css
-/* Base Button Properties */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-family: var(--font-primary);
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: 6px;
-  padding: 8px 16px;
-  transition: all 0.15s ease-in-out;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-/* Primary Action Button */
-.btn-primary {
-  background-color: var(--trade-accent);
-  color: #FFFFFF;
-}
-.btn-primary:hover {
-  background-color: hsl(217, 91%, 52%);
-  box-shadow: var(--shadow-glow-focus);
-}
-
-/* Buy / Long Order Button */
-.btn-buy {
-  background-color: var(--trade-buy);
-  color: #0B0E14;
-}
-.btn-buy:hover {
-  background-color: hsl(165, 100%, 34%);
-  box-shadow: var(--shadow-glow-buy);
-}
-
-/* Sell / Short Order Button */
-.btn-sell {
-  background-color: var(--trade-sell);
-  color: #FFFFFF;
-}
-.btn-sell:hover {
-  background-color: hsl(352, 90%, 54%);
-  box-shadow: var(--shadow-glow-sell);
-}
-
-/* Secondary / Outline Button */
-.btn-secondary {
-  background-color: var(--bg-surface-2);
-  border-color: var(--border-strong);
-  color: var(--text-primary);
-}
-.btn-secondary:hover {
-  background-color: var(--bg-surface-3);
-  border-color: var(--text-secondary);
-}
-
-/* Danger / Emergency Kill-Switch Button */
-.btn-danger {
-  background-color: #DC2626;
-  color: #FFFFFF;
-}
-.btn-danger:hover {
-  background-color: #B91C1C;
-  box-shadow: 0 0 14px rgba(220, 38, 38, 0.4);
-}
-```
+### 5.11 Toast Notifications
+- Position: Top-Right (`top: 16px`, `right: 16px`). Width `380px`.
+- Auto-dismiss: Critical (Manual), Warning (8s), Success (4s), Info (4s).
 
 ---
 
-## 10. Inputs & Form Controls
+## 6. Charts
 
-Form controls must handle search filters, strategy configuration parameters, and numerical inputs without precision loss.
+### 6.1 Trading Chart (Candlestick / OHLC)
+- **Bullish Bar / Wick**: `--trade-profit` (`#00C896`).
+- **Bearish Bar / Wick**: `--trade-loss` (`#F6465D`).
+- **Grid Lines**: Horizontal & vertical dotted lines in `rgba(255, 255, 255, 0.04)`.
+- **Crosshair**: White `50%` opacity dotted lines with price/time axis labels.
 
-### Input Design Specifications
-- **Background**: `--bg-base` (`#0B0E14`).
-- **Border**: `1px solid --border-strong`.
-- **Text Color**: `--text-primary` with monospace font for numerical inputs.
-- **Focus Ring**: `border-color: --trade-accent`, `box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3)`.
-- **Error State**: `border-color: --trade-sell`, `box-shadow: 0 0 0 2px rgba(246, 70, 93, 0.3)`.
+### 6.2 Equity Curve Chart
+- Line stroke `2px` in `--color-accent-primary` (`#3B82F6`).
+- Area fill linear gradient: Top `rgba(59, 130, 246, 0.25)` to Bottom `rgba(59, 130, 246, 0.0)`.
 
----
+### 6.3 PnL & Win Rate Charts
+- Realized profit bars in `--trade-profit`, realized loss bars in `--trade-loss`.
+- Win rate donut chart: Win segment `--trade-profit`, Loss segment `--trade-loss`, Break-even `--text-muted`.
 
-## 11. Dropdowns, Selects & Context Menus
-
-Dropdown menus use high-elevation surfaces (`--bg-surface-2`) to float above data grids.
-
-### Styling Specs
-- **Menu Container**: `border: 1px solid --border-strong`, `border-radius: 8px`, `box-shadow: var(--shadow-elevation-2)`, `background: --bg-surface-2`.
-- **Menu Item**: Height `36px`, padding `8px 12px`, text `--text-primary`, rounded `4px`.
-- **Selected Item**: Background `rgba(59, 130, 246, 0.15)`, text color `--trade-accent`, bold weight (`600`).
-- **Hover Item**: Background `--bg-surface-3`.
+### 6.4 Challenge Progress Chart
+- Target balance line: Dotted green line (`#10B981`).
+- Drawdown limit threshold: Solid red line (`#EF4444`).
 
 ---
 
-## 12. Sidebar Navigation
+## 7. Icons
 
-The sidebar supports both **Expanded (240px)** and **Collapsed (64px)** modes.
-
-### Visual States
-- **Container**: Width `240px`, background `--bg-surface-1`, border-right `1px solid --border-subtle`.
-- **Active Navigation Item**: Left border `3px solid --trade-accent`, background `rgba(59, 130, 246, 0.12)`, text `--text-primary`.
-- **Inactive Item**: Text `--text-secondary`, hover background `--bg-surface-2`, hover text `--text-primary`.
-- **Environment Indicator**: Bottom section badge displaying active Tenant Name, Account Mode (`PAPER` vs `LIVE`), and Environment Health.
-
----
-
-## 13. Top Navbar & Header
-
-The Navbar acts as the central command bar for organization switching and system health observation.
-
-### Header Element Layout
-1. **Left**: Logo & Organization Context Selector dropdown.
-2. **Center**: System Status Indicator (`HEALTHY` [Green dot], `DEGRADED` [Amber dot]), Market Data Freshness badge (`Data lag: 14ms`).
-3. **Right**: Active Account Mode Selector (`Paper Account` vs `Live Account`), Notifications Inbox Bell with unread counter, User Profile avatar.
-
----
-
-## 14. Financial Charts & Visualizations
-
-Charts use high-visibility color sets matching TradingView dark defaults.
-
-### Chart Color Specifications
-- **Bullish Candle / Line**: `--trade-buy` (`#00C896`).
-- **Bearish Candle / Line**: `--trade-sell` (`#F6465D`).
-- **Chart Grid Lines**: `rgba(255, 255, 255, 0.04)`.
-- **Crosshair Line**: `rgba(255, 255, 255, 0.4)` dotted.
-- **Area Chart Gradient**: Top `rgba(0, 200, 150, 0.35)` to Bottom `rgba(0, 200, 150, 0.0)`.
-- **Volume Bars**: Bullish `rgba(0, 200, 150, 0.5)`, Bearish `rgba(246, 70, 93, 0.5)`.
-
----
-
-## 15. Status Colors & Execution Badges
-
-Execution states require distinct, accessible status badges.
-
-| Domain Entity | Status Name | Badge Background | Badge Text Color | Icon Indicator |
-| --- | --- | --- | --- | --- |
-| **Strategy** | `draft` | `rgba(148, 163, 184, 0.15)` | `#94A3B8` | Edit3 |
-| **Strategy** | `validated` | `rgba(59, 130, 246, 0.15)` | `#3B82F6` | CheckCircle |
-| **Strategy** | `paper_enabled`| `rgba(0, 200, 150, 0.15)` | `#00C896` | Play |
-| **Strategy** | `live_approved` | `rgba(245, 158, 11, 0.20)` | `#F59E0B` | ShieldAlert |
-| **Strategy** | `paused` | `rgba(245, 158, 11, 0.15)` | `#F59E0B` | Pause |
-| **Order** | `filled` | `rgba(0, 200, 150, 0.15)` | `#00C896` | Check |
-| **Order** | `rejected` | `rgba(246, 70, 93, 0.15)` | `#F6465D` | XCircle |
-| **Order** | `unknown` | `rgba(239, 68, 68, 0.25)` | `#EF4444` | AlertOctagon |
-
----
-
-## 16. Iconography Guidelines
-
-Icons utilize the **Lucide Icon Set** rendered at crisp pixel sizes (`16px`, `20px`, `24px`).
-
-### Icon Usage Standards
-- **Stroke Width**: `1.75px` for 20px icons, `2.0px` for 16px compact table icons.
-- **Color Matching**: Icons inherit parent text color (`currentColor`) unless representing explicit state indicators.
-- **Mandatory Icon Mapping**:
+- **Icon Library**: `Lucide Icon Set`.
+- **Scale**: `14px` (micro badges), `16px` (table cell icons), `20px` (standard navigation/buttons), `24px` (page headers).
+- **Stroke Width**: `1.75px` default (`2.0px` for 16px icons).
+- **Domain Mappings**:
   - `Kill Switch`: `AlertOctagon`
-  - `Risk Assessment`: `ShieldCheck` / `ShieldAlert`
+  - `Risk Engine`: `ShieldCheck`
+  - `Strategy`: `Cpu`
+  - `TradingView Webhook`: `Radio`
   - `Delta Exchange`: `Layers`
-  - `TradingView Signal`: `Radio`
   - `Reconciliation`: `RefreshCw`
 
 ---
 
-## 17. Notifications & Alert Toast System
+## 8. Loading States
 
-Notifications are categorized into four severity tiers and positioned at `top-right` with auto-dismiss timers.
-
-```text
-+-------------------------------------------------------------+
-| [!] CRITICAL RISK ALERT                                     |
-| Kill-switch triggered on Account #ACC-8841 (Drawdown > 5%)  |
-| 14:32:04 UTC | Action Required                              |
-+-------------------------------------------------------------+
-```
-
-### Toast Tiers & Behavior
-1. **Critical (Red)**: Persistent until manually dismissed by user. Plays alert tone for Kill-switch & Unknown order states.
-2. **Warning (Amber)**: Auto-dismiss after 8 seconds. Used for risk limit warnings & data freshness lag.
-3. **Success (Green)**: Auto-dismiss after 4 seconds. Used for strategy approval & connection confirmation.
-4. **Info (Blue)**: Auto-dismiss after 4 seconds. Used for general system notices & exports.
+- **Skeleton Shimmer**: Animated background gradient scanning across `--bg-surface-2` to `--bg-surface-3` (`animation: shimmer 1.5s infinite`).
+- **Monospace Table Skeletons**: Pre-allocated row skeletons matching `40px` table cell heights.
+- **Button Loading**: Replaces button icon with a `16px` spinning indicator (`spin 0.75s linear infinite`).
 
 ---
 
-## 18. Empty States
+## 9. Empty States
 
-Empty states teach the user the next safe action rather than displaying a blank screen.
-
-### Structure Specification
-- **Icon**: `48px` muted icon (`--text-muted`) inside a circular background (`--bg-surface-2`).
-- **Title**: `Heading 2` (`18px`, `--text-primary`), concise statement (e.g. "No Strategies Registered").
-- **Description**: `Body Primary` (`14px`, `--text-secondary`), explaining how to create or import a strategy.
-- **Primary CTA**: Standard Primary Button leading directly to the creation flow.
+Empty states teach the user the next safe action:
+- **Icon**: `48px` muted icon inside `--bg-surface-2` circle.
+- **Title**: `Heading 2` (`18px`, `--text-primary`), e.g., *"No Strategies Registered"*.
+- **Description**: `Body Primary` (`14px`, `--text-secondary`), e.g., *"Create a strategy version or connect a TradingView alert source to begin."*
+- **Action**: Primary CTA button leading to creation flow.
 
 ---
 
-## 19. Loading States & Skeletons
+## 10. Error States
 
-Loading states must avoid layout shifts during fast market updates.
-
-### Guidelines
-- **Skeleton Shimmer**: Animated background gradient scanning across `--bg-surface-2` to `--bg-surface-3`.
-- **Monospace Table Skeletons**: Pre-allocated row heights matching standard `40px` dense rows.
-- **Spinner Control**: Used for inline button action submissions (`16px` spinning circle).
+Services fail closed for execution and fail visibly for observation:
+- **Unknown Order State Banner**: Persistent full-width red top banner (`--color-danger`) stating: *"Execution State Uncertain. New orders blocked pending reconciliation."*
+- **Inline Field Error**: Text below field in `--color-danger` (`12px`) with `AlertTriangle` icon.
+- **Dependency Failure Callout**: Explains dependency failure (e.g., *"Delta Exchange REST API Unreachable"*), impact, and provides an Audited Retry button.
 
 ---
 
-## 20. Error States & Fail-Closed Alerts
+## 11. Animation Guidelines
 
-Error states adhere to the principle: **Services fail closed for execution and fail visibly for observation.**
-
-### Display Standards
-- **Unknown Execution State**: Displays a full-width persistent red top banner (`--trade-sell`) stating: `"Order Execution State Uncertain. New Orders Blocked Pending Reconciliation."`
-- **Field Validation Error**: Renders directly below the affected input field in `--trade-sell` font size `12px` with a warning icon.
-- **Dependency Failure Callout**: Explains what dependency failed (e.g., "Delta Exchange Sandbox Disconnected"), why it matters, and provides an audited Retry button.
-
----
-
-## 21. Responsive Breakpoints & Adaptability
-
-The dashboard is optimized for multi-monitor desktop workstations while maintaining full responsiveness down to tablet displays.
-
-| Breakpoint Name | Min Width | Layout Strategy |
-| --- | --- | --- |
-| **Desktop Ultra** | `1920px` | 4-column layout (Sidebar + Strategy List + Chart/Order Ticket + Execution Log) |
-| **Desktop Standard**| `1440px` | 3-column layout (Sidebar + Main Workspace + Execution Panel) |
-| **Laptop / Compact**| `1024px` | 2-column layout (Collapsed Sidebar + Main Workspace with tabbed panels) |
-| **Tablet** | `768px` | Single-column stacked view with top dropdown navigation |
+- **Duration Tokens**:
+  - `--duration-fast`: `150ms` (Button hover, checkbox toggle).
+  - `--duration-normal`: `250ms` (Modal open, tab switch, drawer slide).
+  - `--duration-slow`: `400ms` (Page transition, expandable panel expansion).
+- **Easing Curve**: `cubic-bezier(0.16, 1, 0.3, 1)` (Out-Cubic: fast initial response with smooth landing).
 
 ---
 
-## 22. Animation Guidelines & Micro-Interactions
+## 12. Mobile Design
 
-Animations must feel snappy, precise, and hardware-accelerated without delaying execution actions.
-
-### Transition Tokens
-- **Duration Fast**: `150ms` (Button hover, tab selection, checkbox toggle).
-- **Duration Normal**: `250ms` (Modal backdrop fade, accordion expand, drawer slide-over).
-- **Easing Curve**: `cubic-bezier(0.16, 1, 0.3, 1)` (Out-Cubic: fast initial motion with smooth deceleration).
+- **Viewport Range**: `< 768px`.
+- **Navigation**: Bottom navigation bar (`56px` height) with 4 key tabs: *Overview*, *Strategies*, *Orders*, *Risk*.
+- **Touch Targets**: Minimum clickable area `44px x 44px`.
+- **Layout**: Single column vertically stacked cards; horizontal swipeable tables.
 
 ---
 
-## 23. Design Tokens & CSS Custom Properties
+## 13. Desktop Design
+
+- **Viewport Range**: `≥ 1280px`.
+- **Multi-Pane Layout**: Fixed 240px sidebar, top 56px header, main workspace split into Strategy List, Chart View, and Order Ticket/Execution Log.
+- **Keyboard Shortcuts**:
+  - `Ctrl + K`: Global Command Palette
+  - `Esc`: Close Modals & Drawers
+  - `Ctrl + Shift + K`: Emergency Kill Switch Trigger Prompt
+
+---
+
+## 14. Tablet Design
+
+- **Viewport Range**: `768px - 1023px`.
+- **Adaptive Sidebar**: Collapses automatically to icon-only mode (`64px` width).
+- **Dashboard Grid**: Adapts to 2-column layout with tabbed drawers for order execution.
+
+---
+
+## 15. Accessibility
+
+- **Standard**: Full compliance with **WCAG 2.2 AA**.
+- **Contrast Ratios**: Minimum `4.5:1` contrast for standard text; `3:1` for interactive borders and graphical controls.
+- **Keyboard Navigation**: Full tab ordering across all forms, tables, and modals. Focus indicator: `outline: 2px solid --color-accent-primary` with `2px` offset.
+- **Screen Reader Support**: Use proper ARIA roles (`role="grid"`, `aria-live="polite"` for live price ticks, `aria-expanded`).
+- **Reduced Motion**: Respect `@media (prefers-reduced-motion: reduce)` by disabling non-essential transitions.
+
+---
+
+## 16. Theme Tokens
 
 ```css
 :root {
-  /* Color Tokens */
+  /* Surface Colors */
   --bg-base: #0B0E14;
-  --bg-surface-1: #121722;
-  --bg-surface-2: #1A2130;
-  --bg-surface-3: #242E42;
+  --bg-root: #0E121A;
+  --bg-app: #121722;
+  --bg-surface-1: #161D2A;
+  --bg-surface-2: #1E2638;
+  --bg-surface-3: #28334A;
+
+  /* Border Colors */
   --border-subtle: #1E293B;
   --border-strong: #334155;
+  --border-focus: #3B82F6;
+  --border-accent: #60A5FA;
 
-  --trade-buy: #00C896;
-  --trade-buy-bg: rgba(0, 200, 150, 0.12);
-  --trade-sell: #F6465D;
-  --trade-sell-bg: rgba(246, 70, 93, 0.12);
-  --trade-accent: #3B82F6;
-  --trade-warning: #F59E0B;
+  /* Trading & Status Colors */
+  --color-accent-primary: #3B82F6;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-info: #06B6D4;
 
-  --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
+  --trade-profit: #00C896;
+  --trade-profit-bg: rgba(0, 200, 150, 0.12);
+  --trade-loss: #F6465D;
+  --trade-loss-bg: rgba(246, 70, 93, 0.12);
 
-  /* Typography Tokens */
+  /* Typography */
   --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', Consolas, monospace;
 
-  /* Elevation Shadows */
+  /* Shadows */
   --shadow-elevation-1: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
   --shadow-elevation-2: 0 4px 12px -2px rgba(0, 0, 0, 0.5);
   --shadow-elevation-3: 0 20px 25px -5px rgba(0, 0, 0, 0.7);
 
-  /* Radius Tokens */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-full: 9999px;
+  /* Animation */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+  --ease-out-cubic: cubic-bezier(0.16, 1, 0.3, 1);
 }
 ```
+
+---
+
+## 17. Design Rules
+
+1. **Always Use Monospace for Financial Data**: Every price, size, fee, P&L, order ID, and timestamp must use `--font-mono`.
+2. **Never Rely Solely on Color**: Pair color changes (green/red) with explicit icons (`ArrowUp`, `ArrowDown`, `Check`, `X`) or sign prefixes (`+`/`-`).
+3. **Environment Isolation**: Live mode elements MUST render Amber/Orange header badges to prevent accidental live execution in paper mode.
+4. **Zero Layout Shift**: Pre-allocate numeric container widths (`min-width`) so changing values do not jitter adjacent layout items.
+
+---
+
+## 18. UI Do's and Don'ts
+
+| Category | DO | DON'T |
+| --- | --- | --- |
+| **Financial Values** | DO right-align numeric table cells and format with explicit decimals. | DON'T left-align prices or omit zero decimals (e.g. `$12.5` instead of `$12.50000000`). |
+| **Live Trading Mode**| DO display persistent environment indicators on every screen. | DON'T hide whether an account is connected to Live vs Paper venue. |
+| **Status Indication**| DO pair status colors with readable text labels and icons. | DON'T use raw colored dots without text tooltips or labels. |
+| **Buttons & CTAs**  | DO use high-contrast primary buttons for destructive/trading actions. | DON'T use ambiguous ghost buttons for critical operations like Kill-Switch. |
+| **Modals & Drawers** | DO lock background scrolling and support `Esc` key dismissal. | DON'T allow accidental clicks outside an active order-confirmation modal to execute actions. |
