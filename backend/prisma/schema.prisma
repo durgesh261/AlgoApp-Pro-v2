@@ -421,3 +421,40 @@ model ExecutionJournal {
 
   @@map("execution_journals")
 }
+
+model WebhookEvent {
+  id          String   @id @default(uuid())
+  symbol      String
+  timeframe   String   @default("1H")
+  payloadJson String   @map("payload_json")
+  signature   String?
+  status      String   @default("PROCESSED")
+  timestamp   DateTime @default(now())
+
+  @@map("webhook_events")
+}
+
+model WebhookError {
+  id         String   @id @default(uuid())
+  symbol     String?
+  errorType  String   @map("error_type")
+  message    String
+  rawPayload String   @map("raw_payload")
+  timestamp  DateTime @default(now())
+
+  @@map("webhook_errors")
+}
+
+model ConnectionHealth {
+  id               String   @id @default("tradingview-health")
+  status           String   @default("CONNECTED")
+  lastWebhookAt    DateTime @default(now()) @map("last_webhook_at")
+  totalWebhooks    Int      @default(0) @map("total_webhooks")
+  duplicateCount   Int      @default(0) @map("duplicate_count")
+  droppedCount     Int      @default(0) @map("dropped_count")
+  malformedCount   Int      @default(0) @map("malformed_count")
+  averageLatencyMs Float    @default(0.0) @map("average_latency_ms")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("connection_health")
+}

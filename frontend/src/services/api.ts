@@ -36,6 +36,11 @@ import {
   ExecutionResultDto,
   ExecutionJournalDto,
   SubmitExecutionInput,
+  TradingViewHealthDto,
+  TradingViewWebhookResult,
+  WebhookEventDto,
+  WebhookErrorDto,
+  TradingViewWebhookPayload,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -230,6 +235,25 @@ export const executionApi = {
   },
   getJournal: async (): Promise<ApiResponse<ExecutionJournalDto[]>> => {
     const res = await apiClient.get('/execution/journal');
+    return res.data;
+  },
+};
+
+export const tradingViewApi = {
+  sendWebhook: async (payload: TradingViewWebhookPayload): Promise<ApiResponse<TradingViewWebhookResult>> => {
+    const res = await apiClient.post('/tradingview/webhook', payload);
+    return res.data;
+  },
+  getHealth: async (): Promise<ApiResponse<TradingViewHealthDto>> => {
+    const res = await apiClient.get('/tradingview/health');
+    return res.data;
+  },
+  getEvents: async (): Promise<ApiResponse<WebhookEventDto[]>> => {
+    const res = await apiClient.get('/tradingview/events');
+    return res.data;
+  },
+  getErrors: async (): Promise<ApiResponse<WebhookErrorDto[]>> => {
+    const res = await apiClient.get('/tradingview/errors');
     return res.data;
   },
 };

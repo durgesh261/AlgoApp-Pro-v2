@@ -6,6 +6,7 @@ import { useTerminalStore } from '../../store/useTerminalStore';
 import { useToastStore } from '../../store/useToastStore';
 import { ExecutionMode } from '@algoapp/shared';
 import { CurrentPairWidget } from '../../components/widgets/CurrentPairWidget';
+import { TradingViewConnectionPanel } from '../tradingview/TradingViewConnectionPanel';
 import { 
   Activity, 
   Play, 
@@ -86,10 +87,10 @@ export const LiveTradingPage: React.FC = () => {
         <div>
           <h1 className="text-xl font-bold text-[#F8FAFC] flex items-center gap-2">
             <Activity className="w-5 h-5 text-[#3B82F6]" />
-            Execution Engine & State Machine Coordinator
+            Execution Engine & TradingView Adapter
           </h1>
           <p className="text-xs text-[#94A3B8] mt-0.5">
-            Single coordinator responsible for routing approved decisions to execution adapters via deterministic state machine.
+            Realtime TradingView data ingestion adapter & Execution Coordinator.
           </p>
         </div>
         <div className="flex items-center gap-2 bg-[#3B82F6]/10 border border-[#3B82F6]/30 px-3 py-1.5 rounded-md text-xs text-[#3B82F6]">
@@ -99,6 +100,9 @@ export const LiveTradingPage: React.FC = () => {
       </div>
 
       <CurrentPairWidget />
+
+      {/* TradingView Webhook Connection Panel */}
+      <TradingViewConnectionPanel />
 
       {/* State Machine Transition Diagram */}
       <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-3 shadow-sm">
