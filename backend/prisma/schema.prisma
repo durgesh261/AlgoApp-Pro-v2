@@ -198,11 +198,11 @@ model DecisionTimeline {
 }
 
 model DecisionReason {
-  id              String  @id @default(uuid())
-  explanationId   String  @map("explanation_id")
-  reasonCode      String  @map("reason_code")
-  humanExplanation String @map("human_explanation")
-  isPassed        Boolean @default(true) @map("is_passed")
+  id               String  @id @default(uuid())
+  explanationId    String  @map("explanation_id")
+  reasonCode       String  @map("reason_code")
+  humanExplanation String  @map("human_explanation")
+  isPassed         Boolean @default(true) @map("is_passed")
 
   @@map("decision_reasons")
 }
@@ -216,4 +216,31 @@ model ReplayMetadata {
   createdAt       DateTime @default(now()) @map("created_at")
 
   @@map("replay_metadata")
+}
+
+model TradingRuleConfig {
+  id                String   @id @default("default-trading-rules")
+  ruleVersion       String   @default("v2.0.0") @map("rule_version")
+  configVersion     String   @default("cfg-2026.08.02") @map("config_version")
+  supportedPairsJson String  @default("[\"BTCUSD.P\",\"ETHUSD.P\",\"SOLUSD.P\",\"XRPUSD.P\"]") @map("supported_pairs_json")
+  supportedTimeframe String  @default("1H") @map("supported_timeframe")
+  bonusesJson       String   @map("bonuses_json")
+  riskRulesJson     String   @map("risk_rules_json")
+  challengeRulesJson String  @map("challenge_rules_json")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("trading_rule_configs")
+}
+
+model TradingRuleAudit {
+  id            String   @id @default(uuid())
+  ruleVersion   String   @map("rule_version")
+  configVersion String   @map("config_version")
+  action        String
+  changedBy     String   @default("SYSTEM") @map("changed_by")
+  payloadJson   String   @map("payload_json")
+  timestamp     DateTime @default(now())
+
+  @@map("trading_rule_audits")
 }

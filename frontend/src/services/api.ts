@@ -17,6 +17,11 @@ import {
   EvaluateDecisionInput,
   DecisionExplanationDto,
   ExplainDecisionInput,
+  TradingRuleConfigDto,
+  RuleMetadataDto,
+  CalculateLeverageInput,
+  LeverageOutputDto,
+  UpdateTradingRuleConfigInput,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -116,6 +121,25 @@ export const decisionApi = {
 export const aiDecisionApi = {
   explainDecision: async (input: ExplainDecisionInput): Promise<ApiResponse<DecisionExplanationDto>> => {
     const res = await apiClient.post('/ai-decision/explain', input);
+    return res.data;
+  },
+};
+
+export const tradingRulesApi = {
+  getConfig: async (): Promise<ApiResponse<TradingRuleConfigDto>> => {
+    const res = await apiClient.get('/rules/config');
+    return res.data;
+  },
+  updateConfig: async (input: UpdateTradingRuleConfigInput): Promise<ApiResponse<TradingRuleConfigDto>> => {
+    const res = await apiClient.patch('/rules/config', input);
+    return res.data;
+  },
+  calculateLeverage: async (input: CalculateLeverageInput): Promise<ApiResponse<LeverageOutputDto>> => {
+    const res = await apiClient.post('/rules/calculate-leverage', input);
+    return res.data;
+  },
+  getRegistry: async (): Promise<ApiResponse<RuleMetadataDto[]>> => {
+    const res = await apiClient.get('/rules/registry');
     return res.data;
   },
 };
