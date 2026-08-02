@@ -44,6 +44,8 @@ import {
   PipelineTraceDto,
   SystemMonitorOverviewDto,
   RunPipelineInput,
+  DeltaHealthDto,
+  DeltaEnvironment,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -276,6 +278,25 @@ export const systemIntegrationApi = {
   },
   getHealthOverview: async (): Promise<ApiResponse<SystemMonitorOverviewDto>> => {
     const res = await apiClient.get('/system-integration/health-overview');
+    return res.data;
+  },
+};
+
+export const deltaApi = {
+  getHealth: async (): Promise<ApiResponse<DeltaHealthDto>> => {
+    const res = await apiClient.get('/execution/delta/health');
+    return res.data;
+  },
+  connect: async (environment: DeltaEnvironment): Promise<ApiResponse<DeltaHealthDto>> => {
+    const res = await apiClient.post('/execution/delta/connect', { environment });
+    return res.data;
+  },
+  disconnect: async (): Promise<ApiResponse<DeltaHealthDto>> => {
+    const res = await apiClient.post('/execution/delta/disconnect');
+    return res.data;
+  },
+  toggleKillSwitch: async (active: boolean): Promise<ApiResponse<{ isKillSwitchActive: boolean }>> => {
+    const res = await apiClient.post('/execution/delta/kill-switch', { active });
     return res.data;
   },
 };

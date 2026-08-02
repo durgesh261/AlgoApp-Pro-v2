@@ -7,6 +7,7 @@ import { useToastStore } from '../../store/useToastStore';
 import { ExecutionMode } from '@algoapp/shared';
 import { CurrentPairWidget } from '../../components/widgets/CurrentPairWidget';
 import { TradingViewConnectionPanel } from '../tradingview/TradingViewConnectionPanel';
+import { DeltaConnectionPanel } from './DeltaConnectionPanel';
 import { 
   Activity, 
   Play, 
@@ -14,7 +15,6 @@ import {
   Cpu, 
   CheckCircle2, 
   List,
-  AlertTriangle,
   Zap,
   ArrowRight
 } from 'lucide-react';
@@ -58,14 +58,13 @@ export const LiveTradingPage: React.FC = () => {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = () => {
     submitExecutionMutation.mutate({
-      decisionId: `DEC-MANUAL-${Date.now()}`,
+      decisionId: `DEC-LIVE-${Date.now()}`,
       symbol: activeSymbol,
       side,
       mode,
-      quantity: parseFloat(quantity),
+      quantity: parseFloat(quantity) || 0.1,
     });
   };
 
@@ -73,7 +72,8 @@ export const LiveTradingPage: React.FC = () => {
   const results = resultsData?.data || [];
   const journal = journalData?.data || [];
   const activeSession = sessions[0];
-  const latestResult = results[0];
+
+  const stateMachineSteps = ['QUEUED', 'VALIDATED', 'SUBMITTED', 'FILLED'];
 
   return (
     <motion.div
@@ -87,10 +87,10 @@ export const LiveTradingPage: React.FC = () => {
         <div>
           <h1 className="text-xl font-bold text-[#F8FAFC] flex items-center gap-2">
             <Activity className="w-5 h-5 text-[#3B82F6]" />
-            Execution Engine & TradingView Adapter
+            Execution Engine & Delta Exchange Specification
           </h1>
           <p className="text-xs text-[#94A3B8] mt-0.5">
-            Realtime TradingView data ingestion adapter & Execution Coordinator.
+            Realtime TradingView data ingestion & Delta Exchange Adapter specifications.
           </p>
         </div>
         <div className="flex items-center gap-2 bg-[#3B82F6]/10 border border-[#3B82F6]/30 px-3 py-1.5 rounded-md text-xs text-[#3B82F6]">
@@ -104,6 +104,9 @@ export const LiveTradingPage: React.FC = () => {
       {/* TradingView Webhook Connection Panel */}
       <TradingViewConnectionPanel />
 
+      {/* Delta Exchange Adapter Connection Panel */}
+      <DeltaConnectionPanel />
+
       {/* State Machine Transition Diagram */}
       <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-3 shadow-sm">
         <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
@@ -113,185 +116,161 @@ export const LiveTradingPage: React.FC = () => {
               Execution State Machine Pipeline
             </h3>
           </div>
-          <span className="text-[10px] text-[#94A3B8]">DETERMINISTIC TRANSITION PIPELINE</span>
+          <span className="text-[10px] text-[#94A3B8]">DETERMINISTIC TRANSITION VALIDATOR</span>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 bg-[#0B0E14] border border-[#1E293B] p-3 rounded-xl text-xs font-bold">
-          <span className="px-3 py-1 bg-[#1E293B] text-[#94A3B8] rounded border border-[#334155]">1. QUEUED</span>
-          <ArrowRight className="w-4 h-4 text-[#334155]" />
-          <span className="px-3 py-1 bg-[#1E293B] text-[#3B82F6] rounded border border-[#3B82F6]/30">2. VALIDATED</span>
-          <ArrowRight className="w-4 h-4 text-[#334155]" />
-          <span className="px-3 py-1 bg-[#1E293B] text-[#F59E0B] rounded border border-[#F59E0B]/30">3. SUBMITTED</span>
-          <ArrowRight className="w-4 h-4 text-[#334155]" />
-          <span className="px-3 py-1 bg-[#00C896]/20 text-[#00C896] rounded border border-[#00C896]/40">4. FILLED</span>
+        <div className="flex items-center justify-around bg-[#0B0E14] border border-[#1E293B] p-3 rounded-xl text-xs font-bold">
+          {stateMachineSteps.map((step, idx) => (
+            <React.Fragment key={step}>
+              <div className="px-3 py-1 bg-[#1E293B] text-[#F8FAFC] rounded border border-[#3B82F6]/30 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#00C896] animate-pulse"></span>
+                <span>{step}</span>
+              </div>
+              {idx < stateMachineSteps.length - 1 && (
+                <ArrowRight className="w-4 h-4 text-[#334155]" />
+              )}
+            </React.Fragment>
+          ))}
         </div>
       </div>
 
-      {/* Execution Dispatcher Form */}
+      {/* Execution Control Form */}
       <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-4 shadow-sm">
         <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
           <div className="flex items-center space-x-2">
             <Cpu className="w-4 h-4 text-[#3B82F6]" />
             <h3 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider">
-              Execution Dispatcher & Mode Selector — {activeSymbol}
+              Execution Session Dispatcher — {activeSymbol}
             </h3>
           </div>
-          <span className="text-[10px] bg-[#1E293B] text-[#00C896] px-2 py-0.5 rounded font-bold">
-            ADAPTER: {mode === ExecutionMode.LIVE ? 'DELTA_ADAPTER' : 'PAPER_ADAPTER'}
-          </span>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setMode(ExecutionMode.PAPER)}
+              className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${
+                mode === ExecutionMode.PAPER
+                  ? 'bg-[#3B82F6] text-white'
+                  : 'bg-[#1E293B] text-[#94A3B8] hover:text-[#F8FAFC]'
+              }`}
+            >
+              PAPER MODE
+            </button>
+            <button
+              onClick={() => setMode(ExecutionMode.LIVE)}
+              className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${
+                mode === ExecutionMode.LIVE
+                  ? 'bg-[#EF4444] text-white'
+                  : 'bg-[#1E293B] text-[#94A3B8] hover:text-[#F8FAFC]'
+              }`}
+            >
+              LIVE STUB MODE
+            </button>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs items-end">
-          <div className="space-y-1">
-            <label className="text-[#94A3B8] text-[11px] block">Execution Mode</label>
-            <select
-              value={mode}
-              onChange={(e) => setMode(e.target.value as ExecutionMode)}
-              className="w-full bg-[#0B0E14] border border-[#334155] rounded px-3 py-1.5 text-[#F8FAFC] font-mono outline-none"
-            >
-              <option value={ExecutionMode.PAPER}>PAPER (Simulated)</option>
-              <option value={ExecutionMode.LIVE}>LIVE (Delta Exchange Adapter)</option>
-            </select>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div>
+            <label className="text-[10px] text-[#94A3B8] uppercase block mb-1">Order Side</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setSide('LONG')}
+                className={`py-1.5 font-bold rounded border text-xs ${
+                  side === 'LONG'
+                    ? 'bg-[#00C896]/20 border-[#00C896] text-[#00C896]'
+                    : 'bg-[#0B0E14] border-[#1E293B] text-[#94A3B8]'
+                }`}
+              >
+                LONG
+              </button>
+              <button
+                type="button"
+                onClick={() => setSide('SHORT')}
+                className={`py-1.5 font-bold rounded border text-xs ${
+                  side === 'SHORT'
+                    ? 'bg-[#EF4444]/20 border-[#EF4444] text-[#EF4444]'
+                    : 'bg-[#0B0E14] border-[#1E293B] text-[#94A3B8]'
+                }`}
+              >
+                SHORT
+              </button>
+            </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-[#94A3B8] text-[11px] block">Order Side</label>
-            <select
-              value={side}
-              onChange={(e) => setSide(e.target.value as 'LONG' | 'SHORT')}
-              className="w-full bg-[#0B0E14] border border-[#334155] rounded px-3 py-1.5 text-[#F8FAFC] font-mono outline-none"
-            >
-              <option value="LONG">LONG (Buy)</option>
-              <option value="SHORT">SHORT (Sell)</option>
-            </select>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-[#94A3B8] text-[11px] block">Quantity</label>
+          <div>
+            <label className="text-[10px] text-[#94A3B8] uppercase block mb-1">Quantity (Contracts / Units)</label>
             <input
               type="number"
-              step="any"
+              step="0.01"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              className="w-full bg-[#0B0E14] border border-[#334155] rounded px-3 py-1.5 text-[#F8FAFC] font-mono outline-none"
-              required
+              className="w-full bg-[#0B0E14] border border-[#1E293B] rounded px-3 py-1.5 text-[#F8FAFC] font-mono focus:outline-none focus:border-[#3B82F6]"
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={submitExecutionMutation.isPending}
-            className="w-full py-2 bg-[#00C896] hover:bg-[#00B084] text-[#0B0E14] font-bold rounded-lg text-xs transition-colors flex items-center justify-center space-x-2 shadow-md"
-          >
-            <Play className="w-4 h-4" />
-            <span>{submitExecutionMutation.isPending ? 'DISPATCHING...' : 'DISPATCH EXECUTION'}</span>
-          </button>
-        </form>
-
-        {mode === ExecutionMode.LIVE && (
-          <div className="bg-[#F59E0B]/10 border border-[#F59E0B]/30 p-2.5 rounded-lg flex items-center space-x-2 text-xs text-[#F59E0B]">
-            <AlertTriangle className="w-4 h-4 shrink-0" />
-            <span>Note: Delta Live Exchange adapter is currently inactive in simulation mode. Live requests will return REJECTED status.</span>
-          </div>
-        )}
-      </div>
-
-      {/* Latency & Observability Cards */}
-      {latestResult && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-          <div className="bg-[#161D2A] border border-[#1E293B] p-3 rounded-xl">
-            <span className="text-[10px] text-[#94A3B8] uppercase block">Validation Latency</span>
-            <div className="text-sm font-bold text-[#3B82F6] mt-0.5">{latestResult.observability.validationLatencyMs}ms</div>
-          </div>
-
-          <div className="bg-[#161D2A] border border-[#1E293B] p-3 rounded-xl">
-            <span className="text-[10px] text-[#94A3B8] uppercase block">Adapter Latency</span>
-            <div className="text-sm font-bold text-[#00C896] mt-0.5">{latestResult.observability.adapterLatencyMs}ms</div>
-          </div>
-
-          <div className="bg-[#161D2A] border border-[#1E293B] p-3 rounded-xl">
-            <span className="text-[10px] text-[#94A3B8] uppercase block">Queue Latency</span>
-            <div className="text-sm font-bold text-[#F59E0B] mt-0.5">{latestResult.observability.queueTimeMs}ms</div>
-          </div>
-
-          <div className="bg-[#161D2A] border border-[#1E293B] p-3 rounded-xl">
-            <span className="text-[10px] text-[#94A3B8] uppercase block">Total Lifecycle Time</span>
-            <div className="text-sm font-bold text-[#F8FAFC] mt-0.5">{latestResult.observability.totalLifecycleTimeMs}ms</div>
+          <div className="flex items-end">
+            <button
+              onClick={handleSubmit}
+              disabled={submitExecutionMutation.isPending}
+              className="w-full py-2 bg-[#3B82F6] hover:bg-[#2563EB] text-white font-bold rounded transition-colors flex items-center justify-center space-x-2 text-xs"
+            >
+              <Play className="w-4 h-4 fill-current" />
+              <span>{submitExecutionMutation.isPending ? 'DISPATCHING...' : 'DISPATCH EXECUTION SESSION'}</span>
+            </button>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Execution Results & Journal Stream */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Results Stream */}
+      {/* Execution Results Monitor */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Results List */}
         <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-3 shadow-sm">
           <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
             <div className="flex items-center space-x-2">
               <CheckCircle2 className="w-4 h-4 text-[#00C896]" />
               <h3 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider">
-                Execution Results Stream ({results.length})
+                Execution Results ({results.length})
               </h3>
             </div>
-            <span className="text-[10px] text-[#94A3B8]">ADAPTER RESPONSES</span>
+            <span className="text-[10px] text-[#94A3B8]">IDEMPOTENT LOG</span>
           </div>
 
           <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-            {results.length === 0 ? (
-              <div className="p-4 text-center text-xs text-[#64748B]">No execution results yet.</div>
-            ) : (
-              results.map((res) => (
-                <div key={res.id} className="bg-[#0B0E14] border border-[#1E293B] p-2.5 rounded-lg text-xs space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#3B82F6]">{res.adapter}</span>
-                    <span
-                      className={`text-[9px] font-bold px-2 py-0.5 rounded ${
-                        res.status === 'FILLED'
-                          ? 'bg-[#00C896]/20 text-[#00C896]'
-                          : res.status === 'REJECTED'
-                          ? 'bg-[#F59E0B]/20 text-[#F59E0B]'
-                          : 'bg-[#F6465D]/20 text-[#F6465D]'
-                      }`}
-                    >
-                      {res.status}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-[10px] text-[#94A3B8]">
-                    <span>Fill Price: ${res.fillPrice?.toLocaleString() ?? 'N/A'}</span>
-                    <span>Total Latency: {res.observability.totalLifecycleTimeMs}ms</span>
-                  </div>
-                  {res.message && <div className="text-[10px] text-[#64748B]">{res.message}</div>}
+            {results.map((res) => (
+              <div key={res.id} className="bg-[#0B0E14] border border-[#1E293B] p-2.5 rounded-lg text-xs space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#F8FAFC]">{res.adapter} — {res.status}</span>
+                  <span className="text-[10px] text-[#3B82F6] font-mono">{res.observability?.totalLifecycleTimeMs ?? 0}ms</span>
                 </div>
-              ))
-            )}
+                <div className="text-[10px] text-[#94A3B8]">{res.message}</div>
+                <div className="text-[9px] text-[#64748B]">Request: {res.requestId}</div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Execution Journal Log */}
+        {/* State Machine Journal Stream */}
         <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-3 shadow-sm">
           <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
             <div className="flex items-center space-x-2">
               <List className="w-4 h-4 text-[#3B82F6]" />
               <h3 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider">
-                Execution Journal Stream ({journal.length})
+                State Machine Journal Audit ({journal.length})
               </h3>
             </div>
-            <span className="text-[10px] text-[#94A3B8]">STATE MACHINE AUDIT</span>
+            <span className="text-[10px] text-[#94A3B8]">TRANSITION STREAM</span>
           </div>
 
           <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-            {journal.length === 0 ? (
-              <div className="p-4 text-center text-xs text-[#64748B]">No journal entries logged.</div>
-            ) : (
-              journal.map((j) => (
-                <div key={j.id} className="bg-[#0B0E14] border border-[#1E293B] p-2.5 rounded-lg text-xs space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#F8FAFC]">{j.action}</span>
-                    <span className="text-[10px] text-[#64748B]">{j.latencyMs}ms</span>
-                  </div>
-                  <p className="text-[11px] text-[#94A3B8]">{j.details}</p>
+            {journal.map((j) => (
+              <div key={j.id} className="bg-[#0B0E14] border border-[#1E293B] p-2.5 rounded-lg text-xs space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#3B82F6]">{j.action}</span>
+                  <span className="text-[10px] text-[#00C896]">{j.fromState} → {j.toState}</span>
                 </div>
-              ))
-            )}
+                <div className="text-[10px] text-[#94A3B8]">{j.details}</div>
+                <div className="text-[9px] text-[#64748B]">{j.timestamp}</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
