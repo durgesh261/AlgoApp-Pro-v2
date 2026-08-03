@@ -59,6 +59,10 @@ import {
   WalletStateDto,
   ChallengeStateDto,
   TradeLedgerEntryDto,
+  NotificationDto,
+  SubsystemHealthDto,
+  ReconciliationReportDto,
+  TradeAuditTimelineDto,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -393,6 +397,31 @@ export const tradeAccountingApi = {
     return res.data;
   },
 };
+
+export const realtimeOperationsApi = {
+  getNotifications: async (severity?: string): Promise<ApiResponse<NotificationDto[]>> => {
+    const query = severity ? `?severity=${severity}` : '';
+    const res = await apiClient.get(`/realtime-operations/notifications${query}`);
+    return res.data;
+  },
+  markNotificationRead: async (id: string): Promise<ApiResponse<{ success: boolean }>> => {
+    const res = await apiClient.post(`/realtime-operations/notifications/${id}/read`);
+    return res.data;
+  },
+  getAuditTimeline: async (tradeId: string): Promise<ApiResponse<TradeAuditTimelineDto>> => {
+    const res = await apiClient.get(`/realtime-operations/audit-timeline/${tradeId}`);
+    return res.data;
+  },
+  runReconciliation: async (): Promise<ApiResponse<ReconciliationReportDto>> => {
+    const res = await apiClient.post('/realtime-operations/reconcile');
+    return res.data;
+  },
+  getSubsystemHealth: async (): Promise<ApiResponse<SubsystemHealthDto[]>> => {
+    const res = await apiClient.get('/realtime-operations/subsystem-health');
+    return res.data;
+  },
+};
+
 
 
 

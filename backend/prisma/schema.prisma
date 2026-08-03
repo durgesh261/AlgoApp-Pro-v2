@@ -602,4 +602,38 @@ model WalletState {
   @@map("wallet_states")
 }
 
+model Notification {
+  id        String   @id @default(uuid())
+  type      String
+  title     String
+  message   String
+  severity  String   @default("INFO")
+  read      Boolean  @default(false)
+  timestamp DateTime @default(now())
+
+  @@map("notifications")
+}
+
+model TradeAuditTimeline {
+  id              String   @id @default(uuid())
+  tradeId         String   @unique @map("trade_id")
+  symbol          String
+  stepsJson       String   @map("steps_json")
+  totalDurationMs Float    @map("total_duration_ms")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("trade_audit_timelines")
+}
+
+model ReconciliationLog {
+  id              String   @id @default(uuid())
+  reconciledAt    DateTime @default(now()) @map("reconciled_at")
+  status          String   @default("MATCHED")
+  mismatchesCount Int      @default(0) @map("mismatches_count")
+  mismatchesJson  String   @map("mismatches_json")
+
+  @@map("reconciliation_logs")
+}
+
+
 

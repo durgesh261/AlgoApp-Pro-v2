@@ -16,6 +16,7 @@ import { BacktestingPage } from './features/backtesting/BacktestingPage';
 import { TradingViewSetupPage } from './features/tradingview/TradingViewSetupPage';
 import { IndicatorValidationPage } from './features/validation/IndicatorValidationPage';
 import { TradeAccountingPage } from './features/accounting/TradeAccountingPage';
+import { PortfolioDashboardPage } from './features/portfolio/PortfolioDashboardPage';
 
 export const App: React.FC = () => {
   return (
@@ -23,6 +24,7 @@ export const App: React.FC = () => {
       <DesktopTerminalLayout>
         <Routes>
           <Route path="/" element={<DashboardPage />} />
+          <Route path="/portfolio" element={<PortfolioDashboardPage />} />
           <Route path="/paper-trading" element={<PaperTradingPage />} />
           <Route path="/live-trading" element={<LiveTradingPage />} />
           <Route path="/tradingview" element={<TradingViewSetupPage />} />

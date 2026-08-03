@@ -22,6 +22,7 @@ import { indicatorRouter } from '../modules/indicator-engine/indicator.routes.js
 import { indicatorValidationRouter } from '../modules/indicator-validation/indicatorValidation.routes.js';
 import { strategyProfileRouter } from '../modules/strategy-profile/strategyProfile.routes.js';
 import { tradeAccountingRouter } from '../modules/trade-accounting/tradeAccounting.routes.js';
+import { realtimeOperationsRouter } from '../modules/realtime-operations/realtimeOperations.routes.js';
 
 export const apiRouter = Router();
 
@@ -48,3 +49,4 @@ apiRouter.use('/indicator', indicatorRouter);
 apiRouter.use('/indicator-validation', indicatorValidationRouter);
 apiRouter.use('/strategy-profile', strategyProfileRouter);
 apiRouter.use('/trade-accounting', tradeAccountingRouter);
+apiRouter.use('/realtime-operations', realtimeOperationsRouter);

@@ -16,11 +16,13 @@ import {
   ShieldAlert,
   Radio,
   ShieldCheck,
-  Calculator
+  Calculator,
+  PieChart
 } from 'lucide-react';
 
 const navigationItems = [
   { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+  { name: 'Live Portfolio', path: '/portfolio', icon: PieChart },
   { name: 'Paper Trading', path: '/paper-trading', icon: Wallet },
   { name: 'Live Trading', path: '/live-trading', icon: Activity },
   { name: 'Trade Accounting', path: '/trade-accounting', icon: Calculator },
