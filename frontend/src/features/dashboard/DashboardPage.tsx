@@ -7,7 +7,6 @@ import { useToastStore } from '../../store/useToastStore';
 import { InteractiveTradingChart } from '../../components/charts/InteractiveTradingChart';
 import { 
   LayoutDashboard, 
-  Zap, 
   ShieldCheck, 
   Brain, 
   CheckCircle2, 
@@ -19,7 +18,7 @@ import {
 
 export const DashboardPage: React.FC = () => {
   const queryClient = useQueryClient();
-  const { activeSymbol, setActiveSymbol, activeTimeframe } = useTerminalStore();
+  const { activeSymbol, activeTimeframe } = useTerminalStore();
   const { addToast } = useToastStore();
 
   const [showMorningChecklist, setShowMorningChecklist] = useState(false);
@@ -85,13 +84,6 @@ export const DashboardPage: React.FC = () => {
   const decisions = decisionsData?.data || [];
   const challenge = challengeData?.data;
 
-  const pairs = [
-    { symbol: 'BTCUSD.P', price: '$64,250.00', change: '+3.42%', regime: 'BULLISH' },
-    { symbol: 'ETHUSD.P', price: '$3,480.25', change: '+2.18%', regime: 'BULLISH' },
-    { symbol: 'SOLUSD.P', price: '$142.10', change: '-1.45%', regime: 'RANGING' },
-    { symbol: 'XRPUSD.P', price: '$0.5840', change: '+4.85%', regime: 'BULLISH' },
-  ];
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -153,39 +145,8 @@ export const DashboardPage: React.FC = () => {
 
       {/* 4-PANE UNIFIED TRADING WORKSTATION LAYOUT */}
       <div className="grid grid-cols-12 gap-4 h-[calc(100vh-210px)] min-h-[680px]">
-        {/* LEFT PANE: MARKET WATCH (Cols 2) */}
-        <div className="col-span-12 lg:col-span-2 bg-[#161D2A] border border-[#1E293B] rounded-xl p-3 flex flex-col shadow-sm">
-          <div className="flex items-center space-x-2 border-b border-[#1E293B] pb-2.5 mb-2">
-            <Zap className="w-4 h-4 text-[#3B82F6]" />
-            <h2 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider">Market Watch</h2>
-          </div>
-
-          <div className="space-y-2 overflow-y-auto flex-1 pr-0.5">
-            {pairs.map((p) => (
-              <div
-                key={p.symbol}
-                onClick={() => setActiveSymbol(p.symbol)}
-                className={`p-2.5 rounded-lg border cursor-pointer transition-colors ${
-                  activeSymbol === p.symbol
-                    ? 'bg-[#1E293B] border-[#3B82F6]'
-                    : 'bg-[#0B0E14] border-[#1E293B] hover:border-[#334155]'
-                }`}
-              >
-                <div className="flex justify-between items-center text-xs font-bold">
-                  <span className="text-white">{p.symbol}</span>
-                  <span className={p.change.startsWith('+') ? 'text-[#00C896]' : 'text-[#F6465D]'}>{p.change}</span>
-                </div>
-                <div className="flex justify-between items-center text-[11px] text-[#94A3B8] mt-1">
-                  <span>{p.price}</span>
-                  <span className="text-[9px] bg-[#161D2A] px-1.5 py-0.5 rounded text-[#3B82F6]">{p.regime}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* CENTER PANE: TRADINGVIEW CHART WORKSPACE (Cols 7) */}
-        <div className="col-span-12 lg:col-span-7 bg-[#161D2A] border border-[#1E293B] rounded-xl overflow-hidden shadow-sm flex flex-col">
+        {/* CENTER PANE: TRADINGVIEW CHART WORKSPACE (Cols 9) */}
+        <div className="col-span-12 lg:col-span-9 bg-[#161D2A] border border-[#1E293B] rounded-xl overflow-hidden shadow-sm flex flex-col">
           <InteractiveTradingChart initialSymbol={activeSymbol} initialTimeframe={activeTimeframe} />
         </div>
 
