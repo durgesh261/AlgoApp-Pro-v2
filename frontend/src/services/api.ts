@@ -71,6 +71,9 @@ import {
   DatabaseDiagnosticsDto,
   BackupInfoDto,
   DiagnosticsReportDto,
+  TradeReviewDetailDto,
+  TradeJournalNoteDto,
+  PerformanceReviewSummaryDto,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -471,6 +474,22 @@ export const operationsCenterApi = {
     return res.data;
   },
 };
+
+export const tradeReviewApi = {
+  getReview: async (tradeId: string): Promise<ApiResponse<TradeReviewDetailDto>> => {
+    const res = await apiClient.get(`/trade-review/${tradeId}`);
+    return res.data;
+  },
+  saveJournalNote: async (tradeId: string, note: Partial<TradeJournalNoteDto>): Promise<ApiResponse<TradeJournalNoteDto>> => {
+    const res = await apiClient.post(`/trade-review/${tradeId}/journal`, note);
+    return res.data;
+  },
+  getPerformanceSummary: async (): Promise<ApiResponse<PerformanceReviewSummaryDto>> => {
+    const res = await apiClient.get('/trade-review/performance-summary');
+    return res.data;
+  },
+};
+
 
 
 

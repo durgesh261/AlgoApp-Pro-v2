@@ -19,6 +19,7 @@ import { TradeAccountingPage } from './features/accounting/TradeAccountingPage';
 import { PortfolioDashboardPage } from './features/portfolio/PortfolioDashboardPage';
 import { StrategyLaboratoryPage } from './features/laboratory/StrategyLaboratoryPage';
 import { OperationsCenterPage } from './features/operations/OperationsCenterPage';
+import { TradeReviewPage } from './features/review/TradeReviewPage';
 
 export const App: React.FC = () => {
   return (
@@ -27,6 +28,7 @@ export const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/portfolio" element={<PortfolioDashboardPage />} />
+          <Route path="/trade-review" element={<TradeReviewPage />} />
           <Route path="/operations" element={<OperationsCenterPage />} />
           <Route path="/laboratory" element={<StrategyLaboratoryPage />} />
           <Route path="/paper-trading" element={<PaperTradingPage />} />

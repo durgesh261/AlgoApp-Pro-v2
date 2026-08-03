@@ -671,6 +671,44 @@ model SystemBackupRecord {
   @@map("system_backup_records")
 }
 
+model TradeReview {
+  id               String   @id @default(uuid())
+  tradeId          String   @unique @map("trade_id")
+  aiReviewJson     String   @map("ai_review_json")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@map("trade_reviews")
+}
+
+model TradeJournalNote {
+  id               String   @id @default(uuid())
+  tradeId          String   @unique @map("trade_id")
+  idea             String
+  whyEntered       String   @map("why_entered")
+  whyExited        String   @map("why_exited")
+  mistakes         String
+  lessons          String
+  emotion          String   @default("CALM")
+  confidenceBefore Int      @default(8) @map("confidence_before")
+  confidenceAfter  Int      @default(8) @map("confidence_after")
+  improvementNotes String   @map("improvement_notes")
+  tagsJson         String   @map("tags_json")
+  isFavorite       Boolean  @default(false) @map("is_favorite")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("trade_journal_notes")
+}
+
+model TradeSnapshot {
+  id               String   @id @default(uuid())
+  tradeId          String   @unique @map("trade_id")
+  snapshotJson     String   @map("snapshot_json")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@map("trade_snapshots")
+}
+
+
 
 
 

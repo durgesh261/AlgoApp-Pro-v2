@@ -19,12 +19,14 @@ import {
   Calculator,
   PieChart,
   FlaskConical,
-  Cpu
+  Cpu,
+  FileText
 } from 'lucide-react';
 
 const navigationItems = [
   { name: 'Dashboard', path: '/', icon: LayoutDashboard },
   { name: 'Live Portfolio', path: '/portfolio', icon: PieChart },
+  { name: 'Trade Review', path: '/trade-review', icon: FileText },
   { name: 'Operations NOC', path: '/operations', icon: Cpu },
   { name: 'Strategy Lab', path: '/laboratory', icon: FlaskConical },
   { name: 'Paper Trading', path: '/paper-trading', icon: Wallet },
