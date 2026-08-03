@@ -1,80 +1,42 @@
-# Production Deployment Guide — AlgoApp Pro v2.0.0-rc1
+# AlgoApp Pro v2 — Institutional Deployment Guide
 
-This guide covers the deployment of **AlgoApp Pro v2** using Docker, Docker Compose, and environment configuration profiles.
+## Prerequisites
+- Node.js v18.0+ or v20.0+
+- PostgreSQL or SQLite database
+- Delta Exchange Testnet / Production API Credentials
 
----
+## Quick Start Deployment
 
-## 1. Prerequisites
+1. **Clone & Install Dependencies**:
+   ```bash
+   git clone https://github.com/durgesh261/AlgoApp-Pro-v2.git
+   cd AlgoApp-Pro-v2
+   npm install
+   ```
 
-- **Docker Engine**: v20.10+
-- **Docker Compose**: v2.10+
-- **Node.js**: v20.x (for local developer builds)
-- **PostgreSQL**: v15+
+2. **Environment Configuration**:
+   Create `.env` file in `backend/`:
+   ```env
+   PORT=4000
+   DATABASE_URL="file:./dev.db"
+   DELTA_API_KEY="your_delta_api_key"
+   DELTA_API_SECRET="your_delta_api_secret"
+   TRADINGVIEW_WEBHOOK_SECRET="your_webhook_secret"
+   ```
 
----
+3. **Build & Database Migration**:
+   ```bash
+   npm run build
+   ```
 
-## 2. Environment Configuration
+4. **Start Production Servers**:
+   ```bash
+   npm run dev --workspace=backend
+   npm run dev --workspace=frontend
+   ```
 
-Copy `.env.example` to `.env` and fill in your production parameters:
-
-```bash
-cp .env.example .env
-```
-
-### `.env` File Parameters
-
-```env
-NODE_ENV=production
-PORT=4000
-DATABASE_URL=postgresql://postgres:postgrespassword2026@postgres:5432/algoapp_pro_v2
-TRADINGVIEW_WEBHOOK_SECRET=your_production_webhook_secret
-DELTA_API_KEY=your_delta_exchange_api_key
-DELTA_API_SECRET=your_delta_exchange_api_secret
-```
-
----
-
-## 3. Docker Compose Production Deployment
-
-Build and start the multi-container production stack (PostgreSQL database and Backend API):
-
-```bash
-docker-compose up -d --build
-```
-
-### Verify Container Status
-
-```bash
-docker-compose ps
-```
-
----
-
-## 4. Database Migration & Prisma Setup
-
-Run database migrations inside the backend container:
-
-```bash
-docker-compose exec backend npx prisma migrate deploy
-```
-
----
-
-## 5. Health & Readiness Verification
-
-Verify application health endpoints:
-
-- **Liveness Endpoint**: `GET http://localhost:4000/api/v1/system/liveness`
-- **Readiness Endpoint**: `GET http://localhost:4000/api/v1/system/readiness`
-- **Production Overview**: `GET http://localhost:4000/api/v1/production/overview`
-
-Expected response:
-```json
-{
-  "success": true,
-  "data": {
-    "status": "HEALTHY",
-    "uptimeSeconds": 120
-  }
-}
-```
+5. **Access Application Terminals**:
+   - Terminal Desktop UI: `http://localhost:3000`
+   - Operations NOC: `http://localhost:3000/operations`
+   - Shadow Laboratory: `http://localhost:3000/shadow-laboratory`
+   - Trade Review Workspace: `http://localhost:3000/trade-review`
