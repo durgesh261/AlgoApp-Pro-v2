@@ -14,7 +14,8 @@ import {
   BarChart3,
   Server,
   ShieldAlert,
-  Radio
+  Radio,
+  ShieldCheck
 } from 'lucide-react';
 
 const navigationItems = [
@@ -22,6 +23,7 @@ const navigationItems = [
   { name: 'Paper Trading', path: '/paper-trading', icon: Wallet },
   { name: 'Live Trading', path: '/live-trading', icon: Activity },
   { name: 'TradingView Alert', path: '/tradingview', icon: Radio },
+  { name: 'Indicator Validation', path: '/indicator-validation', icon: ShieldCheck },
   { name: 'System Monitor', path: '/system-monitor', icon: Server },
   { name: 'Production', path: '/production-dashboard', icon: ShieldAlert },
   { name: 'Analysis', path: '/analysis', icon: LineChart },

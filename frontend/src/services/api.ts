@@ -52,6 +52,8 @@ import {
   ProductionOverviewDto,
   ExecutionMode,
   BackupStatusDto,
+  ValidationReportDto,
+  RunValidationInput,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -333,3 +335,19 @@ export const productionApi = {
     return res.data;
   },
 };
+
+export const indicatorValidationApi = {
+  runValidation: async (input: RunValidationInput = {}): Promise<ApiResponse<ValidationReportDto>> => {
+    const res = await apiClient.post('/indicator-validation/run', input);
+    return res.data;
+  },
+  getHistory: async (): Promise<ApiResponse<ValidationReportDto[]>> => {
+    const res = await apiClient.get('/indicator-validation/history');
+    return res.data;
+  },
+  getReportById: async (id: string): Promise<ApiResponse<ValidationReportDto>> => {
+    const res = await apiClient.get(`/indicator-validation/report/${id}`);
+    return res.data;
+  },
+};
+

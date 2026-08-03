@@ -19,6 +19,7 @@ import { tradingViewRouter } from '../modules/tradingview-adapter/tradingview.ro
 import { systemIntegrationRouter } from '../modules/system-integration/systemIntegration.routes.js';
 import { productionRouter } from '../modules/production/production.routes.js';
 import { indicatorRouter } from '../modules/indicator-engine/indicator.routes.js';
+import { indicatorValidationRouter } from '../modules/indicator-validation/indicatorValidation.routes.js';
 
 export const apiRouter = Router();
 
@@ -42,3 +43,4 @@ apiRouter.use('/tradingview', tradingViewRouter);
 apiRouter.use('/system-integration', systemIntegrationRouter);
 apiRouter.use('/production', productionRouter);
 apiRouter.use('/indicator', indicatorRouter);
+apiRouter.use('/indicator-validation', indicatorValidationRouter);
