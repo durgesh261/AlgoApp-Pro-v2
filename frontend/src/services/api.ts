@@ -56,6 +56,9 @@ import {
   RunValidationInput,
   StrategyProfileDto,
   CreateStrategyProfileInput,
+  WalletStateDto,
+  ChallengeStateDto,
+  TradeLedgerEntryDto,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -371,5 +374,25 @@ export const strategyProfileApi = {
     return res.data;
   },
 };
+
+export const tradeAccountingApi = {
+  getWallet: async (): Promise<ApiResponse<WalletStateDto>> => {
+    const res = await apiClient.get('/trade-accounting/wallet');
+    return res.data;
+  },
+  getChallenge: async (): Promise<ApiResponse<ChallengeStateDto>> => {
+    const res = await apiClient.get('/trade-accounting/challenge');
+    return res.data;
+  },
+  resetChallenge: async (): Promise<ApiResponse<ChallengeStateDto>> => {
+    const res = await apiClient.post('/trade-accounting/challenge/reset');
+    return res.data;
+  },
+  getLedger: async (): Promise<ApiResponse<TradeLedgerEntryDto[]>> => {
+    const res = await apiClient.get('/trade-accounting/ledger');
+    return res.data;
+  },
+};
+
 
 

@@ -15,6 +15,7 @@ export * from './types/production.js';
 export * from './types/indicatorEngine.js';
 export * from './types/indicatorValidation.js';
 export * from './types/strategyProfile.js';
+export * from './types/tradeAccounting.js';
 export * from './constants/index.js';
 export * from './validation/index.js';
 export * from './validation/paper.js';

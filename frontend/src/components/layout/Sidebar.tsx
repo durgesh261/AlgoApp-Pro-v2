@@ -15,13 +15,15 @@ import {
   Server,
   ShieldAlert,
   Radio,
-  ShieldCheck
+  ShieldCheck,
+  Calculator
 } from 'lucide-react';
 
 const navigationItems = [
   { name: 'Dashboard', path: '/', icon: LayoutDashboard },
   { name: 'Paper Trading', path: '/paper-trading', icon: Wallet },
   { name: 'Live Trading', path: '/live-trading', icon: Activity },
+  { name: 'Trade Accounting', path: '/trade-accounting', icon: Calculator },
   { name: 'TradingView Alert', path: '/tradingview', icon: Radio },
   { name: 'Indicator Validation', path: '/indicator-validation', icon: ShieldCheck },
   { name: 'System Monitor', path: '/system-monitor', icon: Server },

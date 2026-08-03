@@ -517,3 +517,89 @@ model StrategyProfile {
   @@map("strategy_profiles")
 }
 
+model TradeLedger {
+  id                String   @id @default(uuid())
+  tradeId           String   @unique @map("trade_id")
+  exchangeOrderId   String   @map("exchange_order_id")
+  exchangeTradeId   String?  @map("exchange_trade_id")
+  symbol            String
+  timeframe         String   @default("1H")
+  strategyProfileId String   @map("strategy_profile_id")
+  strategyVersion   String   @default("1.0.0") @map("strategy_version")
+  indicatorVersion  String   @default("1.0.0") @map("indicator_version")
+  ruleVersion       String   @default("1.0.0") @map("rule_version")
+  decisionVersion   String   @default("1.0.0") @map("decision_version")
+  executionMode     String   @default("PAPER") @map("execution_mode")
+  side              String
+  entryPrice        Float    @map("entry_price")
+  exitPrice         Float    @map("exit_price")
+  quantity          Float
+  marginUsed        Float    @map("margin_used")
+  leverage          Float
+  riskPercent       Float    @map("risk_percent")
+  rewardPercent     Float    @map("reward_percent")
+  stopLoss          Float    @map("stop_loss")
+  takeProfit        Float    @map("take_profit")
+  grossPnL          Float    @map("gross_pnl")
+  tradingFee        Float    @map("trading_fee")
+  fundingFee        Float    @map("funding_fee")
+  tax               Float
+  netPnL            Float    @map("net_pnl")
+  durationSeconds   Int      @map("duration_seconds")
+  executionLatencyMs Float   @map("execution_latency_ms")
+  decisionConfidence Float   @map("decision_confidence")
+  decisionExplanation String @map("decision_explanation")
+  resultStatus      String   @map("result_status")
+  syncStatus        String   @default("SIMULATED") @map("sync_status")
+  executedAt        DateTime @default(now()) @map("executed_at")
+  closedAt          DateTime @default(now()) @map("closed_at")
+
+  @@map("trade_ledger")
+}
+
+model ChallengeSession {
+  id                 String   @id @default("default-20day-challenge")
+  startDate          DateTime @default(now()) @map("start_date")
+  currentDay         Int      @default(1) @map("current_day")
+  remainingDays      Int      @default(20) @map("remaining_days")
+  initialBalance     Float    @default(50000.0) @map("initial_balance")
+  currentBalance     Float    @default(50000.0) @map("current_balance")
+  grossProfit        Float    @default(0.0) @map("gross_profit")
+  netProfit          Float    @default(0.0) @map("net_profit")
+  dailyTargetPercent Float    @default(0.5) @map("daily_target_percent")
+  totalTargetPercent Float    @default(10.0) @map("total_target_percent")
+  maxDailyDrawdownPercent Float @default(5.0) @map("max_daily_drawdown_percent")
+  maxOverallDrawdownPercent Float @default(10.0) @map("max_overall_drawdown_percent")
+  winningDays        Int      @default(0) @map("winning_days")
+  losingDays         Int      @default(0) @map("losing_days")
+  winStreak          Int      @default(0) @map("win_streak")
+  lossStreak         Int      @default(0) @map("loss_streak")
+  longestWinStreak   Int      @default(0) @map("longest_win_streak")
+  longestLossStreak  Int      @default(0) @map("longest_loss_streak")
+  status             String   @default("RUNNING")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@map("challenge_sessions")
+}
+
+model WalletState {
+  id                 String   @id @default("default-wallet-state")
+  currentBalance     Float    @default(50000.0) @map("current_balance")
+  availableBalance   Float    @default(50000.0) @map("available_balance")
+  usedMargin         Float    @default(0.0) @map("used_margin")
+  equity             Float    @default(50000.0)
+  realizedPnL        Float    @default(0.0) @map("realized_pnl")
+  unrealizedPnL      Float    @default(0.0) @map("unrealized_pnl")
+  grossPnL           Float    @default(0.0) @map("gross_pnl")
+  netPnL             Float    @default(0.0) @map("net_pnl")
+  dailyProfit        Float    @default(0.0) @map("daily_profit")
+  weeklyProfit       Float    @default(0.0) @map("weekly_profit")
+  monthlyProfit      Float    @default(0.0) @map("monthly_profit")
+  peakEquity         Float    @default(50000.0) @map("peak_equity")
+  maxDrawdownPercent Float    @default(0.0) @map("max_drawdown_percent")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@map("wallet_states")
+}
+
+

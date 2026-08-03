@@ -15,6 +15,7 @@ import { ReplayPage } from './features/replay/ReplayPage';
 import { BacktestingPage } from './features/backtesting/BacktestingPage';
 import { TradingViewSetupPage } from './features/tradingview/TradingViewSetupPage';
 import { IndicatorValidationPage } from './features/validation/IndicatorValidationPage';
+import { TradeAccountingPage } from './features/accounting/TradeAccountingPage';
 
 export const App: React.FC = () => {
   return (
@@ -26,6 +27,7 @@ export const App: React.FC = () => {
           <Route path="/live-trading" element={<LiveTradingPage />} />
           <Route path="/tradingview" element={<TradingViewSetupPage />} />
           <Route path="/indicator-validation" element={<IndicatorValidationPage />} />
+          <Route path="/trade-accounting" element={<TradeAccountingPage />} />
           <Route path="/system-monitor" element={<SystemMonitorPage />} />
           <Route path="/production-dashboard" element={<ProductionDashboardPage />} />
           <Route path="/analysis" element={<AnalysisPage />} />
