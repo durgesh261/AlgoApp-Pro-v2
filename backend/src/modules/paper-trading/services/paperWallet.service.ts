@@ -3,12 +3,12 @@ import { PaperWalletDto } from '@algoapp/shared';
 // Memory fallback store for standalone paper trading execution
 let currentWallet: PaperWalletDto = {
   id: 'default-paper-wallet',
-  virtualBalance: 50000.0,
-  availableMargin: 50000.0,
+  virtualBalance: 10.0,
+  availableMargin: 10.0,
   usedMargin: 0.0,
-  realizedPnL: 3840.5,
-  unrealizedPnL: 1116.0,
-  equity: 54956.5,
+  realizedPnL: 0.0,
+  unrealizedPnL: 0.0,
+  equity: 10.0,
   updatedAt: new Date().toISOString(),
 };
 

@@ -2,10 +2,10 @@ import { WalletStateDto } from '@algoapp/shared';
 
 let walletState: WalletStateDto = {
   id: 'default-wallet-state',
-  currentBalance: 50000.0,
-  availableBalance: 50000.0,
+  currentBalance: 10.0,
+  availableBalance: 10.0,
   usedMargin: 0.0,
-  equity: 50000.0,
+  equity: 10.0,
   realizedPnL: 0.0,
   unrealizedPnL: 0.0,
   grossPnL: 0.0,
@@ -13,7 +13,7 @@ let walletState: WalletStateDto = {
   dailyProfit: 0.0,
   weeklyProfit: 0.0,
   monthlyProfit: 0.0,
-  peakEquity: 50000.0,
+  peakEquity: 10.0,
   maxDrawdownPercent: 0.0,
   updatedAt: new Date().toISOString(),
 };
@@ -54,7 +54,7 @@ export class WalletEngineService {
     return walletState;
   }
 
-  public async resetWallet(initialBalance: number = 50000.0): Promise<WalletStateDto> {
+  public async resetWallet(initialBalance: number = 10.0): Promise<WalletStateDto> {
     walletState = {
       id: 'default-wallet-state',
       currentBalance: initialBalance,

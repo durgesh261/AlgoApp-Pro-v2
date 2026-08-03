@@ -31,12 +31,12 @@ model SystemSettings {
 
 model PaperWallet {
   id              String   @id @default("default-paper-wallet")
-  virtualBalance  Float    @default(50000.0) @map("virtual_balance")
-  availableMargin Float    @default(50000.0) @map("available_margin")
+  virtualBalance  Float    @default(10.0) @map("virtual_balance")
+  availableMargin Float    @default(10.0) @map("available_margin")
   usedMargin      Float    @default(0.0) @map("used_margin")
   realizedPnL     Float    @default(0.0) @map("realized_pnl")
   unrealizedPnL   Float    @default(0.0) @map("unrealized_pnl")
-  equity          Float    @default(50000.0)
+  equity          Float    @default(10.0)
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 

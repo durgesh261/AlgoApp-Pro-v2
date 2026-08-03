@@ -8,8 +8,8 @@ let challengeState: ChallengeStateDto = {
   startDate: new Date().toISOString(),
   currentDay: 1,
   remainingDays: 20,
-  initialBalance: 50000.0,
-  currentBalance: 50000.0,
+  initialBalance: 10.0,
+  currentBalance: 10.0,
   grossProfit: 0.0,
   netProfit: 0.0,
   dailyTargetPercent: 0.5,
@@ -131,8 +131,8 @@ export class ChallengeEngineService {
       startDate: new Date().toISOString(),
       currentDay: 1,
       remainingDays: 20,
-      initialBalance: 50000.0,
-      currentBalance: 50000.0,
+      initialBalance: 10.0,
+      currentBalance: 10.0,
       grossProfit: 0.0,
       netProfit: 0.0,
       dailyTargetPercent: 0.5,
@@ -149,7 +149,7 @@ export class ChallengeEngineService {
       updatedAt: new Date().toISOString(),
     };
 
-    await walletService.resetWallet(50000.0);
+    await walletService.resetWallet(10.0);
     return challengeState;
   }
 }

@@ -51,12 +51,12 @@ export class PaperRiskService {
     }
 
     const wallet = await PaperWalletService.getWallet();
-    const maxRiskNotional = (wallet.equity * currentRiskConfig.maxRiskPerTradePercent) / 100;
+    const maxLeveragedNotional = wallet.equity * 100; // Allow up to 100x max leveraged notional for micro accounts
 
-    if (orderNotional > maxRiskNotional * 10) {
+    if (orderNotional > maxLeveragedNotional) {
       return {
         passed: false,
-        reason: `MAX_RISK_PER_TRADE_EXCEEDED: Order value exceeds risk policy limit (${currentRiskConfig.maxRiskPerTradePercent}% of equity).`,
+        reason: `MAX_RISK_PER_TRADE_EXCEEDED: Order notional ($${orderNotional}) exceeds maximum account margin capacity.`,
       };
     }
 

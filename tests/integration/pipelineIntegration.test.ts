@@ -26,7 +26,7 @@ describe('System Integration & Shadow Mode End-to-End Integration Tests', () => 
       timeframe: '1H',
       mode: ExecutionMode.SHADOW,
       price: 64350.0,
-      quantity: 0.1,
+      quantity: 0.001,
     });
 
     expect(trace.symbol).toBe('BTCUSD.P');

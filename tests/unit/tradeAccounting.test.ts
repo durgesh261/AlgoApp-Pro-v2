@@ -40,15 +40,15 @@ describe('Trade Accounting & 20-Day Challenge Manager Test Suite', () => {
 
   it('2. WalletEngineService - updates equity and balance strictly post-accounting', async () => {
     const initialWallet = await walletService.getWalletState();
-    expect(initialWallet.equity).toBe(50000);
+    expect(initialWallet.equity).toBe(10);
 
     // Apply +$1,000 Net PnL
     const updatedWallet = await walletService.applyTradeResult(1000, 1100, 5000);
 
-    expect(updatedWallet.currentBalance).toBe(51000);
-    expect(updatedWallet.equity).toBe(51000);
+    expect(updatedWallet.currentBalance).toBe(1010);
+    expect(updatedWallet.equity).toBe(1010);
     expect(updatedWallet.realizedPnL).toBe(1000);
-    expect(updatedWallet.peakEquity).toBe(51000);
+    expect(updatedWallet.peakEquity).toBe(1010);
   });
 
   it('3. ChallengeEngineService - tracks 10% target ($5,000) and marks status PASSED when achieved', async () => {
@@ -81,17 +81,17 @@ describe('Trade Accounting & 20-Day Challenge Manager Test Suite', () => {
   });
 
   it('5. ChallengeEngineService - enforces safety rejection rules', async () => {
-    // Should allow normal trade
-    const check1 = await challengeService.canExecuteTrade(5000, false);
+    // Should allow normal trade (1.0 margin <= 10.0 available)
+    const check1 = await challengeService.canExecuteTrade(1.0, false);
     expect(check1.allowed).toBe(true);
 
     // Should reject if Kill Switch active
-    const check2 = await challengeService.canExecuteTrade(5000, true);
+    const check2 = await challengeService.canExecuteTrade(1.0, true);
     expect(check2.allowed).toBe(false);
     expect(check2.reason).toContain('Kill Switch');
 
-    // Should reject if margin required > available balance
-    const check3 = await challengeService.canExecuteTrade(60000, false);
+    // Should reject if margin required > available balance (20.0 > 10.0)
+    const check3 = await challengeService.canExecuteTrade(20.0, false);
     expect(check3.allowed).toBe(false);
     expect(check3.reason).toContain('Insufficient available balance');
   });

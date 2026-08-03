@@ -17,7 +17,7 @@ describe('Execution Engine Unit Tests', () => {
       symbol: 'BTCUSD.P',
       side: 'LONG',
       mode: ExecutionMode.PAPER,
-      quantity: 0.1,
+      quantity: 0.001,
       price: 64000.0,
     });
 

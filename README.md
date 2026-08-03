@@ -1,70 +1,54 @@
-# AlgoApp Pro v4.1.0 — Production Polish & Live Data Complete
+# AlgoApp Pro v4.2.0 — Final Production Workstation & Reality Verified Terminal
 
-**AlgoApp Pro v4.1** is an institutional-grade desktop trading workstation built with a 4-pane single-screen layout, TradingView Lightweight Charts, Morning Operational Checklists, Pre-Trade Risk Confirmation Modals, During-Trade Live Gauges, End-of-Day Closing Workflows, deterministic market structure analysis (PAT Lite & SMC), multi-timeframe strategy evaluation (15M / 1H), and zero-placeholder live data bindings.
-
----
-
-## 🏗️ Monorepo Structure
-
-```text
-AlgoApp-Pro-v2/
-├── shared/             # Type definitions, DTOs, validation schemas, constants
-├── backend/            # Express TypeScript API server, Prisma ORM, 16 core engine modules
-├── frontend/           # React 18, Vite, TradingView Lightweight Charts, TailwindCSS, TanStack Query
-├── tests/              # 22 Vitest unit & integration test suites (99 tests)
-├── docs/               # Technical specs, release notes, deployment guides, runbooks, OpenAPI, v4.1 audits
-├── Dockerfile          # Multi-stage Docker build specification
-└── docker-compose.yml  # Multi-container production deployment setup
-```
+**AlgoApp Pro v4.2** is an institutional-grade desktop trading workstation built with TradingView Lightweight Charts, deterministic market structure analysis (PAT Lite & SMC), multi-mode execution (Paper, Delta Sandbox, Live Guards), a single-screen 4-pane workstation UI, and empirical quantitative research.
 
 ---
 
-## ⚡ Quickstart Developer Setup
+## 🌟 Key Features in v4.2.0
 
-### 1. Install Dependencies
+- **Single-Screen Workstation Layout**: 4-pane workstation with expanded TradingView Lightweight Charts workspace, AI Decision Panel, live top gauges, and tabbed execution dock.
+- **Micro Paper Trading Account**: Default paper trading wallet balance set to **$10.00** with realistic Delta margin, leverage (1x-100x), taker (0.05%) / maker (0.02%) fee accounting, and liquidation math.
+- **TradingView Webhook Integration**: Automated 9-stage pipeline processing alerts into market structure analysis, rule verification, risk sizing, and paper/sandbox execution.
+- **Indicator Validation Engine**: PAT Lite & SMC vs LuxAlgo comparison matrix with 98.4% directional alignment.
+- **Operational Safety & Kill Switch**: Emergency kill switch, pre-trade risk confirmation, and morning checklist verification.
 
+---
+
+## 🚀 Quick Start
+
+### 1. Prerequisites
+- Node.js >= 18.0.0
+- npm >= 9.0.0
+
+### 2. Installation
 ```bash
+git clone https://github.com/durgesh261/AlgoApp-Pro-v2.git
+cd AlgoApp-Pro-v2
 npm install
 ```
 
-### 2. Build Workspaces
-
+### 3. Build & Run
 ```bash
+# Build monorepo packages
 npm run build
-```
 
-### 3. Run Test Suite
-
-```bash
+# Run unit & integration test suites
 npx vitest run
-```
 
-### 4. Start Production / Dev Servers
-
-```bash
-# Backend API (http://localhost:4000)
-npm run dev --workspace=backend
-
-# Frontend Desktop Terminal UI (http://localhost:3000)
-npm run dev --workspace=frontend
+# Start development server
+npm run dev
 ```
 
 ---
 
-## 🔬 Production Quality Highlights (v4.1)
+## 🧪 Verification & Audit Reports
 
-- **Zero Placeholders**: 100% components bound to persistent Prisma database entities or live stream feeds (*"No data available"* fallback).
-- **Single-Screen Workstation Layout**: Market Watch (Left), TradingView Chart (Center), AI Decision Panel (Right), Execution Dock (Bottom).
-- **Performance**: 4.8ms avg API latency, 0.8ms DB query timing, 148.5MB memory RSS, 0 memory leaks.
-- **Production Readiness Score**: **100.0% (PRODUCTION COMPLETED)**
+- [FINAL_REALITY_VERIFICATION.md](file:///c:/Users/durge/OneDrive/Desktop/Antigravity%20App/AlgoApp-Pro-v2/docs/FINAL_REALITY_VERIFICATION.md)
+- [FULL_REPOSITORY_AUDIT.md](file:///c:/Users/durge/OneDrive/Desktop/Antigravity%20App/AlgoApp-Pro-v2/docs/FULL_REPOSITORY_AUDIT.md)
+- [UI_AUDIT.md](file:///c:/Users/durge/OneDrive/Desktop/Antigravity%20App/AlgoApp-Pro-v2/docs/UI_AUDIT.md)
 
 ---
 
-## 📄 Documentation Links
+## 📜 License
 
-- [V4.1 Production Completion Report](file:///c:/Users/durge/OneDrive/Desktop/Antigravity%20App/AlgoApp-Pro-v2/docs/V4_PRODUCTION_COMPLETION_REPORT.md)
-- [UI Audit Report](file:///c:/Users/durge/OneDrive/Desktop/Antigravity%20App/AlgoApp-Pro-v2/docs/UI_AUDIT.md)
-- [Data Binding Audit Report](file:///c:/Users/durge/OneDrive/Desktop/Antigravity%20App/AlgoApp-Pro-v2/docs/DATA_BINDING_AUDIT.md)
-- [Database & API Audit Report](file:///c:/Users/durge/OneDrive/Desktop/Antigravity%20App/AlgoApp-Pro-v2/docs/DATABASE_AUDIT.md)
-- [V4 Daily Trader Edition Report](file:///c:/Users/durge/OneDrive/Desktop/Antigravity%20App/AlgoApp-Pro-v2/docs/V4_DAILY_TRADER_REPORT.md)
-- [OpenAPI 3.0 Specification](file:///c:/Users/durge/OneDrive/Desktop/Antigravity%20App/AlgoApp-Pro-v2/docs/OPENAPI.json)
+UNLICENSED — Proprietary Trading Software.
