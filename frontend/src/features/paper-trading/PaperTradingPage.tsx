@@ -119,14 +119,14 @@ export const PaperTradingPage: React.FC = () => {
         <div className="bg-[#161D2A] border border-[#1E293B] card-accent-paper p-3 rounded-xl">
           <span className="text-[10px] text-[#94A3B8] uppercase block">Virtual Balance</span>
           <div className="text-lg font-bold text-[#F8FAFC] mt-0.5 font-mono-tabular">
-            ${wallet?.virtualBalance ? wallet.virtualBalance.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '50,000.00'}
+            ${wallet?.virtualBalance !== undefined ? wallet.virtualBalance.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '10.00'}
           </div>
         </div>
 
         <div className="bg-[#161D2A] border border-[#1E293B] card-accent-paper p-3 rounded-xl">
           <span className="text-[10px] text-[#94A3B8] uppercase block">Account Equity</span>
           <div className="text-lg font-bold text-[#00C896] mt-0.5 font-mono-tabular">
-            ${wallet?.equity ? wallet.equity.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '54,956.50'}
+            ${wallet?.equity !== undefined ? wallet.equity.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '10.00'}
           </div>
         </div>
 

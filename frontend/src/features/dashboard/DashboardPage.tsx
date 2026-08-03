@@ -33,7 +33,7 @@ export const DashboardPage: React.FC = () => {
     { id: 1, label: 'TradingView Adapter Connected', passed: true },
     { id: 2, label: 'Delta Exchange Sandbox Connected', passed: true },
     { id: 3, label: 'PostgreSQL Database Healthy', passed: true },
-    { id: 4, label: 'Paper Wallet Synced ($50,000)', passed: true },
+    { id: 4, label: 'Paper Wallet Synced ($10)', passed: true },
     { id: 5, label: '20-Day Challenge Session Active', passed: true },
     { id: 6, label: 'Strategy Profile Loaded (Default 1H)', passed: true },
     { id: 7, label: 'Timeframe Selected (1H)', passed: true },
@@ -111,7 +111,7 @@ export const DashboardPage: React.FC = () => {
         <div className="flex flex-wrap items-center gap-3 text-xs">
           <div className="bg-[#0B0E14] border border-[#1E293B] px-3 py-1.5 rounded-lg">
             <span className="text-[#94A3B8] block text-[10px]">WALLET BALANCE</span>
-            <span className="text-white font-bold font-mono-tabular">${wallet?.virtualBalance.toLocaleString() ?? '50,000.00'}</span>
+            <span className="text-white font-bold font-mono-tabular">${wallet?.virtualBalance !== undefined ? wallet.virtualBalance.toFixed(2) : '10.00'}</span>
           </div>
 
           <div className="bg-[#0B0E14] border border-[#1E293B] px-3 py-1.5 rounded-lg">

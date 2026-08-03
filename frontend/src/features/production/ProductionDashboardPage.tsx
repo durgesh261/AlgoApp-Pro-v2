@@ -132,7 +132,7 @@ export const ProductionDashboardPage: React.FC = () => {
               <span>PAPER SIMULATION</span>
               <ShieldCheck className="w-4 h-4" />
             </div>
-            <p className="text-[10px] opacity-80">Virtual balance simulation ($50,000 equity). Zero financial risk.</p>
+            <p className="text-[10px] opacity-80">Virtual balance simulation ($10.00 equity). Zero financial risk.</p>
           </button>
 
           <button

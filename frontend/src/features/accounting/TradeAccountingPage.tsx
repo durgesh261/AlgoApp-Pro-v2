@@ -36,7 +36,7 @@ export const TradeAccountingPage: React.FC = () => {
   const resetChallengeMutation = useMutation({
     mutationFn: tradeAccountingApi.resetChallenge,
     onSuccess: () => {
-      addToast('Challenge Reset', '20-Day Challenge and Wallet state have been reset to $50,000', 'info');
+      addToast('Challenge Reset', '20-Day Challenge and Wallet state have been reset to $10.00', 'info');
       queryClient.invalidateQueries({ queryKey: ['challengeState'] });
       queryClient.invalidateQueries({ queryKey: ['walletState'] });
     },
@@ -49,23 +49,23 @@ export const TradeAccountingPage: React.FC = () => {
   };
 
   const wallet = walletData?.data || {
-    currentBalance: 50000.0,
-    availableBalance: 50000.0,
+    currentBalance: 10.0,
+    availableBalance: 10.0,
     usedMargin: 0.0,
-    equity: 50000.0,
+    equity: 10.0,
     realizedPnL: 0.0,
     grossPnL: 0.0,
     netPnL: 0.0,
     dailyProfit: 0.0,
-    peakEquity: 50000.0,
+    peakEquity: 10.0,
     maxDrawdownPercent: 0.0,
   };
 
   const challenge = challengeData?.data || {
     currentDay: 1,
     remainingDays: 20,
-    initialBalance: 50000.0,
-    currentBalance: 50000.0,
+    initialBalance: 10.0,
+    currentBalance: 10.0,
     grossProfit: 0.0,
     netProfit: 0.0,
     totalTargetPercent: 10.0,

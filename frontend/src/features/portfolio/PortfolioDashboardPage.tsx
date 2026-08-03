@@ -56,10 +56,10 @@ export const PortfolioDashboardPage: React.FC = () => {
   });
 
   const wallet = walletData?.data || {
-    currentBalance: 50000.0,
-    availableBalance: 50000.0,
+    currentBalance: 10.0,
+    availableBalance: 10.0,
     usedMargin: 0.0,
-    equity: 50000.0,
+    equity: 10.0,
     netPnL: 0.0,
     dailyProfit: 0.0,
   };
