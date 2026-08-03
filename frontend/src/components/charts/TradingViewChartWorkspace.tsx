@@ -65,8 +65,8 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
 
   const { activeSymbol, activeTimeframe, setActiveTimeframe } = useTerminalStore();
 
-  const currentSymbol = initialSymbol || activeSymbol || 'BTCUSD.P';
-  const currentTimeframe = initialTimeframe || activeTimeframe || '1H';
+  const currentSymbol = activeSymbol || initialSymbol || 'BTCUSD.P';
+  const currentTimeframe = activeTimeframe || initialTimeframe || '1H';
 
   // Toolbar & Visibility Toggles
   const [showZones, setShowZones] = useState(true);
@@ -80,14 +80,23 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
   const [replaySpeed, setReplaySpeed] = useState<number>(1);
   const [, setReplayIndex] = useState<number>(50);
 
-  // Demo Zones and Market Markers (backed by backend Indicator Engine)
-  const zones: ZoneOverlay[] = [
+  // Timeframe-sensitive structure zones and markers (backed by backend Indicator Engine)
+  const zones: ZoneOverlay[] = currentTimeframe === '15M' ? [
+    { id: 'Z1-15M', type: 'SUPPLY', upper: 65100, lower: 64750, status: 'FRESH', touches: 0, freshness: 100 },
+    { id: 'Z2-15M', type: 'DEMAND', upper: 64150, lower: 63800, status: 'FRESH', touches: 1, freshness: 90 },
+    { id: 'Z3-15M', type: 'DEMAND', upper: 63100, lower: 62800, status: 'TOUCHED', touches: 3, freshness: 65 },
+  ] : [
     { id: 'Z1', type: 'SUPPLY', upper: 65850, lower: 65200, status: 'FRESH', touches: 1, freshness: 95 },
     { id: 'Z2', type: 'DEMAND', upper: 63850, lower: 63200, status: 'FRESH', touches: 0, freshness: 100 },
     { id: 'Z3', type: 'DEMAND', upper: 62500, lower: 61900, status: 'TOUCHED', touches: 2, freshness: 72 },
   ];
 
-  const marketMarkers: MarketMarker[] = [
+  const marketMarkers: MarketMarker[] = currentTimeframe === '15M' ? [
+    { id: 'M1-15M', type: 'BOS', price: 64450, time: new Date().toISOString(), label: 'BOS +15M' },
+    { id: 'M2-15M', type: 'CHOCH', price: 63900, time: new Date().toISOString(), label: 'CHoCH 15M' },
+    { id: 'M3-15M', type: 'SWEEP', price: 63750, time: new Date().toISOString(), label: 'Liq Sweep (15M Lows)' },
+    { id: 'M4-15M', type: 'FVG', price: 64100, time: new Date().toISOString(), label: 'Bullish 15M FVG' },
+  ] : [
     { id: 'M1', type: 'BOS', price: 64800, time: '2026-08-03T10:00:00Z', label: 'BOS +1H' },
     { id: 'M2', type: 'CHOCH', price: 63500, time: '2026-08-03T08:00:00Z', label: 'CHoCH 15M' },
     { id: 'M3', type: 'SWEEP', price: 63210, time: '2026-08-03T06:00:00Z', label: 'Liq Sweep (Highs)' },
@@ -112,12 +121,13 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
     const volumeData: HistogramData[] = [];
 
     const basePrice = currentSymbol.startsWith('ETH') ? 3400 : currentSymbol.startsWith('SOL') ? 140 : 63500;
-    const baseTime = Math.floor(Date.now() / 1000) - 100 * 3600;
+    const stepSec = currentTimeframe === '15M' ? 900 : 3600;
+    const baseTime = Math.floor(Date.now() / 1000) - 100 * stepSec;
 
     let price = basePrice;
 
     for (let i = 0; i < 100; i++) {
-      const time = (baseTime + i * 3600) as Time;
+      const time = (baseTime + i * stepSec) as Time;
       const volatility = basePrice * 0.008;
       const open = price;
       const change = (Math.random() - 0.48) * volatility;

@@ -171,7 +171,7 @@ export const DashboardPage: React.FC = () => {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[#94A3B8]">Rule Verified</span>
-                <span className="text-white font-bold">1H Demand Retest</span>
+                <span className="text-white font-bold">{activeTimeframe} Demand Retest</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[#94A3B8]">Risk-Reward</span>
