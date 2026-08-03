@@ -40,7 +40,7 @@ export class TradeAccountingService {
     const marginUsed = leverage > 0 ? Number((notionalValue / leverage).toFixed(2)) : notionalValue;
     const roiPercent = marginUsed > 0 ? Number(((netPnL / marginUsed) * 100).toFixed(2)) : 0;
     const effectiveLeverage = leverage;
-    const capitalUtilizationPercent = marginUsed > 0 ? Number(((marginUsed / 50000.0) * 100).toFixed(1)) : 0;
+    const capitalUtilizationPercent = marginUsed > 0 ? Number(((marginUsed / 10.0) * 100).toFixed(1)) : 0;
 
     return {
       tradeId,

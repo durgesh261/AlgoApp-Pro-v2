@@ -13,7 +13,7 @@ export class AiTradeReviewService {
       ? ['Slight slippage observed during volatile candle entry execution.']
       : ['Price broke demand zone boundary before stop loss trigger point.'];
 
-    const riskAnalysis = `Margin used was $${ledgerEntry.marginUsed} (${((ledgerEntry.marginUsed / 50000.0) * 100).toFixed(1)}% of total equity) with effective risk-reward ratio of ${ledgerEntry.rewardPercent / ledgerEntry.riskPercent}:1.`;
+    const riskAnalysis = `Margin used was $${ledgerEntry.marginUsed} (${((ledgerEntry.marginUsed / 10.0) * 100).toFixed(1)}% of total equity) with effective risk-reward ratio of ${ledgerEntry.rewardPercent / ledgerEntry.riskPercent}:1.`;
     const challengeImpact = isWin
       ? `Added +$${ledgerEntry.netPnL} to 20-Day Challenge balance, progressing towards 10% target.`
       : `Deducted -$${Math.abs(ledgerEntry.netPnL)} from 20-Day Challenge balance. Daily drawdown remains strictly within 5% max threshold.`;
