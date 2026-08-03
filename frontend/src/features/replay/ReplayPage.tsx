@@ -6,6 +6,7 @@ import { useTerminalStore } from '../../store/useTerminalStore';
 import { useToastStore } from '../../store/useToastStore';
 import { ReplayControlAction, ReplayStatus } from '@algoapp/shared';
 import { CurrentPairWidget } from '../../components/widgets/CurrentPairWidget';
+import { TradingViewChartWorkspace } from '../../components/charts/TradingViewChartWorkspace';
 import { 
   Play, 
   Pause, 
@@ -77,6 +78,11 @@ export const ReplayPage: React.FC = () => {
       </div>
 
       <CurrentPairWidget />
+
+      {/* Interactive TradingView Chart Workspace */}
+      <div className="h-[420px] w-full">
+        <TradingViewChartWorkspace initialSymbol={activeSymbol} initialTimeframe="1H" isReplayActive={true} />
+      </div>
 
       {/* Replay Control Bar & Slider */}
       <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-4 shadow-sm">
