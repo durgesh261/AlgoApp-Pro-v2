@@ -21,6 +21,7 @@ export * from './types/strategyOptimization.js';
 export * from './types/operationsCenter.js';
 export * from './types/tradeReview.js';
 export * from './types/shadowTrading.js';
+export * from './types/tradingIntelligence.js';
 export * from './constants/index.js';
 export * from './validation/index.js';
 export * from './validation/paper.js';

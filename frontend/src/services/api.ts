@@ -512,6 +512,41 @@ export const shadowTradingApi = {
   },
 };
 
+export const intelligenceApi = {
+  getIntelligenceScore: async () => {
+    const res = await apiClient.get('/analysis/intelligence-score');
+    return res.data;
+  },
+  getStrategyMetrics: async () => {
+    const res = await apiClient.get('/analysis/strategy-metrics');
+    return res.data;
+  },
+  getMarketRegime: async (symbol?: string, timeframe?: string) => {
+    const res = await apiClient.get('/analysis/market-regime', { params: { symbol, timeframe } });
+    return res.data;
+  },
+  getPatterns: async () => {
+    const res = await apiClient.get('/analysis/patterns');
+    return res.data;
+  },
+  getTraderAnalytics: async () => {
+    const res = await apiClient.get('/analysis/trader-analytics');
+    return res.data;
+  },
+  getRecommendations: async () => {
+    const res = await apiClient.get('/analysis/recommendations');
+    return res.data;
+  },
+  getJournalIntelligence: async () => {
+    const res = await apiClient.get('/analysis/journal-intelligence');
+    return res.data;
+  },
+  getRiskIntelligence: async () => {
+    const res = await apiClient.get('/analysis/risk-intelligence');
+    return res.data;
+  },
+};
+
 
 
 
