@@ -29,12 +29,12 @@ It covers product, architecture, governance, operations, and delivery documentat
 | --- | --- |
 | Product | [Vision](01_PRODUCT_VISION.md), [Requirements](02_PRODUCT_REQUIREMENTS.md), [UI/UX](12_UI_UX.md), [Design System](DESIGN_SYSTEM.md), [Roadmap](21_ROADMAP.md) |
 | Platform | [Architecture](03_ARCHITECTURE.md), [Tech Stack](04_TECH_STACK.md), [Database](05_DATABASE.md), [API](06_API.md) |
-| Trading | [Strategy](07_STRATEGY_ENGINE.md), [Decision](08_DECISION_ENGINE.md), [Risk](09_RISK_ENGINE.md), [TradingView](10_TRADINGVIEW_AGENT.md), [Delta](11_DELTA_EXCHANGE.md) |
+| Trading | [Strategy](07_STRATEGY_ENGINE.md), [Decision](08_DECISION_ENGINE.md), [Risk](09_RISK_ENGINE.md), [TradingView](10_TRADINGVIEW_AGENT.md), [Delta](11_DELTA_EXCHANGE.md), [Strategy Specification](STRATEGY_SPECIFICATION.md), [Indicator Reverse Engineering](INDICATOR_REVERSE_ENGINEERING.md) |
 | Experience | [Dashboard](13_DASHBOARD.md), [Analytics](14_ANALYTICS.md), [Challenge](15_CHALLENGE.md), [Notifications](16_NOTIFICATIONS.md) |
 | Assurance | [Deployment](17_DEPLOYMENT.md), [Security](18_SECURITY.md), [Testing](19_TESTING.md), [Coding Rules](20_CODING_RULES.md) |
 | Delivery | [Master Prompt](22_MASTER_PROMPT.md) |
 | Implementation baseline | [Implementation Blueprint](23_IMPLEMENTATION_BLUEPRINT.md) |
-| Architecture review | [Project Review](PROJECT_REVIEW.md), [Project Audit](PROJECT_AUDIT.md) |
+| Architecture review | [Project Review](PROJECT_REVIEW.md), [Project Audit](PROJECT_AUDIT.md), [UI Audit](UI_AUDIT.md) |
 
 ## Document authority
 
@@ -49,3 +49,5 @@ Add ADRs, service runbooks, incident playbooks, data-retention schedules, and re
 - [Project Charter](../PROJECT.md)
 - [Repository README](../README.md)
 - [Architecture](03_ARCHITECTURE.md)
+- [Strategy Specification](STRATEGY_SPECIFICATION.md)
+- [Indicator Reverse Engineering](INDICATOR_REVERSE_ENGINEERING.md)
