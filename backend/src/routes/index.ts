@@ -26,6 +26,7 @@ import { realtimeOperationsRouter } from '../modules/realtime-operations/realtim
 import { strategyOptimizationRouter } from '../modules/strategy-optimization/strategyOptimization.routes.js';
 import { operationsCenterRouter } from '../modules/operations-center/operationsCenter.routes.js';
 import { tradeReviewRouter } from '../modules/trade-review/tradeReview.routes.js';
+import { shadowTradingRouter } from '../modules/shadow-trading/shadowTrading.routes.js';
 
 export const apiRouter = Router();
 
@@ -56,3 +57,4 @@ apiRouter.use('/realtime-operations', realtimeOperationsRouter);
 apiRouter.use('/strategy-optimization', strategyOptimizationRouter);
 apiRouter.use('/operations-center', operationsCenterRouter);
 apiRouter.use('/trade-review', tradeReviewRouter);
+apiRouter.use('/shadow-trading', shadowTradingRouter);

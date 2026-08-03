@@ -26,6 +26,7 @@ import {
 const navigationItems = [
   { name: 'Dashboard', path: '/', icon: LayoutDashboard },
   { name: 'Live Portfolio', path: '/portfolio', icon: PieChart },
+  { name: 'Shadow Lab', path: '/shadow-laboratory', icon: ShieldCheck },
   { name: 'Trade Review', path: '/trade-review', icon: FileText },
   { name: 'Operations NOC', path: '/operations', icon: Cpu },
   { name: 'Strategy Lab', path: '/laboratory', icon: FlaskConical },

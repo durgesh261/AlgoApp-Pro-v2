@@ -708,6 +708,48 @@ model TradeSnapshot {
   @@map("trade_snapshots")
 }
 
+model ShadowDecisionRecord {
+  id                String   @id @default(uuid())
+  symbol            String
+  timeframe         String   @default("1H")
+  strategyProfileId String   @map("strategy_profile_id")
+  decision          String
+  confidence        Float
+  entryPrice        Float    @map("entry_price")
+  stopLossPrice     Float    @map("stop_loss_price")
+  takeProfitPrice   Float    @map("take_profit_price")
+  positionSize      Float    @map("position_size")
+  reasonCodesJson   String   @map("reason_codes_json")
+  timestamp         DateTime @default(now())
+
+  @@map("shadow_decision_records")
+}
+
+model MarketOutcomeValidation {
+  id                 String   @id @default(uuid())
+  decisionId         String   @unique @map("decision_id")
+  tpHit              Boolean  @map("tp_hit")
+  slHit              Boolean  @map("sl_hit")
+  mfe                Float
+  mae                Float
+  holdDurationMinutes Int      @map("hold_duration_minutes")
+  accuracyPercent    Float    @map("accuracy_percent")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@map("market_outcome_validations")
+}
+
+model ProductionReadinessReport {
+  id                   String   @id @default(uuid())
+  overallReadinessScore Float   @map("overall_readiness_score")
+  isProductionReady    Boolean  @map("is_production_ready")
+  reportJson           String   @map("report_json")
+  generatedAt          DateTime @default(now()) @map("generated_at")
+
+  @@map("production_readiness_reports")
+}
+
+
 
 
 

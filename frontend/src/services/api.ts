@@ -74,6 +74,10 @@ import {
   TradeReviewDetailDto,
   TradeJournalNoteDto,
   PerformanceReviewSummaryDto,
+  ShadowDecisionRecordDto,
+  ChallengeSimulationDto,
+  StabilityMatrixItemDto,
+  ProductionReadinessScoreDto,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -489,6 +493,25 @@ export const tradeReviewApi = {
     return res.data;
   },
 };
+
+export const shadowTradingApi = {
+  getDashboard: async (): Promise<
+    ApiResponse<{
+      decisions: ShadowDecisionRecordDto[];
+      stability: StabilityMatrixItemDto[];
+      readiness: ProductionReadinessScoreDto;
+      challengeSim: ChallengeSimulationDto;
+    }>
+  > => {
+    const res = await apiClient.get('/shadow-trading/dashboard');
+    return res.data;
+  },
+  triggerCycle: async (): Promise<ApiResponse<{ status: string; record: ShadowDecisionRecordDto }>> => {
+    const res = await apiClient.post('/shadow-trading/cycle');
+    return res.data;
+  },
+};
+
 
 
 
