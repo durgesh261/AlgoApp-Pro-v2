@@ -1,7 +1,6 @@
-import { CandleDto, IngestCandleInput } from '@algoapp/shared';
+import { CandleDto, IngestCandleInput, MarketEventType } from '@algoapp/shared';
 import { MarketDataValidator } from './marketDataValidator.js';
 import { MarketEventGenerator } from './marketEventGenerator.js';
-import { MarketEventType } from '@algoapp/shared';
 
 let historicalCandlesStore: CandleDto[] = [
   {
@@ -41,11 +40,11 @@ let historicalCandlesStore: CandleDto[] = [
     id: 'CNDL-SOL-1',
     symbol: 'SOLUSD.P',
     timeframe: '1H',
-    open: 139.5,
-    high: 143.2,
-    low: 138.8,
+    open: 138.5,
+    high: 144.2,
+    low: 137.8,
     close: 142.1,
-    volume: 15420.0,
+    volume: 48200.0,
     timestamp: '2026-08-02T19:00:00Z',
   },
   {
@@ -62,10 +61,29 @@ let historicalCandlesStore: CandleDto[] = [
 ];
 
 export class CandleStoreService {
-  public static async getCandles(symbol: string, limit: number = 50): Promise<CandleDto[]> {
-    return historicalCandlesStore
-      .filter((c) => c.symbol === symbol)
-      .slice(-limit);
+  public static async getCandles(
+    symbol: string,
+    timeframeOrLimit: string | number = '1H',
+    limitNum: number = 50
+  ): Promise<CandleDto[]> {
+    let timeframe: '15M' | '1H' = '1H';
+    let limit = limitNum;
+
+    if (typeof timeframeOrLimit === 'number') {
+      limit = timeframeOrLimit;
+      timeframe = '1H';
+    } else if (timeframeOrLimit === '15M' || timeframeOrLimit === '1H') {
+      timeframe = timeframeOrLimit;
+    }
+
+    const filtered = historicalCandlesStore.filter((c) => c.symbol === symbol && c.timeframe === timeframe);
+    if (filtered.length === 0) {
+      return historicalCandlesStore
+        .filter((c) => c.symbol === symbol)
+        .map((c) => ({ ...c, timeframe }))
+        .slice(-limit);
+    }
+    return filtered.slice(-limit);
   }
 
   public static async ingestCandle(input: IngestCandleInput): Promise<CandleDto> {

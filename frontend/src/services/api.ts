@@ -54,6 +54,8 @@ import {
   BackupStatusDto,
   ValidationReportDto,
   RunValidationInput,
+  StrategyProfileDto,
+  CreateStrategyProfileInput,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -350,4 +352,24 @@ export const indicatorValidationApi = {
     return res.data;
   },
 };
+
+export const strategyProfileApi = {
+  getProfiles: async (): Promise<ApiResponse<StrategyProfileDto[]>> => {
+    const res = await apiClient.get('/strategy-profile');
+    return res.data;
+  },
+  getProfileById: async (id: string): Promise<ApiResponse<StrategyProfileDto>> => {
+    const res = await apiClient.get(`/strategy-profile/${id}`);
+    return res.data;
+  },
+  createProfile: async (input: CreateStrategyProfileInput): Promise<ApiResponse<StrategyProfileDto>> => {
+    const res = await apiClient.post('/strategy-profile', input);
+    return res.data;
+  },
+  updateProfile: async (id: string, updates: Partial<StrategyProfileDto>): Promise<ApiResponse<StrategyProfileDto>> => {
+    const res = await apiClient.put(`/strategy-profile/${id}`, updates);
+    return res.data;
+  },
+};
+
 

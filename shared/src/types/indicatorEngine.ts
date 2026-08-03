@@ -1,4 +1,5 @@
 import { CandleDto } from './marketData.js';
+import { TradingTimeframe } from './strategyProfile.js';
 
 export type ZoneLifecycleState = 
   | 'NEW'
@@ -13,7 +14,7 @@ export type ZoneTypeCategory = 'SUPPLY' | 'DEMAND';
 export interface BaseZone {
   id: string;
   symbol: string;
-  timeframe: '1H';
+  timeframe: TradingTimeframe;
   type: ZoneTypeCategory;
   upperPrice: number;
   lowerPrice: number;
@@ -23,7 +24,7 @@ export interface BaseZone {
   width: number;
   freshness: number;
   touchCount: number;
-  age: number; // Age in 1H candles
+  age: number; // Age in candles
   confidence: number;
   status: ZoneLifecycleState;
   source: 'PAT' | 'SMC' | 'MERGED';
@@ -49,7 +50,7 @@ export interface ZoneScore {
 
 export interface MarketStructure {
   symbol: string;
-  timeframe: '1H';
+  timeframe: TradingTimeframe;
   trend: 'BULLISH' | 'BEARISH';
   internalTrend: 'BULLISH' | 'BEARISH';
   swingTrend: 'BULLISH' | 'BEARISH';
@@ -62,7 +63,7 @@ export interface MarketStructure {
 
 export interface IndicatorEngineOutput {
   symbol: string;
-  timeframe: '1H';
+  timeframe: TradingTimeframe;
   supplyZones: SupplyZone[];
   demandZones: DemandZone[];
   zoneScores: Record<string, ZoneScore>;
@@ -72,6 +73,6 @@ export interface IndicatorEngineOutput {
 
 export interface EvaluateIndicatorInput {
   symbol: string;
-  timeframe?: '1H';
-  candles?: CandleDto[];
+  timeframe?: TradingTimeframe | undefined;
+  candles?: CandleDto[] | undefined;
 }

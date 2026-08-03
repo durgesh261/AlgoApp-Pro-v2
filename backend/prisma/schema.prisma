@@ -496,3 +496,24 @@ model PipelineTrace {
   @@index([symbol, timestamp])
   @@map("pipeline_traces")
 }
+
+model StrategyProfile {
+  id              String   @id @default(uuid())
+  name            String
+  description     String
+  version         String   @default("1.0.0")
+  isActive        Boolean  @default(true) @map("is_active")
+  pair            String   @default("BTCUSD.P")
+  timeframe       String   @default("1H")
+  patConfigJson   String   @map("pat_config_json")
+  smcConfigJson   String   @map("smc_config_json")
+  riskConfigJson  String   @map("risk_config_json")
+  execConfigJson  String   @map("exec_config_json")
+  indConfigJson   String   @map("ind_config_json")
+  decConfigJson   String   @map("dec_config_json")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("strategy_profiles")
+}
+

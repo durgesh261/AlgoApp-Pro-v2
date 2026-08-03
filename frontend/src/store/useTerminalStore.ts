@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { TerminalPage, SystemStatus } from '@algoapp/shared';
+import { TerminalPage, SystemStatus, TradingTimeframe } from '@algoapp/shared';
 
 export interface WidgetVisibilityState {
   showCurrentPair: boolean;
@@ -42,6 +42,8 @@ const loadInitialWidgetState = (): WidgetVisibilityState => {
 interface TerminalState {
   activePage: TerminalPage;
   activeSymbol: string;
+  activeTimeframe: TradingTimeframe;
+  activeProfileId: string;
   isSidebarCollapsed: boolean;
   isMarketWatchOpen: boolean;
   isCommandPaletteOpen: boolean;
@@ -50,6 +52,8 @@ interface TerminalState {
 
   setActivePage: (page: TerminalPage) => void;
   setActiveSymbol: (symbol: string) => void;
+  setActiveTimeframe: (timeframe: TradingTimeframe) => void;
+  setActiveProfileId: (id: string) => void;
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   toggleMarketWatch: () => void;
@@ -65,6 +69,8 @@ interface TerminalState {
 export const useTerminalStore = create<TerminalState>((set, get) => ({
   activePage: TerminalPage.DASHBOARD,
   activeSymbol: 'BTCUSD.P',
+  activeTimeframe: '1H',
+  activeProfileId: 'DEF-1H-PROF',
   isSidebarCollapsed: false,
   isMarketWatchOpen: true,
   isCommandPaletteOpen: false,
@@ -73,6 +79,8 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
 
   setActivePage: (page) => set({ activePage: page }),
   setActiveSymbol: (symbol) => set({ activeSymbol: symbol }),
+  setActiveTimeframe: (timeframe) => set({ activeTimeframe: timeframe }),
+  setActiveProfileId: (id) => set({ activeProfileId: id }),
   toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
   setSidebarCollapsed: (collapsed) => set({ isSidebarCollapsed: collapsed }),
   toggleMarketWatch: () => set((state) => ({ isMarketWatchOpen: !state.isMarketWatchOpen })),

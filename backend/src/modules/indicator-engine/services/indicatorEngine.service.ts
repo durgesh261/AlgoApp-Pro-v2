@@ -1,4 +1,4 @@
-import { CandleDto, IndicatorEngineOutput, SupplyZone, DemandZone } from '@algoapp/shared';
+import { CandleDto, IndicatorEngineOutput, SupplyZone, DemandZone, TradingTimeframe } from '@algoapp/shared';
 import { PivotEngine } from '../engines/pivotEngine.js';
 import { SwingEngine } from '../engines/swingEngine.js';
 import { MarketStructureEngine } from '../engines/marketStructureEngine.js';
@@ -10,21 +10,30 @@ import { FreshnessEngine } from '../engines/freshnessEngine.js';
 import { TouchEngine } from '../engines/touchEngine.js';
 import { ZoneScoreEngine } from '../engines/zoneScoreEngine.js';
 import { CandleStoreService } from '../../market-data/services/candleStore.service.js';
+import { StrategyProfileService } from '../../strategy-profile/services/strategyProfile.service.js';
+
+const profileService = new StrategyProfileService();
 
 export class IndicatorEngineService {
-  public async evaluateSymbol(symbol: string = 'BTCUSD.P', inputCandles?: CandleDto[]): Promise<IndicatorEngineOutput> {
-    const candles = inputCandles ?? (await CandleStoreService.getCandles(symbol, 100));
+  public async evaluateSymbol(
+    symbol: string = 'BTCUSD.P',
+    timeframe: TradingTimeframe = '1H',
+    profileId?: string,
+    inputCandles?: CandleDto[]
+  ): Promise<IndicatorEngineOutput> {
+    const profile = await profileService.getProfileById(profileId || 'DEF-1H-PROF');
+    const candles = inputCandles ?? (await CandleStoreService.getCandles(symbol, timeframe, 100));
 
     if (candles.length === 0) {
       return {
         symbol,
-        timeframe: '1H',
+        timeframe,
         supplyZones: [],
         demandZones: [],
         zoneScores: {},
         marketStructure: {
           symbol,
-          timeframe: '1H',
+          timeframe,
           trend: 'BULLISH',
           internalTrend: 'BULLISH',
           swingTrend: 'BULLISH',
@@ -36,22 +45,26 @@ export class IndicatorEngineService {
 
     const latestCandle = candles[candles.length - 1]!;
 
-    // 1. Pivot Engine
-    const pivots9 = PivotEngine.findPivots(candles, 9);
-    const pivots50 = PivotEngine.findPivots(candles, 50);
+    // 1. Pivot Engine (Using Profile zigzagLen & swingLen)
+    const pivotLen = profile?.patConfig?.zigzagLen || (timeframe === '15M' ? 5 : 9);
+    const swingLen = profile?.smcConfig?.swingLen || (timeframe === '15M' ? 30 : 50);
+
+    const pivotsInternal = PivotEngine.findPivots(candles, pivotLen);
+    const pivotsSwing = PivotEngine.findPivots(candles, swingLen);
 
     // 2. Swing Engine
-    SwingEngine.calculateSwings(pivots9);
+    SwingEngine.calculateSwings(pivotsInternal);
 
     // 3. Market Structure Engine
-    const { marketStructure, events } = MarketStructureEngine.evaluateStructure(symbol, candles, pivots9, pivots50);
+    const { marketStructure, events } = MarketStructureEngine.evaluateStructure(symbol, candles, pivotsInternal, pivotsSwing);
+    marketStructure.timeframe = timeframe;
 
     // 4. PAT Zone Engine
     const patResult = PatZoneEngine.extractPatZones(symbol, candles, events);
     marketStructure.liquiditySwept = patResult.liquiditySwept;
 
     // 5. SMC Zone Engine
-    const smcResult = SmcZoneEngine.extractSmcZones(symbol, candles, pivots9);
+    const smcResult = SmcZoneEngine.extractSmcZones(symbol, candles, pivotsInternal);
 
     // 6. Zone Merge Engine
     const combinedSupply = [...patResult.supplyZones, ...smcResult.supplyZones];
@@ -80,7 +93,7 @@ export class IndicatorEngineService {
 
     return {
       symbol,
-      timeframe: '1H',
+      timeframe,
       supplyZones: finalSupply,
       demandZones: finalDemand,
       zoneScores,

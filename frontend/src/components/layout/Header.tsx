@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTerminalStore } from '../../store/useTerminalStore';
 import { mockMarketPairs } from '../../mock/marketData';
+import { TradingTimeframe } from '@algoapp/shared';
 import { 
   Search, 
   Terminal, 
@@ -8,13 +9,18 @@ import {
   PanelLeft,
   ChevronDown,
   ShieldAlert,
-  Radio
+  Radio,
+  SlidersHorizontal
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const { 
     activeSymbol, 
     setActiveSymbol, 
+    activeTimeframe,
+    setActiveTimeframe,
+    activeProfileId,
+    setActiveProfileId,
     isSidebarCollapsed, 
     toggleSidebar, 
     toggleCommandPalette 
@@ -23,10 +29,15 @@ export const Header: React.FC = () => {
   const currentPair = mockMarketPairs[activeSymbol] ?? mockMarketPairs['BTCUSD.P']!;
   const pairOptions = Object.keys(mockMarketPairs);
 
+  const profileOptions = [
+    { id: 'DEF-1H-PROF', name: 'Default 1H Profile', timeframe: '1H' },
+    { id: 'DEF-15M-PROF', name: 'Default 15M Profile', timeframe: '15M' },
+  ];
+
   return (
-    <header className="h-14 glass-header flex items-center justify-between px-4 z-20 select-none">
-      {/* Left Symbol Selector */}
-      <div className="flex items-center space-x-4">
+    <header className="h-14 glass-header flex items-center justify-between px-4 z-20 select-none font-mono">
+      {/* Left Selectors (Symbol, Timeframe, Profile) */}
+      <div className="flex items-center space-x-3">
         <button
           onClick={toggleSidebar}
           className="p-1.5 text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#1E2638] rounded-md transition-colors"
@@ -44,11 +55,12 @@ export const Header: React.FC = () => {
             <Terminal className="w-4 h-4 text-white" />
           </div>
           
+          {/* Pair Selector */}
           <div className="relative group">
             <select
               value={activeSymbol}
               onChange={(e) => setActiveSymbol(e.target.value)}
-              className="appearance-none bg-[#161D2A] border border-[#1E293B] hover:border-[#3B82F6] text-[#F8FAFC] font-bold text-sm rounded-lg pl-3 pr-8 py-1.5 cursor-pointer font-mono focus:outline-none transition-colors"
+              className="appearance-none bg-[#161D2A] border border-[#1E293B] hover:border-[#3B82F6] text-[#F8FAFC] font-bold text-xs rounded-lg pl-2.5 pr-7 py-1 cursor-pointer focus:outline-none transition-colors"
             >
               {pairOptions.map((sym) => (
                 <option key={sym} value={sym} className="bg-[#161D2A] text-white">
@@ -56,13 +68,50 @@ export const Header: React.FC = () => {
                 </option>
               ))}
             </select>
-            <ChevronDown className="w-4 h-4 text-[#94A3B8] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-[#94A3B8] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
-          <div className="hidden sm:flex items-center space-x-2 px-2.5 py-1 bg-[#161D2A] border border-[#1E293B] rounded-lg text-xs font-mono">
-            <span className="text-[#94A3B8]">1H</span>
-            <span className="text-[#334155]">|</span>
-            <span className="text-[#F8FAFC] font-bold font-mono-tabular">{currentPair.price}</span>
+          {/* Timeframe Segmented Selector */}
+          <div className="flex items-center bg-[#0B0E14] border border-[#1E293B] p-0.5 rounded-lg text-xs">
+            {(['15M', '1H'] as TradingTimeframe[]).map((tf) => (
+              <button
+                key={tf}
+                onClick={() => {
+                  setActiveTimeframe(tf);
+                  if (tf === '15M') setActiveProfileId('DEF-15M-PROF');
+                  if (tf === '1H') setActiveProfileId('DEF-1H-PROF');
+                }}
+                className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all ${
+                  activeTimeframe === tf
+                    ? 'bg-[#3B82F6] text-white shadow-sm'
+                    : 'text-[#94A3B8] hover:text-[#F8FAFC]'
+                }`}
+              >
+                {tf}
+              </button>
+            ))}
+          </div>
+
+          {/* Strategy Profile Selector */}
+          <div className="hidden lg:flex items-center relative group">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-[#3B82F6] absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <select
+              value={activeProfileId}
+              onChange={(e) => setActiveProfileId(e.target.value)}
+              className="appearance-none bg-[#161D2A] border border-[#1E293B] hover:border-[#3B82F6] text-[#F8FAFC] font-bold text-xs rounded-lg pl-7 pr-7 py-1 cursor-pointer focus:outline-none transition-colors"
+            >
+              {profileOptions.map((prof) => (
+                <option key={prof.id} value={prof.id} className="bg-[#161D2A] text-white">
+                  {prof.name} ({prof.timeframe})
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-[#94A3B8] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+
+          {/* Live Price Ticker */}
+          <div className="hidden xl:flex items-center space-x-2 px-2.5 py-1 bg-[#161D2A] border border-[#1E293B] rounded-lg text-xs font-mono">
+            <span className="text-[#F8FAFC] font-bold font-mono-tabular">${currentPair.price}</span>
             <span className={`font-semibold font-mono-tabular ${currentPair.isPositive ? 'text-[#00C896]' : 'text-[#F6465D]'}`}>
               {currentPair.change24h}
             </span>
@@ -73,11 +122,11 @@ export const Header: React.FC = () => {
       {/* Center Search / Command Palette Shortcut */}
       <button
         onClick={toggleCommandPalette}
-        className="hidden md:flex items-center space-x-2 bg-[#161D2A] hover:bg-[#1E2638] border border-[#1E293B] hover:border-[#334155] text-[#94A3B8] px-3 py-1.5 rounded-lg text-xs font-mono transition-colors w-72 justify-between"
+        className="hidden md:flex items-center space-x-2 bg-[#161D2A] hover:bg-[#1E2638] border border-[#1E293B] hover:border-[#334155] text-[#94A3B8] px-3 py-1 rounded-lg text-xs transition-colors w-64 justify-between"
       >
         <div className="flex items-center space-x-2">
           <Search className="w-3.5 h-3.5" />
-          <span>Search symbol, rule, or action...</span>
+          <span>Search symbol, profile...</span>
         </div>
         <kbd className="bg-[#0B0E14] border border-[#334155] px-1.5 py-0.5 rounded text-[10px] text-[#F8FAFC]">
           Ctrl K
@@ -86,9 +135,9 @@ export const Header: React.FC = () => {
 
       {/* Right Telemetry & Kill Switch Actions */}
       <div className="flex items-center space-x-3">
-        <div className="flex items-center space-x-1.5 bg-[#00C896]/10 border border-[#00C896]/30 px-2.5 py-1 rounded-md text-[11px] font-mono text-[#00C896] font-bold">
+        <div className="flex items-center space-x-1.5 bg-[#00C896]/10 border border-[#00C896]/30 px-2.5 py-1 rounded-md text-[11px] text-[#00C896] font-bold">
           <Radio className="w-3 h-3 animate-pulse text-[#00C896]" />
-          <span>PAPER SIMULATION</span>
+          <span>PAPER</span>
         </div>
 
         <button

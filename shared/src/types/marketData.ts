@@ -1,3 +1,5 @@
+import { TradingTimeframe } from './strategyProfile.js';
+
 export enum MarketEventType {
   NEW_CANDLE = 'NEW_CANDLE',
   PRICE_UPDATED = 'PRICE_UPDATED',
@@ -9,7 +11,7 @@ export enum MarketEventType {
 export interface CandleDto {
   id: string;
   symbol: string;
-  timeframe: '1H';
+  timeframe: TradingTimeframe;
   open: number;
   high: number;
   low: number;
@@ -23,16 +25,19 @@ export interface MarketSnapshotDto {
   symbol: string;
   currentPrice: number;
   spread: number;
-  session: string; // e.g. "NEW_YORK", "LONDON", "ASIAN"
-  trend: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
-  volatility: 'LOW' | 'MEDIUM' | 'HIGH';
+  bid?: number | undefined;
+  ask?: number | undefined;
+  session?: string | undefined;
+  trend?: string | undefined;
+  volatility?: string | undefined;
   timestamp: string;
 }
 
 export interface MarketEventDto {
   id: string;
   symbol: string;
-  eventType: MarketEventType;
+  type?: MarketEventType | undefined;
+  eventType?: MarketEventType | string | undefined;
   payloadJson: string;
   timestamp: string;
 }

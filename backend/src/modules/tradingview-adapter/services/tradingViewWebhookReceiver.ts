@@ -23,9 +23,9 @@ export class TradingViewWebhookReceiver {
       return { valid: false, reason: `UNSUPPORTED_PAIR: Symbol '${payload.symbol}' is not allowed.` };
     }
 
-    // 2. Timeframe Check (Strictly 1H)
-    if (payload.timeframe !== '1H') {
-      return { valid: false, reason: `UNSUPPORTED_TIMEFRAME: Timeframe '${payload.timeframe}' is rejected. Only 1H is supported.` };
+    // 2. Timeframe Check (Strictly 15M or 1H)
+    if (payload.timeframe !== '1H' && payload.timeframe !== '15M') {
+      return { valid: false, reason: `UNSUPPORTED_TIMEFRAME: Timeframe '${payload.timeframe}' is rejected. Supported timeframes: 15M, 1H.` };
     }
 
     // 3. High/Low validation

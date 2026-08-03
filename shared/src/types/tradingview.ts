@@ -1,8 +1,9 @@
 import { CandleDto, MarketSnapshotDto, MarketEventDto } from './marketData.js';
+import { TradingTimeframe } from './strategyProfile.js';
 
 export interface TradingViewWebhookPayload {
   symbol: string;
-  timeframe: '1H';
+  timeframe: TradingTimeframe;
   open: number;
   high: number;
   low: number;
