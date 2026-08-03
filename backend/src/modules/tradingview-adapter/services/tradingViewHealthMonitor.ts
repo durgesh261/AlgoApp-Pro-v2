@@ -1,9 +1,10 @@
-import { TradingViewHealthDto, WebhookEventDto, WebhookErrorDto } from '@algoapp/shared';
+import { TradingViewHealthDto, WebhookEventDto, WebhookErrorDto, CandleDto } from '@algoapp/shared';
 
 let currentHealth: TradingViewHealthDto = {
   id: 'tradingview-health',
   status: 'CONNECTED',
   lastWebhookAt: new Date().toISOString(),
+  lastWebhookTimestamp: new Date().toISOString(),
   totalWebhooks: 0,
   duplicateCount: 0,
   droppedCount: 0,
@@ -20,10 +21,20 @@ export class TradingViewHealthMonitor {
     return currentHealth;
   }
 
-  public static async recordWebhookSuccess(latencyMs: number, symbol: string, payloadJson: string): Promise<void> {
+  public static async recordWebhookSuccess(
+    latencyMs: number,
+    symbol: string,
+    payloadJson: string,
+    candle?: CandleDto
+  ): Promise<void> {
     currentHealth.totalWebhooks += 1;
     currentHealth.lastWebhookAt = new Date().toISOString();
+    currentHealth.lastWebhookTimestamp = new Date().toISOString();
     currentHealth.status = 'CONNECTED';
+
+    if (candle) {
+      currentHealth.lastReceivedCandle = candle;
+    }
 
     // Update moving average latency
     currentHealth.averageLatencyMs = Number(
@@ -45,6 +56,8 @@ export class TradingViewHealthMonitor {
   public static async recordDuplicate(symbol: string, rawPayload: string): Promise<void> {
     currentHealth.totalWebhooks += 1;
     currentHealth.duplicateCount += 1;
+    currentHealth.lastWebhookAt = new Date().toISOString();
+    currentHealth.lastWebhookTimestamp = new Date().toISOString();
     currentHealth.updatedAt = new Date().toISOString();
 
     const event: WebhookEventDto = {
@@ -61,6 +74,8 @@ export class TradingViewHealthMonitor {
   public static async recordMalformed(reason: string, rawPayload: string): Promise<void> {
     currentHealth.totalWebhooks += 1;
     currentHealth.malformedCount += 1;
+    currentHealth.lastWebhookAt = new Date().toISOString();
+    currentHealth.lastWebhookTimestamp = new Date().toISOString();
     currentHealth.status = currentHealth.malformedCount > 5 ? 'DEGRADED' : 'CONNECTED';
     currentHealth.updatedAt = new Date().toISOString();
 
@@ -77,6 +92,8 @@ export class TradingViewHealthMonitor {
   public static async recordDropped(reason: string, rawPayload: string): Promise<void> {
     currentHealth.totalWebhooks += 1;
     currentHealth.droppedCount += 1;
+    currentHealth.lastWebhookAt = new Date().toISOString();
+    currentHealth.lastWebhookTimestamp = new Date().toISOString();
     currentHealth.updatedAt = new Date().toISOString();
 
     const err: WebhookErrorDto = {

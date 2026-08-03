@@ -13,6 +13,7 @@ import { ChallengePage } from './features/challenge/ChallengePage';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { ReplayPage } from './features/replay/ReplayPage';
 import { BacktestingPage } from './features/backtesting/BacktestingPage';
+import { TradingViewSetupPage } from './features/tradingview/TradingViewSetupPage';
 
 export const App: React.FC = () => {
   return (
@@ -22,6 +23,7 @@ export const App: React.FC = () => {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/paper-trading" element={<PaperTradingPage />} />
           <Route path="/live-trading" element={<LiveTradingPage />} />
+          <Route path="/tradingview" element={<TradingViewSetupPage />} />
           <Route path="/system-monitor" element={<SystemMonitorPage />} />
           <Route path="/production-dashboard" element={<ProductionDashboardPage />} />
           <Route path="/analysis" element={<AnalysisPage />} />

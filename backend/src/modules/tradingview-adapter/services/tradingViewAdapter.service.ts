@@ -62,7 +62,7 @@ export class TradingViewAdapterService implements ITradingViewDataAdapter {
     });
 
     const latencyMs = Date.now() - startTime;
-    await TradingViewHealthMonitor.recordWebhookSuccess(latencyMs, payload.symbol, rawString);
+    await TradingViewHealthMonitor.recordWebhookSuccess(latencyMs, payload.symbol, rawString, normalized.candle);
 
     return {
       success: true,

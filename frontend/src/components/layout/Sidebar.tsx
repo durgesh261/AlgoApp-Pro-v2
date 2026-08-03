@@ -13,13 +13,15 @@ import {
   RotateCcw,
   BarChart3,
   Server,
-  ShieldAlert
+  ShieldAlert,
+  Radio
 } from 'lucide-react';
 
 const navigationItems = [
   { name: 'Dashboard', path: '/', icon: LayoutDashboard },
   { name: 'Paper Trading', path: '/paper-trading', icon: Wallet },
   { name: 'Live Trading', path: '/live-trading', icon: Activity },
+  { name: 'TradingView Alert', path: '/tradingview', icon: Radio },
   { name: 'System Monitor', path: '/system-monitor', icon: Server },
   { name: 'Production', path: '/production-dashboard', icon: ShieldAlert },
   { name: 'Analysis', path: '/analysis', icon: LineChart },

@@ -35,6 +35,8 @@ export interface TradingViewHealthDto {
   id: string;
   status: 'CONNECTED' | 'DEGRADED' | 'DISCONNECTED';
   lastWebhookAt: string;
+  lastWebhookTimestamp?: string | undefined;
+  lastReceivedCandle?: CandleDto | undefined;
   totalWebhooks: number;
   duplicateCount: number;
   droppedCount: number;
