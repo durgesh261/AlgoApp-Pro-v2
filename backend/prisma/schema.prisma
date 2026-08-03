@@ -635,5 +635,21 @@ model ReconciliationLog {
   @@map("reconciliation_logs")
 }
 
+model OptimizationRun {
+  id                 String   @id @default(uuid())
+  symbol             String
+  timeframe          String   @default("1H")
+  strategyProfileId  String   @map("strategy_profile_id")
+  strategyProfileName String  @map("strategy_profile_name")
+  parametersJson     String   @map("parameters_json")
+  metricsJson        String   @map("metrics_json")
+  walkForwardJson    String   @map("walk_forward_json")
+  monteCarloJson     String   @map("monte_carlo_json")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@map("optimization_runs")
+}
+
+
 
 

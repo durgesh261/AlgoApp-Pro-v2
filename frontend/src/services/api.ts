@@ -63,6 +63,8 @@ import {
   SubsystemHealthDto,
   ReconciliationReportDto,
   TradeAuditTimelineDto,
+  ParameterSweepInput,
+  OptimizationRunResult,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -421,6 +423,18 @@ export const realtimeOperationsApi = {
     return res.data;
   },
 };
+
+export const strategyOptimizationApi = {
+  runSweep: async (input: ParameterSweepInput): Promise<ApiResponse<OptimizationRunResult[]>> => {
+    const res = await apiClient.post('/strategy-optimization/run', input);
+    return res.data;
+  },
+  getHistory: async (): Promise<ApiResponse<OptimizationRunResult[]>> => {
+    const res = await apiClient.get('/strategy-optimization/history');
+    return res.data;
+  },
+};
+
 
 
 

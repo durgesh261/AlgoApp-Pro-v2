@@ -17,6 +17,7 @@ import { TradingViewSetupPage } from './features/tradingview/TradingViewSetupPag
 import { IndicatorValidationPage } from './features/validation/IndicatorValidationPage';
 import { TradeAccountingPage } from './features/accounting/TradeAccountingPage';
 import { PortfolioDashboardPage } from './features/portfolio/PortfolioDashboardPage';
+import { StrategyLaboratoryPage } from './features/laboratory/StrategyLaboratoryPage';
 
 export const App: React.FC = () => {
   return (
@@ -25,6 +26,7 @@ export const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/portfolio" element={<PortfolioDashboardPage />} />
+          <Route path="/laboratory" element={<StrategyLaboratoryPage />} />
           <Route path="/paper-trading" element={<PaperTradingPage />} />
           <Route path="/live-trading" element={<LiveTradingPage />} />
           <Route path="/tradingview" element={<TradingViewSetupPage />} />
