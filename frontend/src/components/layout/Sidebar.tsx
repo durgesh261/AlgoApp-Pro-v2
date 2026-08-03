@@ -18,12 +18,14 @@ import {
   ShieldCheck,
   Calculator,
   PieChart,
-  FlaskConical
+  FlaskConical,
+  Cpu
 } from 'lucide-react';
 
 const navigationItems = [
   { name: 'Dashboard', path: '/', icon: LayoutDashboard },
   { name: 'Live Portfolio', path: '/portfolio', icon: PieChart },
+  { name: 'Operations NOC', path: '/operations', icon: Cpu },
   { name: 'Strategy Lab', path: '/laboratory', icon: FlaskConical },
   { name: 'Paper Trading', path: '/paper-trading', icon: Wallet },
   { name: 'Live Trading', path: '/live-trading', icon: Activity },

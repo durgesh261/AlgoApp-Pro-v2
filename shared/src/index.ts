@@ -18,6 +18,7 @@ export * from './types/strategyProfile.js';
 export * from './types/tradeAccounting.js';
 export * from './types/realtimeOperations.js';
 export * from './types/strategyOptimization.js';
+export * from './types/operationsCenter.js';
 export * from './constants/index.js';
 export * from './validation/index.js';
 export * from './validation/paper.js';

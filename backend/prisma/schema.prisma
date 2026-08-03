@@ -650,6 +650,28 @@ model OptimizationRun {
   @@map("optimization_runs")
 }
 
+model SystemErrorLog {
+  id         String   @id @default(uuid())
+  category   String
+  message    String
+  severity   String   @default("MEDIUM")
+  stackTrace String?  @map("stack_trace")
+  timestamp  DateTime @default(now())
+
+  @@map("system_error_logs")
+}
+
+model SystemBackupRecord {
+  id        String   @id @default(uuid())
+  filename  String
+  sizeBytes Int      @map("size_bytes")
+  createdAt DateTime @default(now()) @map("created_at")
+  status    String   @default("SUCCESS")
+
+  @@map("system_backup_records")
+}
+
+
 
 
 

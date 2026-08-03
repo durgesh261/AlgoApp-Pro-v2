@@ -65,6 +65,12 @@ import {
   TradeAuditTimelineDto,
   ParameterSweepInput,
   OptimizationRunResult,
+  NocServiceHealthDto,
+  SystemMetricsDto,
+  ErrorLogEntryDto,
+  DatabaseDiagnosticsDto,
+  BackupInfoDto,
+  DiagnosticsReportDto,
 } from '@algoapp/shared';
 
 const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api/v1';
@@ -434,6 +440,38 @@ export const strategyOptimizationApi = {
     return res.data;
   },
 };
+
+export const operationsCenterApi = {
+  getNocStatus: async (): Promise<ApiResponse<{ services: NocServiceHealthDto[]; metrics: SystemMetricsDto }>> => {
+    const res = await apiClient.get('/operations-center/status');
+    return res.data;
+  },
+  getErrors: async (category?: string, severity?: string): Promise<ApiResponse<ErrorLogEntryDto[]>> => {
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (severity) params.append('severity', severity);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    const res = await apiClient.get(`/operations-center/errors${query}`);
+    return res.data;
+  },
+  getDatabaseDiagnostics: async (): Promise<ApiResponse<DatabaseDiagnosticsDto>> => {
+    const res = await apiClient.get('/operations-center/database-diagnostics');
+    return res.data;
+  },
+  createBackup: async (): Promise<ApiResponse<BackupInfoDto>> => {
+    const res = await apiClient.post('/operations-center/backup');
+    return res.data;
+  },
+  getBackupHistory: async (): Promise<ApiResponse<BackupInfoDto[]>> => {
+    const res = await apiClient.get('/operations-center/backup-history');
+    return res.data;
+  },
+  generateDiagnosticsReport: async (): Promise<ApiResponse<DiagnosticsReportDto>> => {
+    const res = await apiClient.get('/operations-center/diagnostics-report');
+    return res.data;
+  },
+};
+
 
 
 

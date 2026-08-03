@@ -24,6 +24,7 @@ import { strategyProfileRouter } from '../modules/strategy-profile/strategyProfi
 import { tradeAccountingRouter } from '../modules/trade-accounting/tradeAccounting.routes.js';
 import { realtimeOperationsRouter } from '../modules/realtime-operations/realtimeOperations.routes.js';
 import { strategyOptimizationRouter } from '../modules/strategy-optimization/strategyOptimization.routes.js';
+import { operationsCenterRouter } from '../modules/operations-center/operationsCenter.routes.js';
 
 export const apiRouter = Router();
 
@@ -52,3 +53,4 @@ apiRouter.use('/strategy-profile', strategyProfileRouter);
 apiRouter.use('/trade-accounting', tradeAccountingRouter);
 apiRouter.use('/realtime-operations', realtimeOperationsRouter);
 apiRouter.use('/strategy-optimization', strategyOptimizationRouter);
+apiRouter.use('/operations-center', operationsCenterRouter);
