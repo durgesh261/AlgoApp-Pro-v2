@@ -121,13 +121,9 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
     const container = chartContainerRef.current;
     if (!container) return;
 
-    const rect = container.getBoundingClientRect();
-    const w = rect.width || container.clientWidth || 800;
-    const h = rect.height || container.clientHeight || 480;
 
     const chart = createChart(container, {
-      width: w,
-      height: h,
+      autoSize: true, // Lightweight Charts handles its own sizing — fixes zero-width blank chart
       layout: {
         background: { color: '#0B0E14' },
         textColor: '#94A3B8',
@@ -225,14 +221,9 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
       }
     });
 
-    // ── ResizeObserver for container size changes ──
-    const resizeObserver = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry || !chartApiRef.current) return;
-      const { width, height } = entry.contentRect;
-      if (width > 0 && height > 0) {
-        chartApiRef.current.applyOptions({ width, height });
-      }
+    // ── ResizeObserver: trigger fitContent on resize (autoSize handles actual dimensions) ──
+    const resizeObserver = new ResizeObserver(() => {
+      chartApiRef.current?.timeScale().fitContent();
     });
     resizeObserver.observe(container);
 
@@ -551,9 +542,8 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
   // ─────────────────────────────────────────────
   return (
     <div
-      className={`bg-[#161D2A] border border-[#1E293B] rounded-xl overflow-hidden shadow-sm flex flex-col h-full font-mono text-xs ${
-        isFullscreen ? 'fixed inset-0 z-50 rounded-none border-none' : 'relative'
-      }`}
+      style={{ display: 'flex', flexDirection: 'column', height: isFullscreen ? '100vh' : '100%', minHeight: '480px' }}
+      className={`bg-[#161D2A] border border-[#1E293B] rounded-xl overflow-hidden shadow-sm font-mono text-xs ${isFullscreen ? 'fixed inset-0 z-50 rounded-none border-none' : 'relative'}`}
     >
       {/* ── Chart Top Toolbar ── */}
       <div className="h-11 bg-[#0E121A] border-b border-[#1E293B] px-3 flex items-center justify-between shrink-0 overflow-x-auto no-scrollbar">
@@ -718,9 +708,9 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
           />
         </div>
       ) : (
-        <div className="relative flex-1 w-full h-full min-h-[380px] bg-[#0B0E14]">
-          {/* Lightweight Charts Canvas — Managed by Refs, NOT React re-renders */}
-          <div ref={chartContainerRef} className="absolute inset-0 w-full h-full" />
+        <div style={{ position: 'relative', flex: 1, minHeight: '420px', background: '#0B0E14', overflow: 'hidden' }}>
+          {/* Lightweight Charts Canvas — autoSize:true reads this container's bounding rect */}
+          <div ref={chartContainerRef} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
 
           {/* Real Supply/Demand Zone Badges */}
           {showZones && displayZones.length > 0 && (
