@@ -14,9 +14,7 @@ import {
   Camera, 
   RotateCcw, 
   Layers, 
-  Zap, 
-  Target, 
-  CheckCircle2
+  Zap
 } from 'lucide-react';
 
 interface ZoneOverlay {
@@ -37,37 +35,24 @@ interface MarketMarker {
   label: string;
 }
 
-interface TradeVisualization {
-  id: string;
-  symbol: string;
-  side: 'LONG' | 'SHORT';
-  entryPrice: number;
-  stopLoss: number;
-  takeProfit: number;
-  status: 'OPEN' | 'WIN' | 'LOSS';
-  pnl: number;
-  riskReward: string;
-}
 
 interface TradingViewChartWorkspaceProps {
   initialSymbol?: string;
   initialTimeframe?: '15M' | '1H';
   isReplayActive?: boolean;
-  onSelectTrade?: (tradeId: string) => void;
 }
 
 export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps> = ({
   initialSymbol = 'BTCUSD.P',
   initialTimeframe = '1H',
   isReplayActive = false,
-  onSelectTrade,
 }) => {
   const { activeSymbol, activeTimeframe, setActiveTimeframe } = useTerminalStore();
   const currentSymbol = activeSymbol || initialSymbol;
   const currentTimeframe = activeTimeframe || initialTimeframe;
 
   // Chart Engine Choice: Official TradingView Live Widget (Delta Exchange India) vs Native SMC Canvas
-  const [chartEngine, setChartEngine] = useState<'TRADINGVIEW_LIVE' | 'LIGHTWEIGHT'>('TRADINGVIEW_LIVE');
+  const [chartEngine, setChartEngine] = useState<'TRADINGVIEW_LIVE' | 'LIGHTWEIGHT'>('LIGHTWEIGHT');
 
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartApiRef = useRef<IChartApi | null>(null);
@@ -81,10 +66,8 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
 
   // Toolbar & Visibility Toggles
   const [showZones, setShowZones] = useState(true);
-  const [showTrades, setShowTrades] = useState(true);
   const [showMarkers, setShowMarkers] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [selectedTrade, setSelectedTrade] = useState<TradeVisualization | null>(null);
 
   // Replay State
   const [isPlaying, setIsPlaying] = useState(false);
@@ -114,17 +97,6 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
     { id: 'M4', type: 'FVG', price: +(lastPrice * 1.003).toFixed(2), time: new Date().toISOString(), label: `Bullish FVG` },
   ];
 
-  const tradeViz: TradeVisualization = {
-    id: 'TRD-1785756576484',
-    symbol: currentSymbol,
-    side: 'LONG',
-    entryPrice: +(lastPrice * 0.995).toFixed(2),
-    stopLoss: +(lastPrice * 0.985).toFixed(2),
-    takeProfit: +(lastPrice * 1.025).toFixed(2),
-    status: 'WIN',
-    pnl: +(lastPrice * 0.01).toFixed(2),
-    riskReward: '3.00:1',
-  };
 
   const generateCandleData = (): { candles: CandlestickData[]; volume: HistogramData[] } => {
     const candlesData: CandlestickData[] = [];
@@ -347,14 +319,6 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
               <Zap className="w-3.5 h-3.5" />
               <span>BOS/CHoCH</span>
             </button>
-            <button
-              onClick={() => setShowTrades(!showTrades)}
-              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${showTrades ? 'bg-[#1E293B] text-[#F59E0B]' : 'hover:bg-[#1E293B]'}`}
-              title="Toggle Trade Execution Overlay"
-            >
-              <Target className="w-3.5 h-3.5" />
-              <span>Trades</span>
-            </button>
           </div>
         </div>
 
@@ -513,60 +477,6 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
               ))}
             </div>
           )}
-
-          {/* Trade Execution Risk-Reward Box Overlay */}
-          {showTrades && (
-            <div
-              onClick={() => {
-                setSelectedTrade(tradeViz);
-                if (onSelectTrade) onSelectTrade(tradeViz.id);
-              }}
-              className="absolute bottom-12 left-4 z-10 bg-[#161D2A]/90 border border-[#00C896] p-2.5 rounded-lg shadow-xl backdrop-blur-md cursor-pointer hover:border-white transition-colors"
-            >
-              <div className="flex items-center justify-between space-x-3 mb-1">
-                <span className="text-[10px] font-bold bg-[#00C896] text-black px-1.5 py-0.5 rounded">
-                  TRADE EXECUTED ({tradeViz.side})
-                </span>
-                <span className="text-[10px] font-bold text-[#00C896]">
-                  RR {tradeViz.riskReward}
-                </span>
-              </div>
-              <div className="text-[11px] text-[#94A3B8] space-y-0.5">
-                <div>Entry: <span className="text-white font-mono font-bold">${tradeViz.entryPrice}</span></div>
-                <div>Target: <span className="text-[#00C896] font-mono font-bold">${tradeViz.takeProfit}</span></div>
-                <div>Stop: <span className="text-[#F6465D] font-mono font-bold">${tradeViz.stopLoss}</span></div>
-                <div className="text-[10px] text-[#00C896] font-bold pt-0.5">Net PnL: +${tradeViz.pnl} (WIN)</div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Interactive Trade Decision Drawer (Rendered when Trade Clicked) */}
-      {selectedTrade && (
-        <div className="bg-[#0E121A] border-t border-[#1E293B] p-3 shrink-0 flex items-center justify-between font-mono">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <CheckCircle2 className="w-4 h-4 text-[#00C896]" />
-              <span className="font-bold text-white">Trade {selectedTrade.id}</span>
-              <span className="bg-[#00C896]/20 text-[#00C896] text-[10px] px-2 py-0.5 rounded font-bold">
-                {selectedTrade.status}
-              </span>
-            </div>
-            <div className="text-[#94A3B8] text-[11px]">
-              RR: <span className="text-[#F59E0B]">{selectedTrade.riskReward}</span>
-              <span className="ml-3">PnL: <span className={selectedTrade.pnl >= 0 ? 'text-[#00C896]' : 'text-[#F6465D]'}>${selectedTrade.pnl.toFixed(2)}</span></span>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => setSelectedTrade(null)}
-              className="text-[#94A3B8] hover:text-white text-[11px] underline"
-            >
-              Close Drawer
-            </button>
-          </div>
         </div>
       )}
     </div>
