@@ -64,7 +64,7 @@ export class CandleStoreService {
   public static async getCandles(
     symbol: string,
     timeframeOrLimit: string | number = '1H',
-    limitNum: number = 50
+    limitNum: number = 1000
   ): Promise<CandleDto[]> {
     let timeframe: '15M' | '1H' = '1H';
     let limit = limitNum;

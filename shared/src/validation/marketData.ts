@@ -14,7 +14,7 @@ export const ingestCandleSchema = z.object({
 export const getMarketCandlesQuerySchema = z.object({
   symbol: z.string().min(1, 'Symbol is required'),
   timeframe: z.enum(['15M', '1H']).default('1H'),
-  limit: z.coerce.number().positive().max(500).default(50),
+  limit: z.coerce.number().positive().max(5000).default(1000),
 });
 
 export type IngestCandleInput = z.infer<typeof ingestCandleSchema>;

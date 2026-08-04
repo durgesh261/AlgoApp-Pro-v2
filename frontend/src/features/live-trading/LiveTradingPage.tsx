@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { paperTradingApi, decisionApi, deltaApi } from '../../services/api';
 import { useTerminalStore } from '../../store/useTerminalStore';
 import { useToastStore } from '../../store/useToastStore';
+import { useChartWebSocket } from '../../hooks/useChartWebSocket';
 import { InteractiveTradingChart } from '../../components/charts/InteractiveTradingChart';
 import { 
   Activity, 
@@ -21,6 +22,9 @@ export const LiveTradingPage: React.FC = () => {
 
   // Tabbed Bottom Dock
   const [bottomTab, setBottomTab] = useState<'POSITIONS' | 'ORDERS' | 'HISTORY' | 'JOURNAL'>('POSITIONS');
+
+  // WebSocket Live Data
+  const { state: wsState, ticker } = useChartWebSocket(activeSymbol);
 
   // Order Placement State
   const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
@@ -105,12 +109,13 @@ export const LiveTradingPage: React.FC = () => {
           <Activity className="w-6 h-6 text-[#00C896]" />
           <div>
             <h1 className="text-lg font-bold text-[#F8FAFC]">
-              Professional Live Trading Terminal — {activeSymbol} ({activeTimeframe})
+              Professional Live Trading Terminal — {activeSymbol} 
+              {ticker ? <span className="ml-2 text-[#00C896]">${ticker.markPrice.toFixed(2)}</span> : ''}
             </h1>
             <div className="flex items-center space-x-2 text-xs text-[#94A3B8] mt-0.5">
               <span>Source of Truth: <strong className="text-[#00C896]">Delta Exchange India</strong></span>
               <span>•</span>
-              <span>Status: <strong className={isDeltaConnected ? 'text-[#00C896]' : 'text-[#94A3B8]'}>{isDeltaConnected ? `CONNECTED (${deltaHealth?.data?.wsLatencyMs || 5.5}ms)` : 'DISCONNECTED'}</strong></span>
+              <span>Status: <strong className={wsState === 'CONNECTED' ? 'text-[#00C896]' : 'text-[#F59E0B]'}>{wsState}</strong></span>
             </div>
           </div>
         </div>
