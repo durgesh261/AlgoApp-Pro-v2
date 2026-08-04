@@ -118,123 +118,137 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
   // EFFECT 1: Create chart once — never recreated
   // ─────────────────────────────────────────────
   useEffect(() => {
-    const container = chartContainerRef.current;
-    if (!container) return;
+    let rafId: number;
+    let chartInstance: ReturnType<typeof createChart> | null = null;
+    let ro: ResizeObserver | null = null;
 
+    const initChart = () => {
+      const container = chartContainerRef.current;
+      if (!container) return;
 
-    const chart = createChart(container, {
-      autoSize: true, // Lightweight Charts handles its own sizing — fixes zero-width blank chart
-      layout: {
-        background: { color: '#0B0E14' },
-        textColor: '#94A3B8',
-        fontSize: 11,
-        fontFamily: 'JetBrains Mono, monospace',
-      },
-      grid: {
-        vertLines: { color: '#1E293B' },
-        horzLines: { color: '#1E293B' },
-      },
-      crosshair: {
-        mode: 1,
-        vertLine: { color: '#3B82F6', width: 1, style: 2, labelBackgroundColor: '#1E293B' },
-        horzLine: { color: '#3B82F6', width: 1, style: 2, labelBackgroundColor: '#1E293B' },
-      },
-      rightPriceScale: {
-        borderColor: '#1E293B',
-        scaleMargins: { top: 0.1, bottom: 0.2 },
-      },
-      timeScale: {
-        borderColor: '#1E293B',
-        timeVisible: true,
-        secondsVisible: false,
-        rightOffset: 5,
-      },
-    });
+      // requestAnimationFrame guarantees a full layout pass has occurred.
+      // container.offsetWidth is now a real pixel value — guaranteed non-zero.
+      const w = container.offsetWidth || window.innerWidth - 420;
+      const h = Math.max(400, window.innerHeight - 255);
 
-    const candlestickSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#00C896',
-      downColor: '#F6465D',
-      borderVisible: false,
-      wickUpColor: '#00C896',
-      wickDownColor: '#F6465D',
-    });
+      chartInstance = createChart(container, {
+        width: w,
+        height: h,
+        layout: {
+          background: { color: '#0B0E14' },
+          textColor: '#94A3B8',
+          fontSize: 11,
+          fontFamily: 'JetBrains Mono, monospace',
+        },
+        grid: {
+          vertLines: { color: '#1E293B' },
+          horzLines: { color: '#1E293B' },
+        },
+        crosshair: {
+          mode: 1,
+          vertLine: { color: '#3B82F6', width: 1, style: 2, labelBackgroundColor: '#1E293B' },
+          horzLine: { color: '#3B82F6', width: 1, style: 2, labelBackgroundColor: '#1E293B' },
+        },
+        rightPriceScale: {
+          borderColor: '#1E293B',
+          scaleMargins: { top: 0.1, bottom: 0.2 },
+        },
+        timeScale: {
+          borderColor: '#1E293B',
+          timeVisible: true,
+          secondsVisible: false,
+          rightOffset: 5,
+        },
+      });
 
-    const volumeSeries = chart.addSeries(HistogramSeries, {
-      priceFormat: { type: 'volume' },
-      priceScaleId: '',
-    });
+      const candlestickSeries = chartInstance.addSeries(CandlestickSeries, {
+        upColor: '#00C896',
+        downColor: '#F6465D',
+        borderVisible: false,
+        wickUpColor: '#00C896',
+        wickDownColor: '#F6465D',
+      });
 
-    volumeSeries.priceScale().applyOptions({
-      scaleMargins: { top: 0.8, bottom: 0 },
-    });
+      const volumeSeries = chartInstance.addSeries(HistogramSeries, {
+        priceFormat: { type: 'volume' },
+        priceScaleId: '',
+      });
 
-    seriesRef.current = { candle: candlestickSeries, volume: volumeSeries };
-    chartApiRef.current = chart;
+      volumeSeries.priceScale().applyOptions({
+        scaleMargins: { top: 0.8, bottom: 0 },
+      });
 
-    // ── Infinite Scroll: Load more history on left-scroll ──
-    chart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
-      if (!range) return;
-      if (range.from < 10 && !isFetchingOlderRef.current && oldestTimestampRef.current > 0) {
-        isFetchingOlderRef.current = true;
-        const stepSec = currentTimeframe === '15M' ? 900 : 3600;
-        const olderTo = oldestTimestampRef.current;
-        const olderFrom = olderTo - limit * stepSec;
-        marketDataApi
-          .getCandles({
-            symbol: currentSymbol,
-            timeframe: currentTimeframe,
-            limit,
-          })
-          .then((res) => {
-            if (!res?.data || res.data.length === 0 || !seriesRef.current) return;
-            const series = seriesRef.current;
-            const map = new Map<number, { candle: CandlestickData; vol: HistogramData }>();
-            for (const c of res.data) {
-              const t = Math.floor(new Date(c.timestamp).getTime() / 1000);
-              if (isNaN(t) || t <= 0 || t >= olderTo) continue;
-              map.set(t, {
-                candle: { time: t as Time, open: c.open, high: c.high, low: c.low, close: c.close },
-                vol: {
-                  time: t as Time,
-                  value: c.volume,
-                  color: c.close >= c.open ? 'rgba(0,200,150,0.4)' : 'rgba(246,70,93,0.4)',
-                },
-              });
-            }
-            const sorted = Array.from(map.keys()).sort((a, b) => a - b);
-            if (sorted.length > 0) {
-              oldestTimestampRef.current = Math.min(oldestTimestampRef.current, sorted[0]!);
-              // Prepend by getting current data, merging, and resetting
-              const allCandles = sorted.map((t) => map.get(t)!.candle);
-              const allVolumes = sorted.map((t) => map.get(t)!.vol);
-              // Note: lightweight-charts does not support prepend natively;
-              // we keep current data as authoritative and simply extend from oldestFrom
-              series.candle.setData(allCandles);
-              series.volume.setData(allVolumes);
-            }
-          })
-          .catch(() => {})
-          .finally(() => {
-            isFetchingOlderRef.current = false;
-            void olderFrom; // suppress unused warning
-          });
-      }
-    });
+      seriesRef.current = { candle: candlestickSeries, volume: volumeSeries };
+      chartApiRef.current = chartInstance;
 
-    // ── ResizeObserver: trigger fitContent on resize (autoSize handles actual dimensions) ──
-    const resizeObserver = new ResizeObserver(() => {
-      chartApiRef.current?.timeScale().fitContent();
-    });
-    resizeObserver.observe(container);
+      // ── Infinite scroll: fetch older candles when user scrolls left ──
+      chartInstance.timeScale().subscribeVisibleLogicalRangeChange((range) => {
+        if (!range) return;
+        if (range.from < 10 && !isFetchingOlderRef.current && oldestTimestampRef.current > 0) {
+          isFetchingOlderRef.current = true;
+          const olderTo = oldestTimestampRef.current;
+          marketDataApi
+            .getCandles({ symbol: currentSymbol, timeframe: currentTimeframe, limit })
+            .then((res) => {
+              if (!res?.data || res.data.length === 0 || !seriesRef.current) return;
+              const map = new Map<number, { candle: CandlestickData; vol: HistogramData }>();
+              for (const c of res.data) {
+                const t = Math.floor(new Date(c.timestamp).getTime() / 1000);
+                if (isNaN(t) || t <= 0 || t >= olderTo) continue;
+                map.set(t, {
+                  candle: { time: t as Time, open: c.open, high: c.high, low: c.low, close: c.close },
+                  vol: { time: t as Time, value: c.volume, color: c.close >= c.open ? 'rgba(0,200,150,0.4)' : 'rgba(246,70,93,0.4)' },
+                });
+              }
+              const sorted = Array.from(map.keys()).sort((a, b) => a - b);
+              if (sorted.length > 0 && seriesRef.current) {
+                oldestTimestampRef.current = Math.min(oldestTimestampRef.current, sorted[0]!);
+                seriesRef.current.candle.setData(sorted.map((t) => map.get(t)!.candle));
+                seriesRef.current.volume.setData(sorted.map((t) => map.get(t)!.vol));
+              }
+            })
+            .catch(() => {})
+            .finally(() => { isFetchingOlderRef.current = false; });
+        }
+      });
+
+      // ── ResizeObserver: update chart dimensions when container resizes ──
+      ro = new ResizeObserver(() => {
+        if (!chartApiRef.current || !chartContainerRef.current) return;
+        const nw = chartContainerRef.current.offsetWidth || window.innerWidth - 420;
+        const nh = Math.max(400, window.innerHeight - 255);
+        chartApiRef.current.applyOptions({ width: nw, height: nh });
+      });
+      ro.observe(container);
+
+      const onWindowResize = () => {
+        if (!chartApiRef.current) return;
+        chartApiRef.current.applyOptions({
+          width: (chartContainerRef.current?.offsetWidth ?? window.innerWidth - 420),
+          height: Math.max(400, window.innerHeight - 255),
+        });
+      };
+      window.addEventListener('resize', onWindowResize);
+
+      // Store cleanup for window resize listener
+      (chartInstance as unknown as { _cleanupWindowResize?: () => void })._cleanupWindowResize = () => {
+        window.removeEventListener('resize', onWindowResize);
+      };
+    };
+
+    // Defer by 1 animation frame so layout is complete and offsetWidth > 0
+    rafId = requestAnimationFrame(initChart);
 
     return () => {
-      resizeObserver.disconnect();
-      chart.remove();
+      cancelAnimationFrame(rafId);
+      ro?.disconnect();
+      (chartApiRef.current as unknown as { _cleanupWindowResize?: () => void })?._cleanupWindowResize?.();
+      chartInstance?.remove();
       chartApiRef.current = null;
       seriesRef.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // ← intentionally empty: chart is created once
+  }, []); // ← intentionally empty: chart created ONCE
 
   // ─────────────────────────────────────────────
   // EFFECT 2: Load historical candle data into existing series
@@ -708,9 +722,23 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
           />
         </div>
       ) : (
-        <div style={{ position: 'relative', flex: 1, minHeight: '420px', background: '#0B0E14', overflow: 'hidden' }}>
-          {/* Lightweight Charts Canvas — autoSize:true reads this container's bounding rect */}
-          <div ref={chartContainerRef} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
+        <div
+          style={{
+            position: 'relative',
+            width: '100%',
+            // Explicit pixel height — the ONLY reliable way to get Lightweight Charts to render.
+            // flex/h-full chains are unreliable during initial paint. All pro terminals use this.
+            height: `calc(100vh - 255px)`,
+            minHeight: '400px',
+            background: '#0B0E14',
+            overflow: 'hidden',
+          }}
+        >
+          {/* chartContainerRef gets explicit pixel dimensions via the parent's calc(100vh-255px) */}
+          <div
+            ref={chartContainerRef}
+            style={{ width: '100%', height: '100%' }}
+          />
 
           {/* Real Supply/Demand Zone Badges */}
           {showZones && displayZones.length > 0 && (
