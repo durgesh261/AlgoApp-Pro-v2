@@ -45,6 +45,40 @@ let snapshotCache: Record<string, MarketSnapshotDto> = {
 
 export class MarketSnapshotService {
   public static async getSnapshot(symbol: string): Promise<MarketSnapshotDto> {
+    const symbolMap: Record<string, string> = {
+      'BTCUSD.P': 'BTCUSD',
+      'ETHUSD.P': 'ETHUSD',
+      'SOLUSD.P': 'SOLUSD',
+      'XRPUSD.P': 'XRPUSD',
+    };
+    const deltaSymbol = symbolMap[symbol] || symbol.replace('.P', '');
+
+    try {
+      const res = await fetch(`https://api.india.delta.exchange/v2/tickers/${deltaSymbol}`)
+        .catch(() => fetch(`https://api.delta.exchange/v2/tickers/${deltaSymbol}`));
+      const data: any = await res.json();
+      if (data && data.success && data.result) {
+        const t = data.result;
+        const livePrice = parseFloat(t.close || t.mark_price || t.spot_price);
+        if (!isNaN(livePrice) && livePrice > 0) {
+          const updated: MarketSnapshotDto = {
+            id: `SNAP-${symbol}`,
+            symbol,
+            currentPrice: livePrice,
+            spread: parseFloat(t.quotes?.best_ask) - parseFloat(t.quotes?.best_bid) || 0.5,
+            session: 'NEW_YORK',
+            trend: parseFloat(t.change_24h) >= 0 ? 'BULLISH' : 'BEARISH',
+            volatility: 'MEDIUM',
+            timestamp: new Date().toISOString(),
+          };
+          snapshotCache[symbol] = updated;
+          return updated;
+        }
+      }
+    } catch {
+      // Fallback to cache if network fails
+    }
+
     return snapshotCache[symbol] || {
       id: `SNAP-${symbol}`,
       symbol,

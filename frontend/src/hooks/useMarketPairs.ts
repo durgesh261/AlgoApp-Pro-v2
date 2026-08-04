@@ -37,7 +37,7 @@ function formatPrice(p: number): string {
     : `$${p.toFixed(4)}`;
 }
 
-export function useMarketPairs(pollMs = 8000) {
+export function useMarketPairs(pollMs = 2000) {
   const [pairs, setPairs] = useState<Record<string, LiveMarketPair>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +48,7 @@ export function useMarketPairs(pollMs = 8000) {
         WATCHLIST_SYMBOLS.map(async (symbol) => {
           const [snapshotRes, candlesRes, zonesRes, signalsRes] = await Promise.all([
             marketDataApi.getSnapshot(symbol),
-            marketDataApi.getCandles(symbol, 24).catch(() => ({ data: [] as CandleDto[] })),
+            marketDataApi.getCandles(symbol, '1H', 24).catch(() => ({ data: [] as CandleDto[] })),
             strategyApi.getZones(symbol).catch(() => ({ data: [] as ZoneDto[] })),
             strategyApi.getSignals().catch(() => ({ data: [] as any[] })),
           ]);

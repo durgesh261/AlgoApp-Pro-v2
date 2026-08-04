@@ -76,6 +76,53 @@ export class CandleStoreService {
       timeframe = timeframeOrLimit;
     }
 
+    const symbolMap: Record<string, string> = {
+      'BTCUSD.P': 'BTCUSD',
+      'ETHUSD.P': 'ETHUSD',
+      'SOLUSD.P': 'SOLUSD',
+      'XRPUSD.P': 'XRPUSD',
+    };
+    const deltaSymbol = symbolMap[symbol] || symbol.replace('.P', '');
+    const resolution = timeframe === '15M' ? '15' : '60';
+    const stepSec = timeframe === '15M' ? 900 : 3600;
+    const to = Math.floor(Date.now() / 1000);
+    const from = to - limit * stepSec;
+
+    try {
+      const url = `https://api.india.delta.exchange/v2/chart/history?resolution=${resolution}&symbol=${deltaSymbol}&from=${from}&to=${to}`;
+      const res = await fetch(url).catch(() => fetch(`https://api.delta.exchange/v2/chart/history?resolution=${resolution}&symbol=${deltaSymbol}&from=${from}&to=${to}`));
+      const data: any = await res.json();
+
+      if (data && data.success && data.result && Array.isArray(data.result.c)) {
+        const c = data.result.c;
+        const o = data.result.o;
+        const h = data.result.h;
+        const l = data.result.l;
+        const v = data.result.v;
+        const t = data.result.t;
+
+        const candles: CandleDto[] = [];
+        for (let i = 0; i < c.length; i++) {
+          candles.push({
+            id: `CNDL-${symbol}-${t[i]}`,
+            symbol,
+            timeframe,
+            open: o[i],
+            high: h[i],
+            low: l[i],
+            close: c[i],
+            volume: v[i],
+            timestamp: new Date(t[i] * 1000).toISOString(),
+          });
+        }
+        if (candles.length > 0) {
+          return candles;
+        }
+      }
+    } catch {
+      // Fallback to memory store if offline
+    }
+
     const filtered = historicalCandlesStore.filter((c) => c.symbol === symbol && c.timeframe === timeframe);
     if (filtered.length === 0) {
       return historicalCandlesStore

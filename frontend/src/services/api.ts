@@ -209,8 +209,16 @@ export const marketDataApi = {
     const res = await apiClient.get('/market-data/snapshot', { params: { symbol } });
     return res.data;
   },
-  getCandles: async (symbol: string, limit: number = 50): Promise<ApiResponse<CandleDto[]>> => {
-    const res = await apiClient.get('/market-data/candles', { params: { symbol, limit } });
+  getCandles: async (
+    params: { symbol: string; timeframe?: string; limit?: number } | string,
+    timeframe?: string,
+    limit: number = 50
+  ): Promise<ApiResponse<CandleDto[]>> => {
+    if (typeof params === 'object') {
+      const res = await apiClient.get('/market-data/candles', { params });
+      return res.data;
+    }
+    const res = await apiClient.get('/market-data/candles', { params: { symbol: params, timeframe, limit } });
     return res.data;
   },
   ingestCandle: async (input: IngestCandleInput): Promise<ApiResponse<CandleDto>> => {
