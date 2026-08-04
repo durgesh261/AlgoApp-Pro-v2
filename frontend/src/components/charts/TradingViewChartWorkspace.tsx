@@ -60,7 +60,7 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
   // Fetch real live OHLC candles from backend (sourced directly from Delta Exchange India)
   const { data: candleDataResponse } = useQuery({
     queryKey: ['candles', currentSymbol, currentTimeframe],
-    queryFn: () => marketDataApi.getCandles({ symbol: currentSymbol, timeframe: currentTimeframe, limit: 100 }),
+    queryFn: () => marketDataApi.getCandles({ symbol: currentSymbol, timeframe: currentTimeframe, limit: 500 }),
     refetchInterval: 10000,
   });
 
@@ -98,38 +98,7 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
   ];
 
 
-  const generateCandleData = (): { candles: CandlestickData[]; volume: HistogramData[] } => {
-    const candlesData: CandlestickData[] = [];
-    const volumeData: HistogramData[] = [];
 
-    const basePrice = currentSymbol.startsWith('ETH') ? 1870 : currentSymbol.startsWith('SOL') ? 73.5 : currentSymbol.startsWith('XRP') ? 1.07 : 64000;
-    const stepSec = currentTimeframe === '15M' ? 900 : 3600;
-    const baseTime = Math.floor(Date.now() / 1000) - 100 * stepSec;
-
-    let price = basePrice;
-
-    for (let i = 0; i < 100; i++) {
-      const time = (baseTime + i * stepSec) as Time;
-      const volatility = basePrice * 0.008;
-      const open = price;
-      const change = (Math.random() - 0.48) * volatility;
-      const close = open + change;
-      const high = Math.max(open, close) + Math.random() * volatility * 0.5;
-      const low = Math.min(open, close) - Math.random() * volatility * 0.5;
-      const isUp = close >= open;
-
-      candlesData.push({ time, open, high, low, close });
-      volumeData.push({
-        time,
-        value: Math.floor(Math.random() * 800 + 200),
-        color: isUp ? 'rgba(0, 200, 150, 0.4)' : 'rgba(246, 70, 93, 0.4)',
-      });
-
-      price = close;
-    }
-
-    return { candles: candlesData, volume: volumeData };
-  };
 
   // Initialize TradingView Lightweight Charts
   useEffect(() => {
@@ -210,11 +179,6 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
         volumeSeries.setData(volume);
         chart.timeScale().fitContent();
       }
-    } else {
-      const { candles, volume } = generateCandleData();
-      candlestickSeries.setData(candles);
-      volumeSeries.setData(volume);
-      chart.timeScale().fitContent();
     }
 
     chartApiRef.current = chart;

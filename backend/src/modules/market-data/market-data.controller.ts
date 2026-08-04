@@ -22,7 +22,7 @@ export const getMarketSnapshot = async (req: Request, res: Response): Promise<vo
 
 export const getMarketCandles = async (req: Request, res: Response): Promise<void> => {
   const query = getMarketCandlesQuerySchema.parse(req.query);
-  const candles = await CandleStoreService.getCandles(query.symbol, query.limit);
+  const candles = await CandleStoreService.getCandles(query.symbol, query.timeframe, query.limit);
 
   const response: ApiResponse<typeof candles> = {
     success: true,
