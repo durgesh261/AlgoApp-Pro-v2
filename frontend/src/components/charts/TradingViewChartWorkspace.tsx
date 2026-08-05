@@ -26,7 +26,9 @@ import {
   RotateCcw,
   Layers,
   Zap,
+  Sliders,
 } from 'lucide-react';
+import { CandleDto, PaperOrderStatus, ZoneStatus } from '@algoapp/shared';
 
 // ─────────────────────────────────────────────
 // Types
@@ -71,7 +73,9 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
 
   // ── State ──────────────────────────────────
   const [wsState, setWsState] = useState<string>('DISCONNECTED');
-  const [chartEngine, setChartEngine] = useState<'TRADINGVIEW_LIVE' | 'LIGHTWEIGHT'>('LIGHTWEIGHT');
+  // TradingView is the primary default engine as requested
+  const [chartEngine, setChartEngine] = useState<'TRADINGVIEW_LIVE' | 'LIGHTWEIGHT'>('TRADINGVIEW_LIVE');
+  const [tvExchange, setTvExchange] = useState<'BINANCE' | 'BYBIT' | 'DELTA'>('BINANCE');
   const [showZones, setShowZones] = useState(true);
   const [showMarkers, setShowMarkers] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -87,14 +91,14 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
     queryKey: ['candles', currentSymbol, currentTimeframe],
     queryFn: () =>
       marketDataApi.getCandles({ symbol: currentSymbol, timeframe: currentTimeframe, limit }),
-    staleTime: Infinity, // WebSocket handles live updates; no polling needed
+    staleTime: 30_000,
   });
 
   // ── Fetch: Real Supply/Demand Zones from backend ──
   const { data: zonesData } = useQuery({
     queryKey: ['zones', currentSymbol],
     queryFn: () => strategyApi.getZones(currentSymbol),
-    staleTime: 60_000, // refresh every minute
+    staleTime: 60_000,
   });
 
   // ── Fetch: Real Strategy Signals (BOS/CHoCH) ──
@@ -115,9 +119,55 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
   });
 
   // ─────────────────────────────────────────────
-  // EFFECT 1: Create chart once — never recreated
+  // Helper to populate candles in Lightweight Chart series
+  // ─────────────────────────────────────────────
+  const populateCandles = useCallback((
+    rawCandles: CandleDto[],
+    candlestickSeries: ISeriesApi<'Candlestick'>,
+    volumeSeries: ISeriesApi<'Histogram'>
+  ) => {
+    if (!rawCandles || rawCandles.length === 0) return;
+    const map = new Map<number, { candle: CandlestickData; vol: HistogramData }>();
+    for (const c of rawCandles) {
+      const timeSec = Math.floor(new Date(c.timestamp).getTime() / 1000);
+      if (isNaN(timeSec) || timeSec <= 0) continue;
+      map.set(timeSec, {
+        candle: { time: timeSec as Time, open: c.open, high: c.high, low: c.low, close: c.close },
+        vol: {
+          time: timeSec as Time,
+          value: c.volume,
+          color: c.close >= c.open ? 'rgba(0,200,150,0.4)' : 'rgba(246,70,93,0.4)',
+        },
+      });
+    }
+
+    const sortedTimes = Array.from(map.keys()).sort((a, b) => a - b);
+    const candles: CandlestickData[] = sortedTimes.map((t) => map.get(t)!.candle);
+    const volumes: HistogramData[] = sortedTimes.map((t) => map.get(t)!.vol);
+
+    if (candles.length > 0) {
+      candlestickSeries.setData(candles);
+      volumeSeries.setData(volumes);
+      chartApiRef.current?.timeScale().fitContent();
+      const lastCandle = candles[candles.length - 1]!;
+      lastCandleRef.current = {
+        time: lastCandle.time,
+        open: lastCandle.open,
+        high: lastCandle.high,
+        low: lastCandle.low,
+        close: lastCandle.close,
+      };
+      currentCandleVolumeRef.current = volumes[volumes.length - 1]?.value ?? 0;
+      oldestTimestampRef.current = sortedTimes[0]!;
+    }
+  }, []);
+
+  // ─────────────────────────────────────────────
+  // EFFECT 1: Create chart once
   // ─────────────────────────────────────────────
   useEffect(() => {
+    if (chartEngine !== 'LIGHTWEIGHT') return;
+
     let rafId: number;
     let chartInstance: ReturnType<typeof createChart> | null = null;
     let ro: ResizeObserver | null = null;
@@ -126,8 +176,6 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
       const container = chartContainerRef.current;
       if (!container) return;
 
-      // requestAnimationFrame guarantees a full layout pass has occurred.
-      // container.offsetWidth is now a real pixel value — guaranteed non-zero.
       const w = container.offsetWidth || window.innerWidth - 420;
       const h = Math.max(400, window.innerHeight - 255);
 
@@ -181,6 +229,11 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
       seriesRef.current = { candle: candlestickSeries, volume: volumeSeries };
       chartApiRef.current = chartInstance;
 
+      // Populate immediately if data is already available
+      if (candleDataResponse?.data && candleDataResponse.data.length > 0) {
+        populateCandles(candleDataResponse.data, candlestickSeries, volumeSeries);
+      }
+
       // ── Infinite scroll: fetch older candles when user scrolls left ──
       chartInstance.timeScale().subscribeVisibleLogicalRangeChange((range) => {
         if (!range) return;
@@ -212,7 +265,7 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
         }
       });
 
-      // ── ResizeObserver: update chart dimensions when container resizes ──
+      // ── ResizeObserver ──
       ro = new ResizeObserver(() => {
         if (!chartApiRef.current || !chartContainerRef.current) return;
         const nw = chartContainerRef.current.offsetWidth || window.innerWidth - 420;
@@ -230,13 +283,11 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
       };
       window.addEventListener('resize', onWindowResize);
 
-      // Store cleanup for window resize listener
       (chartInstance as unknown as { _cleanupWindowResize?: () => void })._cleanupWindowResize = () => {
         window.removeEventListener('resize', onWindowResize);
       };
     };
 
-    // Defer by 1 animation frame so layout is complete and offsetWidth > 0
     rafId = requestAnimationFrame(initChart);
 
     return () => {
@@ -247,60 +298,24 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
       chartApiRef.current = null;
       seriesRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // ← intentionally empty: chart created ONCE
+  }, [chartEngine, populateCandles, currentSymbol, currentTimeframe, limit, candleDataResponse]);
 
   // ─────────────────────────────────────────────
-  // EFFECT 2: Load historical candle data into existing series
+  // EFFECT 2: Sync candle data on response update
   // ─────────────────────────────────────────────
   useEffect(() => {
+    if (chartEngine !== 'LIGHTWEIGHT') return;
     if (!seriesRef.current || !candleDataResponse?.data || candleDataResponse.data.length === 0) return;
-    const { candle: candlestickSeries, volume: volumeSeries } = seriesRef.current;
-
-    const map = new Map<number, { candle: CandlestickData; vol: HistogramData }>();
-    for (const c of candleDataResponse.data) {
-      const timeSec = Math.floor(new Date(c.timestamp).getTime() / 1000);
-      if (isNaN(timeSec) || timeSec <= 0) continue;
-      map.set(timeSec, {
-        candle: { time: timeSec as Time, open: c.open, high: c.high, low: c.low, close: c.close },
-        vol: {
-          time: timeSec as Time,
-          value: c.volume,
-          color: c.close >= c.open ? 'rgba(0,200,150,0.4)' : 'rgba(246,70,93,0.4)',
-        },
-      });
-    }
-
-    const sortedTimes = Array.from(map.keys()).sort((a, b) => a - b);
-    const candles: CandlestickData[] = sortedTimes.map((t) => map.get(t)!.candle);
-    const volumes: HistogramData[] = sortedTimes.map((t) => map.get(t)!.vol);
-
-    if (candles.length > 0) {
-      candlestickSeries.setData(candles);
-      volumeSeries.setData(volumes);
-      chartApiRef.current?.timeScale().fitContent();
-      const lastCandle = candles[candles.length - 1]!;
-      lastCandleRef.current = {
-        time: lastCandle.time,
-        open: lastCandle.open,
-        high: lastCandle.high,
-        low: lastCandle.low,
-        close: lastCandle.close,
-      };
-      currentCandleVolumeRef.current = volumes[volumes.length - 1]?.value ?? 0;
-      oldestTimestampRef.current = sortedTimes[0]!;
-    }
-  }, [candleDataResponse]);
+    populateCandles(candleDataResponse.data, seriesRef.current.candle, seriesRef.current.volume);
+  }, [candleDataResponse, chartEngine, populateCandles]);
 
   // ─────────────────────────────────────────────
-  // EFFECT 3: WebSocket — reconnect on symbol/timeframe change
+  // EFFECT 3: WebSocket Live Ticks
   // ─────────────────────────────────────────────
   useEffect(() => {
-    // Reset live candle state on every symbol/timeframe switch
     lastCandleRef.current = null;
     currentCandleVolumeRef.current = 0;
 
-    // Invalidate candle query to trigger a fresh fetch
     queryClient.invalidateQueries({ queryKey: ['candles', currentSymbol, currentTimeframe] });
 
     const handleWsState = (state: string) => setWsState(state);
@@ -315,10 +330,7 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
       const lastCandleTimeSec = lastCandleRef.current.time as number;
 
       if (tradeTimeSec >= lastCandleTimeSec + stepSec) {
-        // ── New candle: align to exact timeframe bucket boundary ──
-        const newBucketTime =
-          Math.floor(tradeTimeSec / stepSec) * stepSec;
-
+        const newBucketTime = Math.floor(tradeTimeSec / stepSec) * stepSec;
         const newCandle: CandlestickData = {
           time: newBucketTime as Time,
           open: trade.price,
@@ -327,7 +339,7 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
           close: trade.price,
         };
         lastCandleRef.current = newCandle;
-        currentCandleVolumeRef.current = trade.size; // reset volume bucket
+        currentCandleVolumeRef.current = trade.size;
 
         candlestickSeries.update(newCandle);
         volumeSeries.update({
@@ -336,14 +348,13 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
           color: 'rgba(0,200,150,0.4)',
         });
       } else {
-        // ── Update current candle in place ──
         const c = lastCandleRef.current!;
         c.close = trade.price;
         const currentHigh = c.high ?? trade.price;
         const currentLow = c.low ?? trade.price;
         if (trade.price > currentHigh) c.high = trade.price;
         if (trade.price < currentLow) c.low = trade.price;
-        currentCandleVolumeRef.current += trade.size; // accumulate real volume
+        currentCandleVolumeRef.current += trade.size;
 
         candlestickSeries.update(c);
         volumeSeries.update({
@@ -358,144 +369,89 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
     chartWebSocketService.connect(currentSymbol);
 
     return () => {
-      chartWebSocketService.off('trade', handleTrade);
       chartWebSocketService.off('stateChange', handleWsState);
+      chartWebSocketService.off('trade', handleTrade);
     };
   }, [currentSymbol, currentTimeframe, queryClient]);
 
   // ─────────────────────────────────────────────
-  // EFFECT 4: Price-line overlays (positions, orders, real zones, signals)
+  // EFFECT 4: Overlay Supply & Demand Zones
   // ─────────────────────────────────────────────
-  const renderOverlays = useCallback(() => {
-    if (!seriesRef.current?.candle) return;
-    const series = seriesRef.current.candle;
+  useEffect(() => {
+    if (chartEngine !== 'LIGHTWEIGHT') return;
+    const series = seriesRef.current?.candle;
+    if (!series) return;
 
-    // Clear existing lines
-    linesRef.current.forEach((line) => {
-      try { series.removePriceLine(line); } catch { /* already removed */ }
-    });
+    for (const line of linesRef.current) {
+      try { series.removePriceLine(line); } catch { /* ignore */ }
+    }
     linesRef.current = [];
 
-    const newLines: IPriceLine[] = [];
-
-    // ── Real Supply/Demand Zones from backend ──
     if (showZones && zonesData?.data) {
-      zonesData.data
-        .filter((z) => z.status !== 'CONSUMED' && z.status !== 'BROKEN')
-        .forEach((zone) => {
-          const color =
-            zone.type === 'SUPPLY'
-              ? 'rgba(246,70,93,0.6)'
-              : 'rgba(0,200,150,0.6)';
-          const top = series.createPriceLine({
-            price: zone.upperPrice,
-            color,
-            lineWidth: 1,
-            lineStyle: 1,
-            axisLabelVisible: true,
-            title: `${zone.type} (${zone.freshness}%)`,
-          });
-          const bot = series.createPriceLine({
-            price: zone.lowerPrice,
-            color,
-            lineWidth: 1,
-            lineStyle: 1,
-            axisLabelVisible: false,
-            title: '',
-          });
-          newLines.push(top, bot);
+      for (const zone of zonesData.data) {
+        if (zone.symbol !== currentSymbol || zone.status === ZoneStatus.CONSUMED || zone.status === ZoneStatus.BROKEN) continue;
+        const color = zone.type === 'SUPPLY' ? '#F6465D' : '#00C896';
+        const topLine = series.createPriceLine({
+          price: zone.upperPrice,
+          color,
+          lineWidth: 1,
+          lineStyle: 0,
+          axisLabelVisible: true,
+          title: `${zone.type} TOP`,
         });
-    }
-
-    // ── Real BOS/CHoCH Signals from backend ──
-    if (showMarkers && signalsData?.data) {
-      signalsData.data
-        .filter((s) => s.symbol === currentSymbol)
-        .slice(0, 6) // limit to most recent 6
-        .forEach((sig) => {
-          const line = series.createPriceLine({
-            price: sig.price,
-            color: 'rgba(59,130,246,0.7)',
-            lineWidth: 1,
-            lineStyle: 4,
-            axisLabelVisible: true,
-            title: sig.outcome,
-          });
-          newLines.push(line);
+        const botLine = series.createPriceLine({
+          price: zone.lowerPrice,
+          color,
+          lineWidth: 1,
+          lineStyle: 2,
+          axisLabelVisible: false,
+          title: `${zone.type} BOT`,
         });
+        linesRef.current.push(topLine, botLine);
+      }
     }
+  }, [zonesData, showZones, currentSymbol, chartEngine]);
 
-    // ── Open Positions ──
-    if (positionsData?.data) {
-      positionsData.data
-        .filter((pos) => pos.symbol === currentSymbol && pos.quantity > 0)
-        .forEach((pos) => {
-          const isLong = (pos.side as string) === 'LONG';
-          const color = isLong ? '#00C896' : '#F6465D';
-          const line = series.createPriceLine({
-            price: pos.entryPrice,
-            color,
-            lineWidth: 2,
-            lineStyle: 2,
-            axisLabelVisible: true,
-            title: `POS ${pos.side} ${pos.leverage}x`,
-          });
-          newLines.push(line);
-
-          if (pos.stopLoss) {
-            const sl = series.createPriceLine({
-              price: pos.stopLoss,
-              color: '#F6465D',
-              lineWidth: 1,
-              lineStyle: 3,
-              axisLabelVisible: true,
-              title: 'SL',
-            });
-            newLines.push(sl);
-          }
-          if (pos.takeProfit) {
-            const tp = series.createPriceLine({
-              price: pos.takeProfit,
-              color: '#00C896',
-              lineWidth: 1,
-              lineStyle: 3,
-              axisLabelVisible: true,
-              title: 'TP',
-            });
-            newLines.push(tp);
-          }
-        });
-    }
-
-    // ── Pending Orders ──
-    if (ordersData?.data) {
-      ordersData.data
-        .filter((o) => o.symbol === currentSymbol && o.status === 'PENDING')
-        .forEach((order) => {
-          const price = order.price;
-          if (!price) return;
-          const isBuy = (order.side as string) === 'BUY';
-          const line = series.createPriceLine({
-            price,
-            color: isBuy ? '#00C896' : '#F6465D',
-            lineWidth: 1,
-            lineStyle: 3,
-            axisLabelVisible: true,
-            title: `ORD ${order.side}`,
-          });
-          newLines.push(line);
-        });
-    }
-
-    linesRef.current = newLines;
-  }, [showZones, showMarkers, zonesData, signalsData, positionsData, ordersData, currentSymbol]);
-
+  // ─────────────────────────────────────────────
+  // EFFECT 5: Overlay Positions and Orders
+  // ─────────────────────────────────────────────
   useEffect(() => {
-    // Re-render overlays whenever data or toggles change
-    // Chart must exist first — guard against mount race
-    const timer = setTimeout(renderOverlays, 50);
-    return () => clearTimeout(timer);
-  }, [renderOverlays]);
+    if (chartEngine !== 'LIGHTWEIGHT') return;
+    const series = seriesRef.current?.candle;
+    if (!series) return;
+
+    if (positionsData?.data) {
+      for (const pos of positionsData.data) {
+        if (pos.symbol !== currentSymbol || pos.quantity === 0) continue;
+        const color = pos.side === 'LONG' ? '#00C896' : '#F6465D';
+        const posLine = series.createPriceLine({
+          price: pos.entryPrice,
+          color,
+          lineWidth: 2,
+          lineStyle: 0,
+          axisLabelVisible: true,
+          title: `POS: ${pos.side} @ ${pos.entryPrice}`,
+        });
+        linesRef.current.push(posLine);
+      }
+    }
+
+    if (ordersData?.data) {
+      for (const ord of ordersData.data) {
+        if (ord.symbol !== currentSymbol || ord.status !== PaperOrderStatus.PENDING || !ord.price) continue;
+        const color = ord.side === 'BUY' ? '#3B82F6' : '#F59E0B';
+        const ordLine = series.createPriceLine({
+          price: ord.price,
+          color,
+          lineWidth: 1,
+          lineStyle: 1,
+          axisLabelVisible: true,
+          title: `LIMIT ${ord.side} @ ${ord.price}`,
+        });
+        linesRef.current.push(ordLine);
+      }
+    }
+  }, [positionsData, ordersData, currentSymbol, chartEngine]);
 
   // ─────────────────────────────────────────────
   // Replay playback timer
@@ -530,18 +486,30 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
     chartApiRef.current?.timeScale().fitContent();
   };
 
-  // Delta Exchange India TradingView symbol mapping
-  const getTvDeltaSymbol = () => {
-    // Delta Exchange India listings on TradingView resolve under the DELTA: prefix,
-    // and use the same "SYMBOLUSD.P" perpetual naming your watchlist already uses.
-    return `${currentSymbol}`;
+  // ─────────────────────────────────────────────
+  // TradingView Symbol Resolver
+  // ─────────────────────────────────────────────
+  const getTvSymbol = () => {
+    const clean = currentSymbol.toUpperCase().replace('.P', '');
+    if (tvExchange === 'BYBIT') {
+      return `BYBIT:${clean}USD.P`;
+    }
+    if (tvExchange === 'DELTA') {
+      return `DELTA:${clean}USD.P`;
+    }
+    // Default Binance Perpetual Futures (deepest liquid crypto feeds)
+    if (clean.startsWith('BTC')) return 'BINANCE:BTCUSDT.P';
+    if (clean.startsWith('ETH')) return 'BINANCE:ETHUSDT.P';
+    if (clean.startsWith('SOL')) return 'BINANCE:SOLUSDT.P';
+    if (clean.startsWith('XRP')) return 'BINANCE:XRPUSDT.P';
+    return `BINANCE:${clean}USDT.P`;
   };
 
   // ─────────────────────────────────────────────
   // Derived display values for zone/signal badges
   // ─────────────────────────────────────────────
   const displayZones = zonesData?.data?.filter(
-    (z) => z.symbol === currentSymbol && z.status !== 'CONSUMED' && z.status !== 'BROKEN'
+    (z) => z.symbol === currentSymbol && z.status !== ZoneStatus.CONSUMED && z.status !== ZoneStatus.BROKEN
   ) ?? [];
 
   const displaySignals = signalsData?.data?.filter(
@@ -559,7 +527,7 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
       {/* ── Chart Top Toolbar ── */}
       <div className="h-11 bg-[#0E121A] border-b border-[#1E293B] px-3 flex items-center justify-between shrink-0 overflow-x-auto no-scrollbar">
         <div className="flex items-center space-x-3">
-          {/* Symbol */}
+          {/* Symbol & Live Telemetry Badge */}
           <div className="flex items-center space-x-1.5 font-bold text-[#F8FAFC]">
             <BarChart2 className="w-4 h-4 text-[#3B82F6]" />
             <span>{currentSymbol}</span>
@@ -618,6 +586,37 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
 
         {/* Right Controls */}
         <div className="flex items-center space-x-2">
+          {/* TradingView Feed Source Selector when in TV Mode */}
+          {chartEngine === 'TRADINGVIEW_LIVE' && (
+            <div className="flex items-center bg-[#161D2A] border border-[#1E293B] rounded p-0.5 text-[10px] space-x-1">
+              <span className="text-slate-400 px-1 text-[9px] uppercase font-bold flex items-center space-x-1">
+                <Sliders className="w-3 h-3 text-indigo-400" />
+                <span>TV Feed:</span>
+              </span>
+              <button
+                onClick={() => setTvExchange('BINANCE')}
+                className={`px-2 py-0.5 rounded font-bold transition-all ${tvExchange === 'BINANCE' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'text-slate-400 hover:text-white'}`}
+                title="Binance Perpetual Futures Feed"
+              >
+                BINANCE
+              </button>
+              <button
+                onClick={() => setTvExchange('BYBIT')}
+                className={`px-2 py-0.5 rounded font-bold transition-all ${tvExchange === 'BYBIT' ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'text-slate-400 hover:text-white'}`}
+                title="Bybit Perpetual Swap Feed"
+              >
+                BYBIT
+              </button>
+              <button
+                onClick={() => setTvExchange('DELTA')}
+                className={`px-2 py-0.5 rounded font-bold transition-all ${tvExchange === 'DELTA' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'text-slate-400 hover:text-white'}`}
+                title="Delta Exchange Listing"
+              >
+                DELTA
+              </button>
+            </div>
+          )}
+
           {isReplayActive && (
             <div className="flex items-center space-x-1 bg-[#161D2A] border border-[#1E293B] px-2 py-0.5 rounded text-[11px]">
               <button
@@ -651,27 +650,27 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
             </div>
           )}
 
-          {/* Chart Engine Switcher */}
+          {/* Primary Chart Engine Switcher */}
           <div className="flex items-center bg-[#0B0E14] border border-[#1E293B] p-0.5 rounded text-[10px]">
             <button
-              onClick={() => setChartEngine('LIGHTWEIGHT')}
-              className={`px-2.5 py-0.5 rounded font-bold transition-all ${chartEngine === 'LIGHTWEIGHT'
+              onClick={() => setChartEngine('TRADINGVIEW_LIVE')}
+              className={`px-3 py-1 rounded font-bold transition-all ${chartEngine === 'TRADINGVIEW_LIVE'
                 ? 'bg-[#3B82F6] text-white shadow-sm'
                 : 'text-[#94A3B8] hover:text-white'
                 }`}
-              title="100% Genuine Delta Exchange India Feed with SMC Engine & Live Overlays"
+              title="Full TradingView Supercharts Interface"
             >
-              ● NATIVE DELTA (SMC)
+              TRADINGVIEW CHART
             </button>
             <button
-              onClick={() => setChartEngine('TRADINGVIEW_LIVE')}
-              className={`px-2.5 py-0.5 rounded font-bold transition-all ${chartEngine === 'TRADINGVIEW_LIVE'
+              onClick={() => setChartEngine('LIGHTWEIGHT')}
+              className={`px-3 py-1 rounded font-bold transition-all ${chartEngine === 'LIGHTWEIGHT'
                 ? 'bg-[#3B82F6] text-white shadow-sm'
                 : 'text-[#94A3B8] hover:text-white'
                 }`}
-              title="TradingView Public Embed Widget (Global Feeds)"
+              title="Native SMC Lightweight Chart with Real Overlay Data"
             >
-              TV EMBED
+              NATIVE SMC
             </button>
           </div>
 
@@ -701,48 +700,79 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
 
       {/* ── Main Workspace ── */}
       {chartEngine === 'TRADINGVIEW_LIVE' ? (
-        <div className="relative flex-1 w-full h-full min-h-[380px] bg-[#0B0E14] flex flex-col overflow-hidden">
-          {/* Info notice explaining TV public embed vs Native Delta India */}
-          <div className="bg-slate-900/95 border-b border-slate-800 px-3 py-1.5 text-[10px] text-slate-400 flex items-center justify-between z-10 shrink-0">
-            <span className="flex items-center space-x-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-400 inline-block animate-pulse"></span>
-              <span>
-                <strong>TradingView Public Widget:</strong> Free standalone embed displays global feeds ({currentSymbol.startsWith('BTC') ? 'Bybit' : 'Binance'}). For <strong>100% authentic Delta Exchange India</strong> order flow & prices, click <strong>NATIVE DELTA (SMC)</strong>.
-              </span>
-            </span>
-            <button
-              onClick={() => setChartEngine('LIGHTWEIGHT')}
-              className="px-2 py-0.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-[9px] font-bold uppercase transition"
-            >
-              Switch to Delta India Native
-            </button>
-          </div>
-          <div className="relative flex-1 w-full h-full min-h-[340px] bg-[#0B0E14] overflow-hidden">
-            <iframe
-              key={`${currentSymbol}-${currentTimeframe}`}
-              title="TradingView Live Chart"
-              src={`https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(
-                getTvDeltaSymbol()
-              )}&interval=${currentTimeframe === '15M' ? '15' : '60'}&symboledit=1&saveimage=1&toolbarbg=0B0E14&theme=dark&style=1&timezone=Asia%2FKolkata&studies=%5B%5D&locale=en`}
-              className="w-full h-full border-0 absolute inset-0"
-              allowFullScreen
-            />
-          </div>
+        <div
+          style={{
+            position: 'relative',
+            width: '100%',
+            height: `calc(100vh - 255px)`,
+            minHeight: '480px',
+            background: '#0B0E14',
+            overflow: 'hidden',
+          }}
+          className="relative flex-1 w-full"
+        >
+          {/* Real Supply/Demand Zone & Signal Badges rendered directly above TradingView Chart */}
+          {showZones && displayZones.length > 0 && (
+            <div className="absolute top-3 left-14 z-20 flex flex-col space-y-1.5 pointer-events-none">
+              {displayZones.map((zone) => (
+                <div
+                  key={zone.id}
+                  className={`px-2.5 py-1 rounded text-[11px] font-mono flex items-center space-x-2 border shadow-lg backdrop-blur-sm ${zone.type === 'SUPPLY'
+                    ? 'bg-[#F6465D]/15 border-[#F6465D]/40 text-[#F6465D]'
+                    : 'bg-[#00C896]/15 border-[#00C896]/40 text-[#00C896]'
+                    }`}
+                >
+                  <span className="font-bold">
+                    {zone.type} ZONE [{zone.lowerPrice.toFixed(0)} – {zone.upperPrice.toFixed(0)}]
+                  </span>
+                  <span className="text-[10px] bg-[#0E121A] px-1.5 py-0.5 rounded text-[#94A3B8]">
+                    {zone.status} • {zone.touchCount} Touches • {zone.freshness}% Fresh
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* BOS / CHoCH Signal Overlay Badges */}
+          {showMarkers && displaySignals.length > 0 && (
+            <div className="absolute top-3 right-4 z-20 flex flex-col space-y-1.5 pointer-events-none">
+              {displaySignals.map((sig) => (
+                <div
+                  key={sig.id}
+                  className="px-2 py-1 rounded text-[10px] font-mono bg-[#1E293B]/90 border border-[#3B82F6]/40 text-[#3B82F6] flex items-center space-x-1 shadow-md"
+                >
+                  <Zap className="w-3 h-3 text-[#F59E0B]" />
+                  <span className="font-bold">{sig.outcome}:</span>
+                  <span>
+                    {sig.timeframe} (${sig.price?.toFixed(0)})
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Embedded Full TradingView Chart Widget with Drawing Tools */}
+          <iframe
+            key={`${currentSymbol}-${currentTimeframe}-${tvExchange}`}
+            title="TradingView Live Chart"
+            src={`https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(
+              getTvSymbol()
+            )}&interval=${currentTimeframe === '15M' ? '15' : '60'}&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=0B0E14&theme=dark&style=1&timezone=Asia%2FKolkata&studies=%5B%5D&locale=en`}
+            className="w-full h-full border-0 absolute inset-0"
+            allowFullScreen
+          />
         </div>
       ) : (
         <div
           style={{
             position: 'relative',
             width: '100%',
-            // Explicit pixel height — the ONLY reliable way to get Lightweight Charts to render.
-            // flex/h-full chains are unreliable during initial paint. All pro terminals use this.
             height: `calc(100vh - 255px)`,
             minHeight: '400px',
             background: '#0B0E14',
             overflow: 'hidden',
           }}
         >
-          {/* chartContainerRef gets explicit pixel dimensions via the parent's calc(100vh-255px) */}
           <div
             ref={chartContainerRef}
             style={{ width: '100%', height: '100%' }}
@@ -779,7 +809,7 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
             </div>
           )}
 
-          {/* Real BOS/CHoCH Signal Badges */}
+          {/* Signal Badges */}
           {showMarkers && displaySignals.length > 0 && (
             <div className="absolute top-3 right-3 z-10 flex flex-col space-y-1.5 pointer-events-none">
               {displaySignals.map((sig) => (
@@ -790,7 +820,7 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
                   <Zap className="w-3 h-3 text-[#F59E0B]" />
                   <span className="font-bold">{sig.outcome}:</span>
                   <span>
-                    {sig.timeframe} (${sig.price.toFixed(0)})
+                    {sig.timeframe} (${sig.price?.toFixed(0)})
                   </span>
                 </div>
               ))}
@@ -806,7 +836,7 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
             </div>
           )}
 
-          {/* Disconnected overlay — warn user when WS is down */}
+          {/* Disconnected overlay */}
           {wsState === 'DISCONNECTED' && (
             <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
               <div className="bg-[#0E121A]/90 border border-[#F6465D]/40 rounded-lg px-6 py-4 text-center">
@@ -821,3 +851,5 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
     </div>
   );
 };
+
+export default TradingViewChartWorkspace;
