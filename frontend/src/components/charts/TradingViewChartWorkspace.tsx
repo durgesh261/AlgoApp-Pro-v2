@@ -11,32 +11,18 @@ import { ZoneStatus } from '@algoapp/shared';
 // ─────────────────────────────────────────────
 
 /**
- * Maps internal AlgoApp symbol (e.g. "BTCUSD.P") to a TradingView-compatible
- * symbol string.  We default to the Binance Perpetual feed which is reliably
- * available on the public TradingView widget, tracks Delta India prices
- * tick-for-tick, and never shows "Invalid Symbol".
- *
- * The Delta Exchange India integration appears as a *broker* on TradingView's
- * main site, not on the free public CDN widget.  Using Binance perpetuals is
- * the correct approach for the embedded iframe.
+/**
+ * Maps internal AlgoApp symbol (e.g. "BTCUSD.P") to a Delta Exchange India
+ * TradingView symbol. Delta Exchange India is registered on TradingView under
+ * the "DELTA" exchange prefix. Their perpetual contract names drop the ".P"
+ * suffix — e.g. BTCUSD, ETHUSD, SOLUSD, XRPUSD.
  */
 const toTvSymbol = (symbol: string, timeframe: '15M' | '1H'): { sym: string; interval: string } => {
   const interval = timeframe === '15M' ? '15' : '60';
-  const clean = symbol.toUpperCase().replace('.P', '').replace('USD', '');
-  const map: Record<string, string> = {
-    BTC: 'BINANCE:BTCUSDT.P',
-    ETH: 'BINANCE:ETHUSDT.P',
-    SOL: 'BINANCE:SOLUSDT.P',
-    XRP: 'BINANCE:XRPUSDT.P',
-    BNB: 'BINANCE:BNBUSDT.P',
-    DOGE: 'BINANCE:DOGEUSDT.P',
-    AVAX: 'BINANCE:AVAXUSDT.P',
-    LINK: 'BINANCE:LINKUSDT.P',
-    MATIC: 'BINANCE:MATICUSDT.P',
-    OP: 'BINANCE:OPUSDT.P',
-    ARB: 'BINANCE:ARBUSDT.P',
-  };
-  return { sym: map[clean] ?? `BINANCE:${clean}USDT.P`, interval };
+  // Strip ".P" suffix → "BTCUSD.P" → "BTCUSD"
+  const deltaSymbol = symbol.toUpperCase().replace('.P', '');
+  // Delta Exchange India TradingView prefix
+  return { sym: `DELTA:${deltaSymbol}`, interval };
 };
 
 // ─────────────────────────────────────────────
