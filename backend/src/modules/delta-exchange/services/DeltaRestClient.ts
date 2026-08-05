@@ -94,6 +94,10 @@ export class DeltaRestClient {
     });
   }
 
+  public isConfigured(): boolean {
+    return !!(this.credentials.apiKey && this.credentials.apiSecret);
+  }
+
   private async waitForRateLimitToken(): Promise<void> {
     const now = Date.now();
     const elapsed = (now - this.lastTokenRefill) / 1000;

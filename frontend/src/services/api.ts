@@ -262,7 +262,58 @@ export const backtestApi = {
   },
 };
 
+export interface OrderExecutionDto {
+  symbol: string;
+  side: 'buy' | 'sell';
+  orderType: 'market' | 'limit' | 'stop_market' | 'stop_limit';
+  size: number;
+  price?: number | undefined;
+  stopPrice?: number | undefined;
+  leverage?: number | undefined;
+  reduceOnly?: boolean | undefined;
+  postOnly?: boolean | undefined;
+  stopLossPrice?: number | undefined;
+  takeProfitPrice?: number | undefined;
+  clientOrderId?: string | undefined;
+}
+
 export const executionApi = {
+  placeOrder: async (order: OrderExecutionDto): Promise<ApiResponse<any>> => {
+    const res = await apiClient.post('/execution/orders', order);
+    return res.data;
+  },
+  validateOrder: async (order: OrderExecutionDto): Promise<ApiResponse<any>> => {
+    const res = await apiClient.post('/execution/validate', order);
+    return res.data;
+  },
+  cancelOrder: async (orderId: string | number): Promise<ApiResponse<any>> => {
+    const res = await apiClient.post(`/execution/orders/${orderId}/cancel`);
+    return res.data;
+  },
+  cancelAllOrders: async (): Promise<ApiResponse<any>> => {
+    const res = await apiClient.post('/execution/orders/cancel-all');
+    return res.data;
+  },
+  closePosition: async (symbol: string): Promise<ApiResponse<any>> => {
+    const res = await apiClient.post(`/execution/positions/${symbol}/close`);
+    return res.data;
+  },
+  modifyOrder: async (orderId: string | number, updates: { price?: number; size?: number }): Promise<ApiResponse<any>> => {
+    const res = await apiClient.post(`/execution/orders/${orderId}/modify`, updates);
+    return res.data;
+  },
+  getActiveOrders: async (): Promise<ApiResponse<any[]>> => {
+    const res = await apiClient.get('/execution/active');
+    return res.data;
+  },
+  getHistory: async (): Promise<ApiResponse<any[]>> => {
+    const res = await apiClient.get('/execution/history');
+    return res.data;
+  },
+  toggleKillSwitch: async (active: boolean): Promise<ApiResponse<any>> => {
+    const res = await apiClient.post('/execution/kill-switch', { active });
+    return res.data;
+  },
   submitExecution: async (input: SubmitExecutionInput): Promise<ApiResponse<{
     session: ExecutionSessionDto;
     request: ExecutionRequestDto;
@@ -626,6 +677,8 @@ export const portfolioApi = {
     return res.data;
   },
 };
+
+
 
 
 
