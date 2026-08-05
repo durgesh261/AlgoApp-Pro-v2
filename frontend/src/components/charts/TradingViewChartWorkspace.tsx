@@ -207,7 +207,7 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
                 seriesRef.current.volume.setData(sorted.map((t) => map.get(t)!.vol));
               }
             })
-            .catch(() => {})
+            .catch(() => { })
             .finally(() => { isFetchingOlderRef.current = false; });
         }
       });
@@ -247,7 +247,7 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
       chartApiRef.current = null;
       seriesRef.current = null;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // ← intentionally empty: chart created ONCE
 
   // ─────────────────────────────────────────────
@@ -534,7 +534,7 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
   const getTvDeltaSymbol = () => {
     // Delta Exchange India listings on TradingView resolve under the DELTA: prefix,
     // and use the same "SYMBOLUSD.P" perpetual naming your watchlist already uses.
-    return `DELTA:${currentSymbol}`;
+    return `${currentSymbol}`;
   };
 
   // ─────────────────────────────────────────────
@@ -564,15 +564,14 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
             <BarChart2 className="w-4 h-4 text-[#3B82F6]" />
             <span>{currentSymbol}</span>
             <span
-              className={`ml-2 px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold tracking-wider uppercase border ${
-                wsState === 'CONNECTED'
-                  ? 'bg-[#00C896]/10 text-[#00C896] border-[#00C896]/30'
-                  : wsState === 'RECONNECTING'
+              className={`ml-2 px-1.5 py-0.5 rounded-[4px] text-[9px] font-bold tracking-wider uppercase border ${wsState === 'CONNECTED'
+                ? 'bg-[#00C896]/10 text-[#00C896] border-[#00C896]/30'
+                : wsState === 'RECONNECTING'
                   ? 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/30'
                   : 'bg-[#F6465D]/10 text-[#F6465D] border-[#F6465D]/30'
-              }`}
+                }`}
             >
-              {wsState === 'CONNECTED' ? '● LIVE' : wsState}
+              {wsState === 'CONNECTED' ? '● DELTA INDIA LIVE' : wsState}
             </span>
           </div>
 
@@ -582,11 +581,10 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
               <button
                 key={tf}
                 onClick={() => setActiveTimeframe(tf)}
-                className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
-                  currentTimeframe === tf
-                    ? 'bg-[#3B82F6] text-white'
-                    : 'text-[#94A3B8] hover:text-white'
-                }`}
+                className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${currentTimeframe === tf
+                  ? 'bg-[#3B82F6] text-white'
+                  : 'text-[#94A3B8] hover:text-white'
+                  }`}
               >
                 {tf}
               </button>
@@ -599,9 +597,8 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
           <div className="flex items-center space-x-1.5 text-[#94A3B8]">
             <button
               onClick={() => setShowZones(!showZones)}
-              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
-                showZones ? 'bg-[#1E293B] text-[#00C896]' : 'hover:bg-[#1E293B]'
-              }`}
+              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${showZones ? 'bg-[#1E293B] text-[#00C896]' : 'hover:bg-[#1E293B]'
+                }`}
               title="Toggle Supply/Demand Zones"
             >
               <Layers className="w-3.5 h-3.5" />
@@ -609,9 +606,8 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
             </button>
             <button
               onClick={() => setShowMarkers(!showMarkers)}
-              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
-                showMarkers ? 'bg-[#1E293B] text-[#3B82F6]' : 'hover:bg-[#1E293B]'
-              }`}
+              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${showMarkers ? 'bg-[#1E293B] text-[#3B82F6]' : 'hover:bg-[#1E293B]'
+                }`}
               title="Toggle BOS / CHoCH Markers"
             >
               <Zap className="w-3.5 h-3.5" />
@@ -658,26 +654,24 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
           {/* Chart Engine Switcher */}
           <div className="flex items-center bg-[#0B0E14] border border-[#1E293B] p-0.5 rounded text-[10px]">
             <button
-              onClick={() => setChartEngine('TRADINGVIEW_LIVE')}
-              className={`px-2 py-0.5 rounded font-bold transition-all ${
-                chartEngine === 'TRADINGVIEW_LIVE'
-                  ? 'bg-[#3B82F6] text-white shadow-sm'
-                  : 'text-[#94A3B8] hover:text-white'
-              }`}
-              title="Official TradingView Chart Widget (Delta Exchange India)"
+              onClick={() => setChartEngine('LIGHTWEIGHT')}
+              className={`px-2.5 py-0.5 rounded font-bold transition-all ${chartEngine === 'LIGHTWEIGHT'
+                ? 'bg-[#3B82F6] text-white shadow-sm'
+                : 'text-[#94A3B8] hover:text-white'
+                }`}
+              title="100% Genuine Delta Exchange India Feed with SMC Engine & Live Overlays"
             >
-              TV LIVE (DELTA INDIA)
+              ● NATIVE DELTA (SMC)
             </button>
             <button
-              onClick={() => setChartEngine('LIGHTWEIGHT')}
-              className={`px-2 py-0.5 rounded font-bold transition-all ${
-                chartEngine === 'LIGHTWEIGHT'
-                  ? 'bg-[#3B82F6] text-white shadow-sm'
-                  : 'text-[#94A3B8] hover:text-white'
-              }`}
-              title="Native SMC Lightweight Chart with Real Overlay Data"
+              onClick={() => setChartEngine('TRADINGVIEW_LIVE')}
+              className={`px-2.5 py-0.5 rounded font-bold transition-all ${chartEngine === 'TRADINGVIEW_LIVE'
+                ? 'bg-[#3B82F6] text-white shadow-sm'
+                : 'text-[#94A3B8] hover:text-white'
+                }`}
+              title="TradingView Public Embed Widget (Global Feeds)"
             >
-              NATIVE SMC
+              TV EMBED
             </button>
           </div>
 
@@ -707,16 +701,33 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
 
       {/* ── Main Workspace ── */}
       {chartEngine === 'TRADINGVIEW_LIVE' ? (
-        <div className="relative flex-1 w-full h-full min-h-[380px] bg-[#0B0E14] overflow-hidden">
-          <iframe
-            key={`${currentSymbol}-${currentTimeframe}`}
-            title="TradingView Live Delta India Chart"
-            src={`https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(
-              getTvDeltaSymbol()
-            )}&interval=${currentTimeframe === '15M' ? '15' : '60'}&symboledit=1&saveimage=1&toolbarbg=0B0E14&theme=dark&style=1&timezone=Asia%2FKolkata&studies=%5B%5D&locale=en`}
-            className="w-full h-full border-0 absolute inset-0"
-            allowFullScreen
-          />
+        <div className="relative flex-1 w-full h-full min-h-[380px] bg-[#0B0E14] flex flex-col overflow-hidden">
+          {/* Info notice explaining TV public embed vs Native Delta India */}
+          <div className="bg-slate-900/95 border-b border-slate-800 px-3 py-1.5 text-[10px] text-slate-400 flex items-center justify-between z-10 shrink-0">
+            <span className="flex items-center space-x-1.5">
+              <span className="w-2 h-2 rounded-full bg-amber-400 inline-block animate-pulse"></span>
+              <span>
+                <strong>TradingView Public Widget:</strong> Free standalone embed displays global feeds ({currentSymbol.startsWith('BTC') ? 'Bybit' : 'Binance'}). For <strong>100% authentic Delta Exchange India</strong> order flow & prices, click <strong>NATIVE DELTA (SMC)</strong>.
+              </span>
+            </span>
+            <button
+              onClick={() => setChartEngine('LIGHTWEIGHT')}
+              className="px-2 py-0.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-[9px] font-bold uppercase transition"
+            >
+              Switch to Delta India Native
+            </button>
+          </div>
+          <div className="relative flex-1 w-full h-full min-h-[340px] bg-[#0B0E14] overflow-hidden">
+            <iframe
+              key={`${currentSymbol}-${currentTimeframe}`}
+              title="TradingView Live Chart"
+              src={`https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(
+                getTvDeltaSymbol()
+              )}&interval=${currentTimeframe === '15M' ? '15' : '60'}&symboledit=1&saveimage=1&toolbarbg=0B0E14&theme=dark&style=1&timezone=Asia%2FKolkata&studies=%5B%5D&locale=en`}
+              className="w-full h-full border-0 absolute inset-0"
+              allowFullScreen
+            />
+          </div>
         </div>
       ) : (
         <div
@@ -743,11 +754,10 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
               {displayZones.map((zone) => (
                 <div
                   key={zone.id}
-                  className={`px-2.5 py-1 rounded text-[11px] font-mono flex items-center space-x-2 border shadow-lg backdrop-blur-sm ${
-                    zone.type === 'SUPPLY'
-                      ? 'bg-[#F6465D]/15 border-[#F6465D]/40 text-[#F6465D]'
-                      : 'bg-[#00C896]/15 border-[#00C896]/40 text-[#00C896]'
-                  }`}
+                  className={`px-2.5 py-1 rounded text-[11px] font-mono flex items-center space-x-2 border shadow-lg backdrop-blur-sm ${zone.type === 'SUPPLY'
+                    ? 'bg-[#F6465D]/15 border-[#F6465D]/40 text-[#F6465D]'
+                    : 'bg-[#00C896]/15 border-[#00C896]/40 text-[#00C896]'
+                    }`}
                 >
                   <span className="font-bold">
                     {zone.type} ZONE [{zone.lowerPrice.toFixed(0)} – {zone.upperPrice.toFixed(0)}]
