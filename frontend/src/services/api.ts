@@ -596,6 +596,38 @@ export const intelligenceApi = {
   },
 };
 
+export const portfolioApi = {
+  getSummary: async () => {
+    const res = await apiClient.get('/portfolio/summary');
+    return res.data;
+  },
+  getWallet: async () => {
+    const res = await apiClient.get('/portfolio/wallet');
+    return res.data;
+  },
+  getPositions: async () => {
+    const res = await apiClient.get('/portfolio/positions');
+    return res.data;
+  },
+  getOrders: async () => {
+    const res = await apiClient.get('/portfolio/orders');
+    return res.data;
+  },
+  getPnl: async () => {
+    const res = await apiClient.get('/portfolio/pnl');
+    return res.data;
+  },
+  getAnalytics: async () => {
+    const res = await apiClient.get('/portfolio/analytics');
+    return res.data;
+  },
+  getFunding: async () => {
+    const res = await apiClient.get('/portfolio/funding');
+    return res.data;
+  },
+};
+
+
 
 
 

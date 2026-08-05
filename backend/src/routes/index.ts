@@ -28,10 +28,12 @@ import { operationsCenterRouter } from '../modules/operations-center/operationsC
 import { tradeReviewRouter } from '../modules/trade-review/tradeReview.routes.js';
 import { shadowTradingRouter } from '../modules/shadow-trading/shadowTrading.routes.js';
 import { deltaExchangeRouter } from '../modules/delta-exchange/index.js';
+import { portfolioRouter } from '../modules/portfolio/index.js';
 import { enterpriseApiRouter } from './api.js';
 
 export const apiRouter = Router();
 
+apiRouter.use('/portfolio', portfolioRouter);
 apiRouter.use('/delta', deltaExchangeRouter);
 apiRouter.use('/core', enterpriseApiRouter);
 apiRouter.use('/system', systemRouter);
