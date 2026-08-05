@@ -8,14 +8,28 @@ import { ZoneStatus } from '@algoapp/shared';
 
 // ─────────────────────────────────────────────
 // Symbol mapping — Delta Exchange India
-// TradingView symbol for Delta India perpetuals is the raw symbol
-// e.g. "BTCUSD.P" → passes as "BTCUSD.P" to TradingView
-// Confirmed: searching "BTCUSD.P" on TradingView shows Delta Exchange India.
-// "DELTA:BTCUSD" returns "No symbols match your criteria".
+//
+// Confirmed TradingView exchange code: DELTAIN
+//   ✅  DELTAIN:BTCUSD.P  → Delta Exchange India BTC Perpetual
+//   ✅  DELTAIN:ETHUSD.P  → Delta Exchange India ETH Perpetual
+//   ✅  DELTAIN:SOLUSD.P  → Delta Exchange India SOL Perpetual
+//   ✅  DELTAIN:XRPUSD.P  → Delta Exchange India XRP Perpetual
 // ─────────────────────────────────────────────
-const toDeltaSymbol = (symbol: string): string =>
-  // Pass through as-is — BTCUSD.P is the exact Delta Exchange India symbol on TradingView
-  symbol.toUpperCase();
+const DELTA_SYMBOL_MAP: Record<string, string> = {
+  'BTCUSD.P': 'DELTAIN:BTCUSD.P',
+  'ETHUSD.P': 'DELTAIN:ETHUSD.P',
+  'SOLUSD.P': 'DELTAIN:SOLUSD.P',
+  'XRPUSD.P': 'DELTAIN:XRPUSD.P',
+  'BNBUSD.P': 'DELTAIN:BNBUSD.P',
+  'DOGEUSD.P': 'DELTAIN:DOGEUSD.P',
+  'AVAXUSD.P': 'DELTAIN:AVAXUSD.P',
+  'LINKUSD.P': 'DELTAIN:LINKUSD.P',
+};
+
+const toDeltaSymbol = (symbol: string): string => {
+  const key = symbol.toUpperCase();
+  return DELTA_SYMBOL_MAP[key] ?? `DELTAIN:${key}`;
+};
 
 // ─────────────────────────────────────────────
 // Types
@@ -129,9 +143,8 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
         height: isFullscreen ? '100vh' : '100%',
         minHeight: '520px',
       }}
-      className={`bg-[#0B0E14] border border-[#1E293B] rounded-xl overflow-hidden font-mono text-xs ${
-        isFullscreen ? 'fixed inset-0 z-50 rounded-none border-none' : 'relative'
-      }`}
+      className={`bg-[#0B0E14] border border-[#1E293B] rounded-xl overflow-hidden font-mono text-xs ${isFullscreen ? 'fixed inset-0 z-50 rounded-none border-none' : 'relative'
+        }`}
     >
       {/* ── Toolbar ── */}
       <div className="h-10 bg-[#0E121A] border-b border-[#1E293B] px-3 flex items-center justify-between shrink-0">
@@ -143,13 +156,12 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
 
           {/* Delta India live badge */}
           <span
-            className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${
-              wsState === 'CONNECTED'
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                : wsState === 'RECONNECTING'
+            className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${wsState === 'CONNECTED'
+              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+              : wsState === 'RECONNECTING'
                 ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
                 : 'bg-red-500/10 text-red-400 border-red-500/30'
-            }`}
+              }`}
           >
             {wsState === 'CONNECTED' ? '● DELTA INDIA LIVE' : wsState}
           </span>
@@ -162,11 +174,10 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
               <button
                 key={tf}
                 onClick={() => setActiveTimeframe(tf)}
-                className={`px-2.5 py-0.5 rounded text-[10px] font-semibold transition-colors ${
-                  currentTimeframe === tf
-                    ? 'bg-[#3B82F6] text-white'
-                    : 'text-[#94A3B8] hover:text-white'
-                }`}
+                className={`px-2.5 py-0.5 rounded text-[10px] font-semibold transition-colors ${currentTimeframe === tf
+                  ? 'bg-[#3B82F6] text-white'
+                  : 'text-[#94A3B8] hover:text-white'
+                  }`}
               >
                 {tf}
               </button>
@@ -195,13 +206,12 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
           {/* Signal badge */}
           {latestSignal && (
             <div
-              className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                latestSignal.outcome === 'BUY'
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                  : latestSignal.outcome === 'SELL'
+              className={`px-2 py-0.5 rounded text-[10px] font-bold border ${latestSignal.outcome === 'BUY'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                : latestSignal.outcome === 'SELL'
                   ? 'bg-red-500/10 border-red-500/30 text-red-400'
                   : 'bg-slate-500/10 border-slate-500/30 text-slate-400'
-              }`}
+                }`}
             >
               ⚡ {latestSignal.outcome} {latestSignal.timeframe}
             </div>
@@ -229,22 +239,20 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
           {activeZones.slice(0, 6).map((zone) => (
             <div
               key={zone.id}
-              className={`flex items-center space-x-1.5 px-2 py-0.5 rounded border text-[10px] font-mono whitespace-nowrap ${
-                zone.type === 'SUPPLY'
-                  ? 'bg-red-500/10 border-red-500/20 text-red-400'
-                  : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-              }`}
+              className={`flex items-center space-x-1.5 px-2 py-0.5 rounded border text-[10px] font-mono whitespace-nowrap ${zone.type === 'SUPPLY'
+                ? 'bg-red-500/10 border-red-500/20 text-red-400'
+                : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                }`}
             >
               <span className="font-bold">{zone.type}</span>
               <span className="text-slate-400">
                 [{zone.lowerPrice.toFixed(0)}–{zone.upperPrice.toFixed(0)}]
               </span>
               <span
-                className={`px-1 rounded text-[9px] font-bold ${
-                  zone.status === 'FRESH'
-                    ? 'bg-emerald-500/20 text-emerald-300'
-                    : 'bg-amber-500/20 text-amber-300'
-                }`}
+                className={`px-1 rounded text-[9px] font-bold ${zone.status === 'FRESH'
+                  ? 'bg-emerald-500/20 text-emerald-300'
+                  : 'bg-amber-500/20 text-amber-300'
+                  }`}
               >
                 {zone.status}
               </span>
