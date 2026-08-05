@@ -7,11 +7,15 @@ import { Maximize2, Minimize2 } from 'lucide-react';
 import { ZoneStatus } from '@algoapp/shared';
 
 // ─────────────────────────────────────────────
-// Symbol mapping — Delta Exchange India only
-// "BTCUSD.P" → "DELTA:BTCUSD"
+// Symbol mapping — Delta Exchange India
+// TradingView symbol for Delta India perpetuals is the raw symbol
+// e.g. "BTCUSD.P" → passes as "BTCUSD.P" to TradingView
+// Confirmed: searching "BTCUSD.P" on TradingView shows Delta Exchange India.
+// "DELTA:BTCUSD" returns "No symbols match your criteria".
 // ─────────────────────────────────────────────
 const toDeltaSymbol = (symbol: string): string =>
-  `DELTA:${symbol.toUpperCase().replace('.P', '')}`;
+  // Pass through as-is — BTCUSD.P is the exact Delta Exchange India symbol on TradingView
+  symbol.toUpperCase();
 
 // ─────────────────────────────────────────────
 // Types
