@@ -45,7 +45,7 @@
 
 ### BUG 8 — TradingView Widget Used Binance (not Delta Exchange India)
 - **Code (old lines 528–536):** The "TV LIVE (DELTA INDIA)" button was loading `BINANCE:BTCUSDT`.
-- **Fix:** Symbol mapping updated to use `DELTAINDIA:BTCUSD` prefix which is the correct TradingView identifier for Delta Exchange India instruments.
+- **Fix:** Symbol mapping updated to use `DELTA:SYMBOLUSD.P` prefix (e.g. `DELTA:BTCUSD.P`) which is the actual TradingView listing identifier for Delta Exchange India instruments.
 
 ### BUG 9 — No ResizeObserver
 - **Impact:** If the parent panel was resized (e.g., splitter drag) without a window resize event, chart stayed wrong size.
@@ -89,7 +89,7 @@
 | 5 | Stale candle freeze | ✅ Fixed — state reset on reconnect |
 | 6 | Fake Supply/Demand zones | ✅ Fixed — real API data |
 | 7 | Fake BOS/CHoCH markers | ✅ Fixed — real signals API |
-| 8 | TradingView widget used Binance | ✅ Fixed — DELTAINDIA prefix |
+| 8 | TradingView widget used Binance | ✅ Fixed — DELTA prefix (`DELTA:BTCUSD.P`) |
 | 9 | No ResizeObserver | ✅ Fixed |
 | 10 | Candle rollover timestamp drift | ✅ Fixed — bucket boundary math |
 | 11 | Chart width = 0 on mount | ✅ Fixed — getBoundingClientRect fallback |
@@ -113,4 +113,4 @@
 |-----------|--------|
 | **Infinite scroll prepend** | Lightweight Charts `v5` does not natively support prepending. The current approach re-calls the backend but only fetches from the earliest current timestamp — it cannot page further back without implementing a cursor-based offset parameter in the backend `/market-data/candles` endpoint. |
 | **Real-time zones** | Zones from `strategyApi.getZones()` are backend-computed, not live-calculated from real market structure. They represent the last analysis run, not a real-time SMC engine. |
-| **Delta Exchange TV symbol** | `DELTAINDIA:BTCUSD` is the expected prefix but requires TradingView to have this exchange indexed. If the symbol resolves to `unknown`, the TV widget will fall back to showing the search box. |
+| **Delta Exchange TV symbol** | `DELTA:BTCUSD.P` / `DELTA:ETHUSD.P` are the official listing prefixes. TradingView currently provides verified perpetual feeds for BTC and ETH pairs on Delta Exchange India; SOL and XRP support may be partial depending on TradingView's upstream indexing. |

@@ -532,12 +532,9 @@ export const TradingViewChartWorkspace: React.FC<TradingViewChartWorkspaceProps>
 
   // Delta Exchange India TradingView symbol mapping
   const getTvDeltaSymbol = () => {
-    // Delta Exchange India is listed on TradingView under DELTAINDIA prefix
-    if (currentSymbol.startsWith('BTC')) return 'DELTAINDIA:BTCUSD';
-    if (currentSymbol.startsWith('ETH')) return 'DELTAINDIA:ETHUSD';
-    if (currentSymbol.startsWith('SOL')) return 'DELTAINDIA:SOLUSD';
-    if (currentSymbol.startsWith('XRP')) return 'DELTAINDIA:XRPUSD';
-    return `DELTAINDIA:${currentSymbol.replace('.P', '')}`;
+    // Delta Exchange India listings on TradingView resolve under the DELTA: prefix,
+    // and use the same "SYMBOLUSD.P" perpetual naming your watchlist already uses.
+    return `DELTA:${currentSymbol}`;
   };
 
   // ─────────────────────────────────────────────
