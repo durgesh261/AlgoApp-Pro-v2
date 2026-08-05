@@ -89,8 +89,10 @@ export const apiClient = axios.create({
   },
 });
 
+let reqCounter = 0;
 apiClient.interceptors.request.use((config) => {
-  config.headers['X-Request-Id'] = `req-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+  reqCounter = (reqCounter + 1) % 100000;
+  config.headers['X-Request-Id'] = `req-${Date.now()}-${reqCounter}`;
   return config;
 });
 
@@ -328,7 +330,42 @@ export const systemIntegrationApi = {
 
 export const deltaApi = {
   getHealth: async (): Promise<ApiResponse<DeltaHealthDto>> => {
-    const res = await apiClient.get('/execution/delta/health');
+    const res = await apiClient.get('/delta/health');
+    return res.data;
+  },
+  getPortfolio: async (): Promise<ApiResponse<any>> => {
+    const res = await apiClient.get('/delta/portfolio');
+    return res.data;
+  },
+  getOrders: async (): Promise<ApiResponse<any[]>> => {
+    const res = await apiClient.get('/delta/orders');
+    return res.data;
+  },
+  getPositions: async (): Promise<ApiResponse<any[]>> => {
+    const res = await apiClient.get('/delta/positions');
+    return res.data;
+  },
+  getHistory: async (): Promise<ApiResponse<any[]>> => {
+    const res = await apiClient.get('/delta/history');
+    return res.data;
+  },
+  placeOrder: async (payload: {
+    symbol: string;
+    side: 'buy' | 'sell';
+    orderType: 'market' | 'limit' | 'stop_market' | 'stop_limit';
+    size: number;
+    price?: number | undefined;
+    stopPrice?: number | undefined;
+    stopLoss?: number | undefined;
+    takeProfit?: number | undefined;
+    clientOrderId?: string | undefined;
+    reduceOnly?: boolean | undefined;
+  }): Promise<ApiResponse<any>> => {
+    const res = await apiClient.post('/delta/orders', payload);
+    return res.data;
+  },
+  cancelOrder: async (orderId: number | string, productId?: number | undefined): Promise<ApiResponse<any>> => {
+    const res = await apiClient.delete(`/delta/orders/${orderId}`, { data: { productId } });
     return res.data;
   },
   connect: async (environment: DeltaEnvironment): Promise<ApiResponse<DeltaHealthDto>> => {
@@ -558,6 +595,8 @@ export const intelligenceApi = {
     return res.data;
   },
 };
+
+
 
 
 

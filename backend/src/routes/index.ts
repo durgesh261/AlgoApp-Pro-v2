@@ -27,9 +27,13 @@ import { strategyOptimizationRouter } from '../modules/strategy-optimization/str
 import { operationsCenterRouter } from '../modules/operations-center/operationsCenter.routes.js';
 import { tradeReviewRouter } from '../modules/trade-review/tradeReview.routes.js';
 import { shadowTradingRouter } from '../modules/shadow-trading/shadowTrading.routes.js';
+import { deltaExchangeRouter } from '../modules/delta-exchange/index.js';
+import { enterpriseApiRouter } from './api.js';
 
 export const apiRouter = Router();
 
+apiRouter.use('/delta', deltaExchangeRouter);
+apiRouter.use('/core', enterpriseApiRouter);
 apiRouter.use('/system', systemRouter);
 apiRouter.use('/dashboard', dashboardRouter);
 apiRouter.use('/paper-trading', paperTradingRouter);
