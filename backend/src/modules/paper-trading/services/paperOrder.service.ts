@@ -11,6 +11,7 @@ import {
 import { PaperRiskService } from './paperRisk.service.js';
 import { PaperPositionService } from './paperPosition.service.js';
 import { PaperJournalService } from './paperJournal.service.js';
+import { candleEngine } from '../../../engine/CandleEngine.js';
 
 let openOrders: PaperOrderDto[] = [];
 
@@ -20,9 +21,19 @@ export class PaperOrderService {
   }
 
   public static async createOrder(input: CreatePaperOrderInput): Promise<PaperOrderDto> {
-    const activePositions = await PaperPositionService.getOpenPositions();
-    const notional = (input.price || 64000) * input.quantity;
+    // Get LIVE price — no fake fallback
+    const liveCandle = candleEngine.getLiveCandle(input.symbol, '1H');
+    const livePrice = liveCandle?.close || 0;
+    
+    if (!livePrice || livePrice <= 0) {
+      throw new Error(`Cannot create paper order: no live price available for ${input.symbol}`);
+    }
 
+    const executionPrice = input.price || livePrice;
+    const notional = executionPrice * input.quantity;
+
+    const activePositions = await PaperPositionService.getOpenPositions();
+    
     // Evaluate Risk Gate
     const riskCheck = await PaperRiskService.validateOrderRisk(input.symbol, notional, activePositions.length);
     if (!riskCheck.passed) {
@@ -36,10 +47,9 @@ export class PaperOrderService {
     }
 
     const isMarket = input.orderType === PaperOrderType.MARKET;
-    const executionPrice = input.price || 64250.0;
 
     const order: PaperOrderDto = {
-      id: `ORD-${Date.now()}`,
+      id: `PORD-${Date.now()}`,
       symbol: input.symbol,
       side: input.side,
       orderType: input.orderType,
@@ -70,7 +80,7 @@ export class PaperOrderService {
       await PaperJournalService.logEntry(
         PaperJournalEventType.ORDER_FILL,
         'PAPER_MARKET_FILL',
-        `Executed ${input.side} ${input.quantity} ${input.symbol} @ $${executionPrice}`,
+        `Executed ${input.side} ${input.quantity} ${input.symbol} @ $${executionPrice} (LIVE)`,
         input.symbol
       );
     } else {

@@ -52,11 +52,34 @@ export class SystemIntegrationCoordinator {
 
     // 5. Stage 5: Decision Engine
     const t4 = Date.now();
-    const decision = await DecisionEngineService.evaluateDecision(
-      signal.id,
-      signal.symbol,
-      signal.price
-    );
+    
+    // Compute indicators to pass to Decision Engine (as per new requirements)
+    const { IndicatorEngineService } = await import('../../indicator-engine/services/indicatorEngine.service.js');
+    const indicators = IndicatorEngineService.computeIndicators(candles, '1H');
+
+    // Default decision if no signal
+    let decision;
+    if (!signal) {
+      decision = {
+        id: `DEC-${Date.now()}`,
+        symbol,
+        timeframe: '1H',
+        state: 'SKIP',
+        confidenceScore: 0,
+        reasonCodes: [],
+        inputSnapshotHash: '',
+        createdAt: new Date().toISOString(),
+      } as any;
+    } else {
+      decision = await DecisionEngineService.evaluateDecision({
+        symbol: signal.symbol,
+        timeframe: '1H',
+        currentPrice: signal.price,
+        indicators,
+        outcome: signal.outcome,
+        candleTimestamp: candle.timestamp,
+      });
+    }
     const decisionLatencyMs = Date.now() - t4;
 
     // 6. Stage 6: AI Decision Center
@@ -71,7 +94,7 @@ export class SystemIntegrationCoordinator {
     const executionInput = {
       decisionId: decision.id,
       symbol: decision.symbol,
-      side: signal.outcome === 'BUY' ? ('LONG' as const) : ('SHORT' as const),
+      side: signal && signal.outcome === 'BUY' ? ('LONG' as const) : ('SHORT' as const),
       mode: mode === ExecutionMode.LIVE ? ExecutionMode.LIVE : ExecutionMode.PAPER,
       quantity: input.quantity || 0.1,
       price: candle.close,
@@ -92,7 +115,7 @@ export class SystemIntegrationCoordinator {
       candle,
       marketSnapshot: snapshot,
       zones,
-      strategySignal: signal,
+      strategySignal: signal as any,
       decision,
       explanation,
       executionResult: executionOutcome.result,

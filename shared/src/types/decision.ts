@@ -106,10 +106,18 @@ export interface AIConfirmationResultDto {
 
 export interface DecisionDto {
   id: string;
-  signalId: string;
+  signalId?: string | undefined;
   symbol: string;
   timeframe: TradingTimeframe;
-  decisionState: DecisionState;
+  decisionState?: DecisionState | undefined;
+  state?: DecisionState | undefined;
+  outcome?: StrategySignalOutcome | undefined;
+  entryPrice?: number | undefined;
+  stopLossPrice?: number | undefined;
+  takeProfitPrice?: number | undefined;
+  positionSize?: number | undefined;
+  leverage?: number | undefined;
+  riskPercent?: number | undefined;
   confidenceScore: number; // 0 to 100
   reasonCodes: DecisionReasonCode[];
   inputSnapshotHash: string;
@@ -118,17 +126,34 @@ export interface DecisionDto {
   riskValidation?: RiskValidationResultDto | undefined;
   positionSizing?: PositionSizingResultDto | undefined;
   aiConfirmation?: AIConfirmationResultDto | undefined;
-  timestamp: string;
+  timestamp?: string | undefined;
+  createdAt?: string | undefined;
 }
 
 export interface StrategyPipelineResultDto {
-  decision: DecisionDto;
+  id?: string | undefined;
+  symbol?: string | undefined;
+  timeframe?: TradingTimeframe | undefined;
+  decisionState?: DecisionState | undefined;
+  entryPrice?: number | undefined;
+  stopLossPrice?: number | undefined;
+  takeProfitPrice?: number | undefined;
+  positionSize?: number | undefined;
+  leverage?: number | undefined;
+  confidenceScore?: number | undefined;
+  reasonCodes?: DecisionReasonCode[] | undefined;
+  executedAt?: string | undefined;
+  createdAt?: string | undefined;
+  executionResult?: any | undefined;
+  executionError?: string | undefined;
+  
+  decision?: DecisionDto | undefined;
   signal?: StrategySignalDto | undefined;
-  indicatorSnapshot: IndicatorEngineOutput;
-  executionRequested: boolean;
+  indicatorSnapshot?: IndicatorEngineOutput;
+  executionRequested?: boolean;
   executionOrderId?: string | undefined;
   rejectionReason?: string | undefined;
-  timestamp: string;
+  timestamp?: string;
 }
 
 export interface StrategySignalDto {

@@ -2,12 +2,12 @@ import { createApp } from './app.js';
 import { config } from './config/index.js';
 import { logger } from './logger/index.js';
 import { JournalAutomationService } from './modules/journal/services/journalAutomation.service.js';
-import { MarketScannerService } from './modules/live-trading/services/MarketScannerService.js';
+import { marketScanner } from './modules/live-trading/services/MarketScannerService.js';
 
 const app = createApp();
 
 JournalAutomationService.initialize();
-MarketScannerService.initialize();
+marketScanner.startScanner();
 
 import { prisma } from './db.js';
 import { deltaSyncService } from './modules/delta-exchange/index.js';

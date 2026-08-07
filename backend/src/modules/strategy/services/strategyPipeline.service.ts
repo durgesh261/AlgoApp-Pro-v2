@@ -1,5 +1,4 @@
 import {
-  DecisionState,
   IndicatorEngineOutput,
   StrategyPipelineResultDto,
   TradingTimeframe,
@@ -8,9 +7,10 @@ import {
 
 import { IndicatorEngineService } from '../../indicator-engine/services/indicatorEngine.service.js';
 import { DecisionEngineService } from '../../decision/services/decisionEngine.service.js';
-import { executionEngineService, OrderExecutionRequest } from '../../execution-engine/services/ExecutionEngineService.js';
+import { executionEngineService } from '../../execution-engine/services/ExecutionEngineService.js';
 import { deltaSyncService } from '../../delta-exchange/index.js';
 import { eventBus } from '../../../services/EventBus.js';
+import { ZoneDetectorService } from './zoneDetector.service.js';
 
 export interface RunPipelineOptions {
   symbol: string;
@@ -20,9 +20,6 @@ export interface RunPipelineOptions {
 }
 
 export class StrategyPipelineService {
-  /**
-   * Deterministically executes the end-to-end Strategy Pipeline from Market Data to Execution.
-   */
   public static async runPipeline(options: RunPipelineOptions): Promise<StrategyPipelineResultDto> {
     const { symbol, timeframe, candles, autoExecute = true } = options;
 
@@ -34,87 +31,79 @@ export class StrategyPipelineService {
     const currentPrice = latestCandle.close;
     const candleTimestamp = latestCandle.timestamp;
 
-    // 1. Run Deterministic Indicator Engine (Module 7)
+    // 1. Run Indicator Engine
     const indicators: IndicatorEngineOutput = IndicatorEngineService.computeIndicators(
       candles,
       timeframe
     );
 
-    // 2. Fetch Live Delta Account and Position Context
-    const balances = deltaSyncService.getBalances();
-    const usdtBalance = balances.find((b) => b.asset_symbol === 'USDT' || b.asset_symbol === 'USD');
-    const accountBalance = usdtBalance ? parseFloat(usdtBalance.balance || '50000') : 50000;
-    const availableMargin = usdtBalance ? parseFloat(usdtBalance.available_balance || '50000') : 50000;
-
+    // 2. Get REAL Delta Account data
     const positions = deltaSyncService.getPositions();
-    const existingPosition = positions.find(
-      (p) => (p.product_symbol || '').toLowerCase() === (symbol || '').toLowerCase()
+    const hasOpenPosition = positions.length > 0;
+
+    // 3. Get active zones and find best candidate
+    const zones = await ZoneDetectorService.detectZones(symbol);
+    let activeZone = zones.find(z => 
+      z.status === 'FRESH' || z.status === 'TOUCHED'
     );
-    const hasOpenPosition = !!existingPosition && parseFloat(String(existingPosition.size || '0')) !== 0;
 
-    // Find nearest active zone from indicators
-    const allZones = [...indicators.demandZones, ...indicators.supplyZones];
-    const activeZone = allZones.find(
-      (z) => currentPrice >= z.lowerPrice * 0.995 && currentPrice <= z.upperPrice * 1.005
-    ) || allZones[0];
-
-    // 3. Evaluate Deterministic Decision Pipeline (10 Steps)
+    // 4. Evaluate Decision with REAL data
     const decision = await DecisionEngineService.evaluateDecision({
       symbol,
       timeframe,
       currentPrice,
       indicators,
       activeZone,
-      accountBalance,
-      availableMargin,
-      openPositionCount: positions.length,
-      hasOpenPosition,
       candleTimestamp,
     });
 
-    let executionRequested = false;
-    let executionOrderId: string | undefined = undefined;
-    let rejectionReason: string | undefined = undefined;
-
-    // 4. Dispatch to Execution Engine if state is EXECUTE
-    if (decision.decisionState === DecisionState.EXECUTE && autoExecute && decision.positionSizing) {
-      const side = indicators.marketStructure.trend === 'BULLISH' ? 'buy' : 'sell';
-      const orderReq: OrderExecutionRequest = {
-        symbol,
-        side,
-        orderType: 'market',
-        size: Number(decision.positionSizing.contractQuantity),
-        price: decision.positionSizing.entryPrice,
-        leverage: decision.positionSizing.leverage,
-        stopLossPrice: decision.positionSizing.stopLossPrice,
-        takeProfitPrice: decision.positionSizing.takeProfitPrice,
-        clientOrderId: `algo-${symbol.toLowerCase()}-${Date.now()}`,
-      };
-
-      try {
-        const execResult = await executionEngineService.placeOrder(orderReq);
-        executionRequested = true;
-        executionOrderId = execResult.orderId ? String(execResult.orderId) : execResult.clientOrderId;
-      } catch (err: unknown) {
-        rejectionReason = err instanceof Error ? err.message : 'Execution failed';
-      }
-    } else if (decision.decisionState !== DecisionState.EXECUTE) {
-      rejectionReason = `Strategy state '${decision.decisionState}' - Reasons: ${decision.reasonCodes.join(', ')}`;
-    }
-
+    // 5. Build Result
     const result: StrategyPipelineResultDto = {
-      decision,
-      indicatorSnapshot: indicators,
-      executionRequested,
-      executionOrderId,
-      rejectionReason,
-      timestamp: new Date().toISOString(),
+      id: `PIPE-${Date.now()}`,
+      symbol,
+      timeframe,
+      decisionState: decision.state as any,
+      entryPrice: decision.entryPrice,
+      stopLossPrice: decision.stopLossPrice,
+      takeProfitPrice: decision.takeProfitPrice,
+      positionSize: decision.positionSize,
+      leverage: decision.leverage,
+      confidenceScore: decision.confidenceScore,
+      reasonCodes: decision.reasonCodes || [],
+      executedAt: (decision.state as any) === 'APPROVED' ? new Date().toISOString() : undefined,
+      createdAt: new Date().toISOString(),
     };
 
-    // Emit live events for workstation synchronization
-    eventBus.emit('strategy:decision_evaluated', decision);
-    eventBus.emit('strategy:pipeline_completed', result);
+    // 6. Execute if approved
+    if (autoExecute && (decision.state as any) === 'APPROVED' && decision.confidenceScore >= 85) {
+      if (hasOpenPosition) {
+        result.decisionState = 'SKIP' as any;
+        result.reasonCodes!.push('ONE_TRADE_MAXIMUM' as any);
+        eventBus.emit('pipeline:skipped', { symbol, reason: 'One trade maximum' });
+        return result;
+      }
 
+      try {
+        const execResult = await executionEngineService.placeOrder({
+          symbol,
+          side: decision.outcome === 'BUY' ? 'buy' : 'sell',
+          orderType: 'market',
+          size: decision.positionSize || 0,
+          leverage: decision.leverage || 1,
+          stopLossPrice: decision.stopLossPrice || 0,
+          takeProfitPrice: decision.takeProfitPrice || 0,
+          clientOrderId: `QEA-${symbol}-${Date.now()}`,
+        });
+
+        result.executionResult = execResult;
+        eventBus.emit('pipeline:executed', result);
+      } catch (err: any) {
+        result.executionError = err.message;
+        eventBus.emit('pipeline:execution_failed', result);
+      }
+    }
+
+    eventBus.emit('pipeline:completed', result);
     return result;
   }
 }

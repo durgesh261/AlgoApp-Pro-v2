@@ -298,7 +298,7 @@ export class AIDecisionCenterService {
 
     const replayMetadata: ReplayMetadataDto = {
       snapshotHash: decision.inputSnapshotHash,
-      decisionState: decision.decisionState,
+      decisionState: decision.decisionState as DecisionState,
       confidenceScore: decision.confidenceScore,
       validatorSnapshot: {
         freshZone: !decision.reasonCodes.includes(DecisionReasonCode.ZONE_FRESHNESS_DECAYED),
@@ -312,7 +312,7 @@ export class AIDecisionCenterService {
       id: `EXP-LOG-${Date.now()}`,
       decisionId: decision.id,
       symbol: decision.symbol,
-      decisionState: decision.decisionState,
+      decisionState: decision.decisionState as DecisionState,
       confidenceScore: decision.confidenceScore,
       shortSummary,
       mediumSummary,

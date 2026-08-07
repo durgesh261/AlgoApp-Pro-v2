@@ -1,6 +1,6 @@
 import { NocServiceHealthDto, SystemMetricsDto } from '@algoapp/shared';
 import os from 'os';
-import { MarketScannerService } from '../../live-trading/services/MarketScannerService.js';
+import { marketScanner as MarketScannerService } from '../../live-trading/services/MarketScannerService.js';
 import { deltaSyncService } from '../../delta-exchange/index.js';
 import { candleEngine } from '../../../engine/CandleEngine.js';
 

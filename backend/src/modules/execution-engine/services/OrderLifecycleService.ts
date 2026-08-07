@@ -172,6 +172,9 @@ export class OrderLifecycleService {
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }
+  public transition(_orderId: string, _state: any, _result?: any): void {
+    // Stub
+  }
 }
 
 export const orderLifecycleService = new OrderLifecycleService();

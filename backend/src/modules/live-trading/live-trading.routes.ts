@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { ApiResponse, getIsoUtcTimestamp, ScannerStateDto } from '@algoapp/shared';
 import { config } from '../../config/index.js';
-import { MarketScannerService } from './services/MarketScannerService.js';
+import { marketScanner as MarketScannerService } from './services/MarketScannerService.js';
 import { DynamicRiskLeverageService } from './services/DynamicRiskLeverageService.js';
 
 export const liveTradingRouter = Router();

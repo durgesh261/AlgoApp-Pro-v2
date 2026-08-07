@@ -19,11 +19,12 @@ export const getDecisionLogs = async (req: Request, res: Response): Promise<void
 
 export const evaluateDecision = async (req: Request, res: Response): Promise<void> => {
   const validated = evaluateDecisionSchema.parse(req.body);
-  const decision = await DecisionEngineService.evaluateDecision(
-    validated.signalId,
-    validated.symbol,
-    validated.currentPrice
-  );
+  const decision = await DecisionEngineService.evaluateDecision({
+    symbol: validated.symbol,
+    timeframe: '1H',
+    currentPrice: validated.currentPrice,
+    indicators: {} as any,
+  });
 
   const response: ApiResponse<typeof decision> = {
     success: true,

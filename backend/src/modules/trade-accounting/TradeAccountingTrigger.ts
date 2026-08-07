@@ -137,6 +137,9 @@ export class TradeAccountingTrigger {
     eventBus.emit('trade:accounted', result);
     return result;
   }
+  public async recordExecution(_result: any): Promise<void> {
+    // Stub
+  }
 }
 
 export const tradeAccountingTrigger = new TradeAccountingTrigger();

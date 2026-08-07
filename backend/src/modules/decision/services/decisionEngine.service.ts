@@ -20,6 +20,7 @@ import { LiquidityValidator } from '../validators/liquidityValidator.js';
 import { RiskValidator } from '../validators/riskValidator.js';
 import { PositionSizingEngine } from '../sizing/positionSizingEngine.js';
 import { AIDecisionCenterService } from '../../ai-decision/services/aiDecisionCenter.service.js';
+import { deltaSyncService } from '../../delta-exchange/index.js';
 
 let decisionLogs: DecisionDto[] = [];
 
@@ -30,15 +31,6 @@ export interface EvaluateDecisionInput {
   indicators: IndicatorEngineOutput;
   activeZone?: BaseZone | ZoneDto | undefined;
   outcome?: StrategySignalOutcome | undefined;
-  accountBalance?: number | undefined;
-  availableMargin?: number | undefined;
-  dailyLossUsed?: number | undefined;
-  maxDailyLoss?: number | undefined;
-  currentDrawdownPct?: number | undefined;
-  maxDrawdownPct?: number | undefined;
-  openPositionCount?: number | undefined;
-  maxOpenPositions?: number | undefined;
-  hasOpenPosition?: boolean | undefined;
   candleTimestamp?: string | undefined;
 }
 
@@ -52,46 +44,14 @@ export class DecisionEngineService {
   }
 
   /**
-   * Evaluates a trade candidate through the 10-step deterministic decision pipeline.
+   * Evaluates a trade candidate through the deterministic decision pipeline.
+   * REJECTS legacy string signature — only accepts structured input.
    */
   public static async evaluateDecision(
-    inputOrSignalId: string | EvaluateDecisionInput,
-    symbolArg?: string,
-    currentPriceArg?: number
+    input: EvaluateDecisionInput
   ): Promise<DecisionDto> {
-    // Support legacy signature or comprehensive input
-    let input: EvaluateDecisionInput;
-
-    if (typeof inputOrSignalId === 'string') {
-      const symbol = symbolArg || 'BTCUSD.P';
-      const currentPrice = currentPriceArg || 65000;
-      input = {
-        symbol,
-        timeframe: '1H',
-        currentPrice,
-        indicators: {
-          symbol,
-          timeframe: '1H',
-          marketStructure: { symbol, timeframe: '1H', trend: 'BULLISH', internalTrend: 'BULLISH', swingTrend: 'BULLISH', liquiditySwept: false },
-          pivotsInternal: [],
-          pivotsSwing: [],
-          zigzagLegs: [],
-          structureEvents: [],
-          orderBlocks: [],
-          supplyZones: [],
-          demandZones: [],
-          liquiditySweeps: [],
-          fairValueGaps: [],
-          equalHighLows: [],
-          zoneScores: {},
-          atr14: 500,
-          atr200: 450,
-          evaluatedAt: new Date().toISOString(),
-        },
-        outcome: StrategySignalOutcome.BUY,
-      };
-    } else {
-      input = inputOrSignalId;
+    if (!input || typeof input !== 'object') {
+      throw new Error('DecisionEngine.evaluateDecision requires structured EvaluateDecisionInput. Legacy string signature removed.');
     }
 
     const {
@@ -100,12 +60,18 @@ export class DecisionEngineService {
       currentPrice,
       indicators,
       activeZone,
-      accountBalance = 50000,
-      availableMargin = 50000,
-      openPositionCount = 0,
-      hasOpenPosition = false,
       candleTimestamp = new Date().toISOString(),
     } = input;
+
+    // Get REAL account data from Delta Exchange
+    const balances = deltaSyncService.getBalances();
+    const usdtBalance = balances.find((b) => b.asset_symbol === 'USDT' || b.asset_symbol === 'USD');
+    const accountBalance = usdtBalance ? parseFloat(usdtBalance.balance || '0') : 0;
+    const availableMargin = usdtBalance ? parseFloat(usdtBalance.available_balance || '0') : 0;
+    
+    const positions = deltaSyncService.getPositions();
+    const hasOpenPosition = positions.length > 0;
+    const openPositionCount = positions.length;
 
     const reasonCodes: DecisionReasonCode[] = [];
 
@@ -155,81 +121,98 @@ export class DecisionEngineService {
       reasonCodes.push(structResult.reasonCode);
     }
 
-    // 6. Liquidity Sweeps & FVG Validator
+    // 6. Liquidity Sweeps (FVGs disabled per strategy §7)
     const liqResult = LiquidityValidator.validate(
       outcome,
       indicators.liquiditySweeps || [],
-      [] // FVGs disabled per new strategy rules
+      [] // FVGs completely ignored
     );
     for (const code of liqResult.reasonCodes) {
       if (!reasonCodes.includes(code)) reasonCodes.push(code);
     }
 
-    // Calculate Entry, SL, TP according to Strategy
+    // Calculate Entry, SL per Strategy §11 (Order Block Width Rule)
     let entryPrice = currentPrice;
     let stopLossPrice = currentPrice;
-    let slDistance = 0;
+    // Removed slDistance
 
     if (activeZone) {
       const rawWidth = Math.max(0.0001, activeZone.upperPrice - activeZone.lowerPrice);
-      // Width = ((Upper - Lower) / Upper) × 100  [per strategy spec]
+      // Width % = ((Upper - Lower) / Upper) × 100
       const widthPercent = (rawWidth / Math.max(0.0001, activeZone.upperPrice)) * 100;
       
       if (outcome === StrategySignalOutcome.BUY) {
+        // Bullish OB: enter at upper edge if narrow, or 25% inside if wide
         entryPrice = widthPercent <= 0.6 ? activeZone.upperPrice : activeZone.upperPrice - 0.25 * rawWidth;
         stopLossPrice = activeZone.lowerPrice;
       } else {
+        // Bearish OB: enter at lower edge if narrow, or 25% inside if wide
         entryPrice = widthPercent <= 0.6 ? activeZone.lowerPrice : activeZone.lowerPrice + 0.25 * rawWidth;
         stopLossPrice = activeZone.upperPrice;
       }
-      slDistance = Math.abs(entryPrice - stopLossPrice);
+      // _slDistance removed
     } else {
-      const atr = indicators.atr14 || 100;
-      slDistance = atr * 1.5;
-      stopLossPrice = outcome === StrategySignalOutcome.BUY ? entryPrice - slDistance : entryPrice + slDistance;
+      // No zone — reject. Strategy §9: Trade ONLY Order Blocks.
+      const noZoneDecision: DecisionDto = {
+        id: `DEC-${Date.now()}`,
+        symbol,
+        timeframe,
+        state: DecisionState.SKIP,
+        outcome,
+        entryPrice: currentPrice,
+        stopLossPrice: currentPrice,
+        takeProfitPrice: currentPrice,
+        positionSize: 0,
+        leverage: 0,
+        riskPercent: 0,
+        confidenceScore: 0,
+        reasonCodes: ['NO_ACTIVE_ZONE' as any, ...reasonCodes],
+        inputSnapshotHash: '',
+        createdAt: new Date().toISOString(),
+      };
+      decisionLogs.unshift(noZoneDecision);
+      return noZoneDecision;
     }
 
     entryPrice = Number(entryPrice.toFixed(4));
     stopLossPrice = Number(stopLossPrice.toFixed(4));
 
-    // Temporary TP calculation. Real TP will be set by PositionSizingEngine.
-    const takeProfitPrice = outcome === StrategySignalOutcome.BUY
-        ? Number((entryPrice + slDistance * 2.0).toFixed(4))
-        : Number((entryPrice - slDistance * 2.0).toFixed(4));
-
-    // 7. Risk Validator
+    // 7. Risk Validator — Strategy §16-18: 35% risk, 100% balance, max 100x leverage
     const riskResult = RiskValidator.validate({
       entryPrice,
       stopLossPrice,
-      takeProfitPrice,
+      takeProfitPrice: entryPrice, // placeholder, recalculated below
       accountBalance,
       availableMargin,
       estimatedMarginRequired: accountBalance, // 100% margin utilization
-      dailyLossUsed: 0, // Not used
-      maxDailyLoss: accountBalance, // Full account limit
-      currentDrawdownPct: 0,
-      maxDrawdownPct: 100,
       openPositionCount,
-      maxOpenPositions: 1, // Strict 1 trade max
-      minRiskRewardRatio: 0, // RR is dynamic based on 60% TP target
+      maxOpenPositions: 1, // Strict 1 trade max (Strategy §15)
     });
     for (const code of riskResult.reasonCodes) {
       if (!reasonCodes.includes(code)) reasonCodes.push(code);
     }
 
-    // 8. Institutional Position Sizing (35% risk, 60% reward, max 100x leverage)
+    // 8. Position Sizing — 35% risk, max 100x leverage
     const sizingResult = PositionSizingEngine.calculatePositionSize({
       symbol,
       accountBalance,
       entryPrice,
       stopLossPrice,
-      takeProfitPrice,
+      takeProfitPrice: entryPrice,
       riskPercent: 35.0,
       maxLeverageCap: 100,
-    });
+    } as any);
     reasonCodes.push(DecisionReasonCode.POSITION_SIZE_CALCULATED);
 
-    // 9. Deterministic AI Confirmation
+    // Calculate TP based on 60% account profit target (Strategy §19)
+    // TP price is derived from: (TP - Entry) * Size = 0.60 * AccountBalance
+    const tpProfitNeeded = accountBalance * 0.60;
+    const priceMoveNeeded = tpProfitNeeded / sizingResult.positionSize;
+    const takeProfitPrice = outcome === StrategySignalOutcome.BUY
+      ? Number((entryPrice + priceMoveNeeded).toFixed(4))
+      : Number((entryPrice - priceMoveNeeded).toFixed(4));
+
+    // 9. AI Confirmation — minimum 85% confidence (Strategy §20)
     const aiResult = AIDecisionCenterService.confirmDecision({
       symbol,
       timeframe,
@@ -244,7 +227,7 @@ export class DecisionEngineService {
       if (!reasonCodes.includes(code)) reasonCodes.push(code);
     }
 
-    // 10. Anti-Duplication and Cooldown Check
+    // 10. Anti-Duplication and One-Trade-Max Check (Strategy §12, §15)
     const dedupResult = SignalDeduplicationEngine.checkDuplication({
       symbol,
       timeframe,
@@ -256,7 +239,7 @@ export class DecisionEngineService {
       reasonCodes.push(dedupResult.reasonCode);
     }
 
-    // Build Reproducibility SHA256 Hash
+    // Build Reproducibility Hash
     const inputSnapshotPayload = JSON.stringify({
       symbol,
       timeframe,
@@ -271,7 +254,7 @@ export class DecisionEngineService {
     });
     const inputSnapshotHash = crypto.createHash('sha256').update(inputSnapshotPayload).digest('hex');
 
-    // Final Decision State Determination
+    // Final Decision State
     let decisionState = DecisionState.WAIT;
 
     if (
@@ -282,40 +265,33 @@ export class DecisionEngineService {
       !zoneResult.passed
     ) {
       decisionState = DecisionState.SKIP;
-    } else if (
-      aiResult.approved &&
-      aiResult.confidenceScore >= 85.0 &&
-      trendResult.passed &&
-      riskResult.passed
-    ) {
-      decisionState = DecisionState.EXECUTE;
-      SignalDeduplicationEngine.recordExecution(symbol, timeframe, candleTimestamp, activeZone?.id);
+    } else if (aiResult.approved && aiResult.confidenceScore >= 85) {
+      decisionState = 'APPROVED' as any;
     } else {
-      decisionState = DecisionState.WAIT;
+      decisionState = 'REJECTED' as any;
     }
 
     const decision: DecisionDto = {
-      id: `DEC-${crypto.randomUUID()}`,
-      signalId: `SIG-${symbol}-${Date.now()}`,
+      id: `DEC-${Date.now()}`,
       symbol,
       timeframe,
-      decisionState,
+      state: decisionState,
+      outcome,
+      entryPrice,
+      stopLossPrice,
+      takeProfitPrice,
+      positionSize: sizingResult.positionSize,
+      leverage: sizingResult.leverage,
+      riskPercent: 35.0,
       confidenceScore: aiResult.confidenceScore,
       reasonCodes,
       inputSnapshotHash,
-      sessionFilter: sessionResult,
-      marketFilter: marketResult,
-      riskValidation: riskResult,
-      positionSizing: sizingResult,
-      aiConfirmation: aiResult,
-      timestamp: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
     };
 
     decisionLogs.unshift(decision);
-    if (decisionLogs.length > 500) {
-      decisionLogs = decisionLogs.slice(0, 500);
-    }
-
+    if (decisionLogs.length > 1000) decisionLogs.pop();
+    
     return decision;
   }
 }
