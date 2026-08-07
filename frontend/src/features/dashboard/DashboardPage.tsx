@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toISTTime } from '../../utils/time';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { decisionApi } from '../../services/api';
@@ -122,11 +123,11 @@ export const DashboardPage: React.FC = () => {
           <LayoutDashboard className="w-6 h-6 text-indigo-400" />
           <div>
             <h1 className="text-lg font-bold text-white font-mono">
-              QuantEdge AI Workstation — {activeSymbol} ({activeTimeframe})
+              QuantEdge AI Workstation â€” {activeSymbol} ({activeTimeframe})
             </h1>
             <div className="flex items-center space-x-2 text-xs text-slate-400 mt-0.5">
               <span>Profile: <strong className="text-white">Default 1H Profile</strong></span>
-              <span>•</span>
+              <span>â€¢</span>
               <StatusBadge status={connection?.status || 'DISCONNECTED'} label={`DELTA: ${connection?.status || 'OFFLINE'}`} />
             </div>
           </div>
@@ -425,7 +426,7 @@ export const DashboardPage: React.FC = () => {
                 {decisions.length > 0 ? (
                   decisions.map((dec: any, idx: number) => (
                     <tr key={idx} className="border-b border-slate-800/50 hover:bg-slate-950 text-white">
-                      <td className="py-2.5 px-3 text-slate-400">{new Date(dec.timestamp || Date.now()).toLocaleTimeString()}</td>
+                      <td className="py-2.5 px-3 text-slate-400">{toISTTime(dec.timestamp || Date.now())} IST</td>
                       <td className="py-2.5 px-3 font-bold">{dec.symbol || activeSymbol}</td>
                       <td className="py-2.5 px-3 text-emerald-400 font-bold">{dec.decisionState || 'EXECUTE'}</td>
                       <td className="py-2.5 px-3 text-right text-indigo-400">{dec.confidenceScore ? `${dec.confidenceScore.toFixed(1)}%` : '92.5%'}</td>
@@ -528,7 +529,7 @@ export const DashboardPage: React.FC = () => {
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center space-x-2">
                 <FileText className="w-5 h-5 text-amber-400" />
-                <h3 className="text-sm font-bold text-white uppercase">Daily Closing Report — Live Delta Synced</h3>
+                <h3 className="text-sm font-bold text-white uppercase">Daily Closing Report â€” Live Delta Synced</h3>
               </div>
               <button onClick={() => setShowEodReport(false)} className="text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
@@ -558,3 +559,4 @@ export const DashboardPage: React.FC = () => {
 };
 
 export default DashboardPage;
+

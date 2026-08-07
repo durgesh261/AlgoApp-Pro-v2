@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
+import { toISTTime } from '../../utils/time';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { tradeAccountingApi } from '../../services/api';
@@ -641,7 +642,7 @@ export const TradeAccountingPage: React.FC = () => {
               {isLoadingLedger ? (
                 <tr>
                   <td colSpan={14} className="py-8 text-center text-[#94A3B8]">
-                    Loading synchronized trade ledger…
+                    Loading synchronized trade ledgerâ€¦
                   </td>
                 </tr>
               ) : ledger.length === 0 ? (
@@ -729,7 +730,7 @@ export const TradeAccountingPage: React.FC = () => {
                           </span>
                         </td>
                         <td className="py-2.5 px-3 text-right font-mono-tabular text-[#94A3B8] text-[11px]">
-                          {new Date(e.closedAt).toLocaleTimeString()}
+                          {toISTTime(e.closedAt)}
                         </td>
                         <td className="py-2.5 px-2 text-center" onClick={(event) => event.stopPropagation()}>
                           <button
@@ -862,7 +863,7 @@ export const TradeAccountingPage: React.FC = () => {
                     Institutional Audit Verification (Delta Exchange India)
                   </h4>
                   <span className="text-[10px] text-[#00C896] font-bold bg-[#00C896]/10 px-2 py-0.5 rounded">
-                    0% TDS EXEMPT • 18% GST INCLUDED
+                    0% TDS EXEMPT â€¢ 18% GST INCLUDED
                   </span>
                 </div>
 
@@ -1005,3 +1006,4 @@ export const TradeAccountingPage: React.FC = () => {
     </motion.div>
   );
 };
+

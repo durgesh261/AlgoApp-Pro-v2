@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { strategyApi } from '../../services/api';
 import { Radio } from 'lucide-react';
 import { StrategySignalDto } from '@algoapp/shared';
+import { toISTTime } from '../../utils/time';
 
 export const SignalsTable: React.FC = () => {
   const { data: signalsData, isLoading } = useQuery({
@@ -62,7 +63,7 @@ export const SignalsTable: React.FC = () => {
                 <td className="px-3 text-center font-bold text-[#00C896]">{sig.confidenceScore.toFixed(1)}%</td>
                 <td className="px-3 text-[#94A3B8] max-w-xs truncate">{sig.rationale}</td>
                 <td className="px-3 text-right text-[#64748B] text-[11px]">
-                  {new Date(sig.timestamp).toLocaleTimeString()}
+                  {toISTTime(sig.timestamp)} IST
                 </td>
               </tr>
             ))}

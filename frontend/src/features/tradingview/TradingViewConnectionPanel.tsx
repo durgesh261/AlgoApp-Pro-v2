@@ -1,4 +1,5 @@
-import React from 'react';
+﻿import React from 'react';
+import { toISTTime } from '../../utils/time'
 import { useQuery } from '@tanstack/react-query';
 import { tradingViewApi } from '../../services/api';
 import { Radio, Activity, CheckCircle2, AlertOctagon, Copy } from 'lucide-react';
@@ -109,7 +110,7 @@ export const TradingViewConnectionPanel: React.FC = () => {
                 <div key={e.id} className="bg-[#161D2A] border border-[#1E293B] p-2 rounded text-[11px] flex items-center justify-between">
                   <span className="font-bold text-[#3B82F6]">{e.symbol}</span>
                   <span className="text-[10px] bg-[#00C896]/20 text-[#00C896] px-1.5 py-0.5 rounded">{e.status}</span>
-                  <span className="text-[10px] text-[#64748B]">{new Date(e.timestamp).toLocaleTimeString()}</span>
+                  <span className="text-[10px] text-[#64748B]">{toISTTime(e.timestamp)}</span>
                 </div>
               ))
             )}
@@ -133,7 +134,7 @@ export const TradingViewConnectionPanel: React.FC = () => {
                 <div key={err.id} className="bg-[#161D2A] border border-[#F6465D]/30 p-2 rounded text-[11px] space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-[#F6465D]">{err.errorType}</span>
-                    <span className="text-[10px] text-[#64748B]">{new Date(err.timestamp).toLocaleTimeString()}</span>
+                    <span className="text-[10px] text-[#64748B]">{toISTTime(err.timestamp)}</span>
                   </div>
                   <p className="text-[10px] text-[#94A3B8]">{err.message}</p>
                 </div>
@@ -145,3 +146,4 @@ export const TradingViewConnectionPanel: React.FC = () => {
     </div>
   );
 };
+

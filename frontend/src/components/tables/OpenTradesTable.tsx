@@ -4,6 +4,7 @@ import { paperTradingApi } from '../../services/api';
 import { useTerminalStore } from '../../store/useTerminalStore';
 import { Layers, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { PaperPositionDto } from '@algoapp/shared';
+import { toISTTime } from '../../utils/time';
 
 export const OpenTradesTable: React.FC = () => {
   const { activeSymbol } = useTerminalStore();
@@ -82,7 +83,7 @@ export const OpenTradesTable: React.FC = () => {
                     {pos.leverage}x
                   </span>
                 </td>
-                <td className="px-3 text-right text-[#64748B] text-[11px]">{new Date(pos.openedAt).toLocaleTimeString()}</td>
+                <td className="px-3 text-right text-[#64748B] text-[11px]">{toISTTime(pos.openedAt)} IST</td>
               </tr>
             ))}
           </tbody>

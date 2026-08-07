@@ -21,6 +21,7 @@ import {
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { deltaApi, realtimeOperationsApi, scannerApi, settingsApi, systemApi } from '../../services/api';
+import { toISTTimeShort } from '../../utils/time';
 
 export const Header: React.FC = () => {
   const queryClient = useQueryClient();
@@ -331,7 +332,7 @@ export const Header: React.FC = () => {
                         <div className="flex items-center justify-between gap-1">
                           <span className="font-bold text-[#F8FAFC] truncate text-[11px]">{n.title}</span>
                           <span className="text-[9px] text-[#94A3B8] shrink-0">
-                            {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {toISTTimeShort(n.timestamp)} IST
                           </span>
                         </div>
                         <p className="text-[#94A3B8] text-[11px] mt-0.5 leading-relaxed break-words">{n.message}</p>

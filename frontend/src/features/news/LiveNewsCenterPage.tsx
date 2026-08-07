@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { newsApi } from '../../services/api';
 import { useToastStore } from '../../store/useToastStore';
 import { LiveNewsItemDto, NewsCategory, NewsImportance } from '@algoapp/shared';
+import { toISTTimeShort, toISTDate } from '../../utils/time';
 import {
   Newspaper,
   Flame,
@@ -356,8 +357,8 @@ export const LiveNewsCenterPage: React.FC = () => {
                     <div className="flex items-center gap-2 font-mono text-[10px]">
                       <Clock className="w-3 h-3 text-slate-600" />
                       <span>
-                        {new Date(news.publishedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })},{' '}
-                        {new Date(news.publishedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {toISTDate(news.publishedAt)},{' '}
+                        {toISTTimeShort(news.publishedAt)} IST
                       </span>
                       {news.symbols && news.symbols.length > 0 && (
                         <div className="flex items-center gap-1">

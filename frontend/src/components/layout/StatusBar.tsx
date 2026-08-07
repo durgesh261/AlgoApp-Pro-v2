@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getIsoUtcTimestamp } from '@algoapp/shared';
 import { useQuery } from '@tanstack/react-query';
 import { systemApi, deltaApi } from '../../services/api';
 import { useTerminalStore } from '../../store/useTerminalStore';
+import { nowIST } from '../../utils/time';
 import { 
   Wifi, 
   Clock, 
@@ -14,7 +14,7 @@ import {
 
 export const StatusBar: React.FC = () => {
   const { activeTimeframe } = useTerminalStore();
-  const [utcTime, setUtcTime] = useState(getIsoUtcTimestamp());
+  const [istTime, setIstTime] = useState(nowIST());
   const [beLatencyMs, setBeLatencyMs] = useState<number | null>(null);
   const [isBackendOnline, setIsBackendOnline] = useState(true);
 
@@ -28,7 +28,7 @@ export const StatusBar: React.FC = () => {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setUtcTime(getIsoUtcTimestamp());
+      setIstTime(nowIST());
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -104,7 +104,7 @@ export const StatusBar: React.FC = () => {
         {/* UTC Clock */}
         <div className="flex items-center space-x-1 text-[#F8FAFC] font-mono-tabular">
           <Clock className="w-3 h-3 text-[#3B82F6]" />
-          <span>{utcTime}</span>
+          <span>{istTime}</span>
         </div>
       </div>
     </footer>

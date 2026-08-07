@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
+import { toISTTime } from '../../utils/time';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -258,7 +259,7 @@ export const LiveTradingPage: React.FC = () => {
               )}
             </div>
             <p className="text-[11px] text-[#94A3B8] font-sans mt-0.5">
-              Source: Delta Exchange India (DELTAIN) · Feed: <span className={wsState === 'CONNECTED' ? "text-[#00C896] font-bold" : "text-[#F6465D]"}>{wsState}</span>
+              Source: Delta Exchange India (DELTAIN) Â· Feed: <span className={wsState === 'CONNECTED' ? "text-[#00C896] font-bold" : "text-[#F6465D]"}>{wsState}</span>
             </p>
           </div>
         </div>
@@ -339,7 +340,7 @@ export const LiveTradingPage: React.FC = () => {
                       )}
                     </div>
                     <span className="text-[11px] font-mono-tabular font-bold text-slate-200 shrink-0">
-                      {p ? p.priceLabel : '—'}
+                      {p ? p.priceLabel : 'â€”'}
                     </span>
                   </div>
                   <div className="w-full flex items-center justify-between text-[10px] min-w-0">
@@ -410,7 +411,7 @@ export const LiveTradingPage: React.FC = () => {
             <form onSubmit={handleOrderSubmit} className="bg-[#0B0E14] border border-[#1E293B] p-2.5 rounded-lg space-y-2 text-xs">
               <div className="flex items-center justify-between border-b border-[#1E293B] pb-1">
                 <span className="text-[11px] font-bold text-[#F8FAFC]">
-                  Execution — {activeSymbol}
+                  Execution â€” {activeSymbol}
                 </span>
                 <div className="flex items-center space-x-1">
                   <button
@@ -779,12 +780,12 @@ export const LiveTradingPage: React.FC = () => {
                       <td className="py-2.5">{pos.size}</td>
                       <td className="py-2.5">${pos.entryPrice.toFixed(2)}</td>
                       <td className="py-2.5">${pos.markPrice.toFixed(2)}</td>
-                      <td className="py-2.5 text-[#F59E0B]">${pos.liquidationPrice ? pos.liquidationPrice.toFixed(2) : '—'}</td>
+                      <td className="py-2.5 text-[#F59E0B]">${pos.liquidationPrice ? pos.liquidationPrice.toFixed(2) : 'â€”'}</td>
                       <td className={`py-2.5 font-bold ${pos.unrealizedPnl >= 0 ? 'text-[#00C896]' : 'text-[#F6465D]'}`}>
                         {pos.unrealizedPnl >= 0 ? '+' : ''}${pos.unrealizedPnl.toFixed(2)}
                       </td>
                       <td className={`py-2.5 font-bold ${pos.unrealizedPnl >= 0 ? 'text-[#00C896]' : 'text-[#F6465D]'}`}>
-                        {pos.roePercent ? `${pos.roePercent.toFixed(2)}%` : '—'}
+                        {pos.roePercent ? `${pos.roePercent.toFixed(2)}%` : 'â€”'}
                       </td>
                       <td className="py-2.5 text-right">
                         <button
@@ -910,7 +911,7 @@ export const LiveTradingPage: React.FC = () => {
                       <span className="bg-[#3B82F6]/20 text-[#3B82F6] px-1.5 py-0.5 rounded text-[10px] font-bold">{log.toState || log.action}</span>
                       <span className="text-white">{log.details || log.action}</span>
                     </div>
-                    <span className="text-[10px] text-[#94A3B8]">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                    <span className="text-[10px] text-[#94A3B8]">{toISTTime(log.timestamp)}</span>
                   </div>
                 ))}
               </div>
@@ -921,3 +922,4 @@ export const LiveTradingPage: React.FC = () => {
     </motion.div>
   );
 };
+

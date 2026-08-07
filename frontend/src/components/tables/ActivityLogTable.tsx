@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { paperTradingApi } from '../../services/api';
 import { ShieldCheck, Activity } from 'lucide-react';
 import { PaperTradeJournalDto } from '@algoapp/shared';
+import { toISTTime } from '../../utils/time';
 
 export const ActivityLogTable: React.FC = () => {
   const { data: journalData, isLoading } = useQuery({
@@ -63,7 +64,7 @@ export const ActivityLogTable: React.FC = () => {
                   </span>
                 </td>
                 <td className="px-3 text-right text-[#94A3B8] font-mono-tabular text-[11px]">
-                  {new Date(act.timestamp).toLocaleTimeString()}
+                  {toISTTime(act.timestamp)} IST
                 </td>
               </tr>
             ))}

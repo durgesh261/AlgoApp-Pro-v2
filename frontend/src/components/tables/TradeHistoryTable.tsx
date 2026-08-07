@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { tradeAccountingApi, paperTradingApi } from '../../services/api';
 import { History, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { TradeLedgerEntryDto, PaperOrderDto } from '@algoapp/shared';
+import { toISTTime } from '../../utils/time';
 
 export const TradeHistoryTable: React.FC = () => {
   const { data: ledgerData, isLoading: isLoadingLedger } = useQuery({
@@ -81,7 +82,7 @@ export const TradeHistoryTable: React.FC = () => {
                   <td className="px-3 text-right text-[#94A3B8] font-mono-tabular">${trade.tradingFee.toFixed(2)}</td>
                   <td className="px-3 text-[#3B82F6] font-semibold">{trade.resultStatus}</td>
                   <td className="px-3 text-right text-[#94A3B8] font-mono-tabular text-[11px]">
-                    {new Date(trade.executedAt).toLocaleTimeString()}
+                  {toISTTime(trade.executedAt)} IST
                   </td>
                 </tr>
               ))
@@ -104,7 +105,7 @@ export const TradeHistoryTable: React.FC = () => {
                   <td className="px-3 text-right text-[#94A3B8] font-mono-tabular">$0.00</td>
                   <td className="px-3 text-[#3B82F6] font-semibold">{order.status}</td>
                   <td className="px-3 text-right text-[#94A3B8] font-mono-tabular text-[11px]">
-                    {new Date(order.createdAt).toLocaleTimeString()}
+                    {toISTTime(order.createdAt)} IST
                   </td>
                 </tr>
               ))

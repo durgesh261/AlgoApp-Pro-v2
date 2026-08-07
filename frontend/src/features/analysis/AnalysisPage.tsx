@@ -1,4 +1,5 @@
-import React from 'react';
+﻿import React from 'react';
+import { toISTTime } from '../../utils/time';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { intelligenceApi } from '../../services/api';
@@ -76,7 +77,7 @@ export const AnalysisPage: React.FC = () => {
         <div>
           <h1 className="text-lg font-bold text-[#F8FAFC] flex items-center gap-2">
             <LineChart className="w-5 h-5 text-[#3B82F6]" />
-            Trading Intelligence & Adaptive Strategy Platform — {activeSymbol} ({activeTimeframe})
+            Trading Intelligence & Adaptive Strategy Platform â€” {activeSymbol} ({activeTimeframe})
           </h1>
           <p className="text-xs text-[#94A3B8] mt-0.5">
             Empirical trade quality scoring, Sharpe/Sortino performance monitoring, regime detection, and evidence-backed recommendations.
@@ -117,12 +118,12 @@ export const AnalysisPage: React.FC = () => {
             </div>
 
             <p className="text-xs text-[#94A3B8] leading-relaxed bg-[#0B0E14] p-2.5 rounded-lg border border-[#1E293B]">
-              {score?.journalCorrelation ?? '—'}
+              {score?.journalCorrelation ?? 'â€”'}
             </p>
           </div>
 
           <div className="mt-3 pt-2 border-t border-[#1E293B] text-[11px] text-[#94A3B8]">
-            Evaluated At: <span className="text-white font-bold">{score?.evaluatedAt ? new Date(score.evaluatedAt).toLocaleTimeString() : 'LIVE'}</span>
+            Evaluated At: <span className="text-white font-bold">{score?.evaluatedAt ? toISTTime(score.evaluatedAt) : 'LIVE'}</span>
           </div>
         </div>
 
@@ -164,7 +165,7 @@ export const AnalysisPage: React.FC = () => {
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[10px] text-[#94A3B8] block uppercase">Market Regime</span>
-              <span className="text-xs font-bold text-[#00C896]">{regime?.regime ?? '—'}</span>
+              <span className="text-xs font-bold text-[#00C896]">{regime?.regime ?? 'â€”'}</span>
             </div>
           </div>
         </div>
@@ -177,45 +178,45 @@ export const AnalysisPage: React.FC = () => {
           <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
             <div className="flex items-center space-x-2">
               <TrendingUp className="w-5 h-5 text-[#00C896]" />
-              <h2 className="text-xs font-bold text-white uppercase tracking-wider">Strategy Performance Monitor ({metrics?.profileName ?? '—'})</h2>
+              <h2 className="text-xs font-bold text-white uppercase tracking-wider">Strategy Performance Monitor ({metrics?.profileName ?? 'â€”'})</h2>
             </div>
             <span className="text-[10px] bg-[#3B82F6]/20 text-[#3B82F6] px-2 py-0.5 rounded font-bold">
-              SHARPE: {metrics?.sharpeRatio ? metrics.sharpeRatio.toFixed(2) : '—'}
+              SHARPE: {metrics?.sharpeRatio ? metrics.sharpeRatio.toFixed(2) : 'â€”'}
             </span>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[#94A3B8] block text-[10px]">WIN RATE</span>
-              <span className="text-lg font-bold text-[#00C896]">{metrics?.winRate !== undefined ? `${metrics.winRate.toFixed(1)}%` : '—'}</span>
+              <span className="text-lg font-bold text-[#00C896]">{metrics?.winRate !== undefined ? `${metrics.winRate.toFixed(1)}%` : 'â€”'}</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[#94A3B8] block text-[10px]">PROFIT FACTOR</span>
-              <span className="text-lg font-bold text-white">{metrics?.profitFactor ? metrics.profitFactor.toFixed(2) : '—'}</span>
+              <span className="text-lg font-bold text-white">{metrics?.profitFactor ? metrics.profitFactor.toFixed(2) : 'â€”'}</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[#94A3B8] block text-[10px]">SORTINO RATIO</span>
-              <span className="text-lg font-bold text-[#3B82F6]">{metrics?.sortinoRatio ? metrics.sortinoRatio.toFixed(2) : '—'}</span>
+              <span className="text-lg font-bold text-[#3B82F6]">{metrics?.sortinoRatio ? metrics.sortinoRatio.toFixed(2) : 'â€”'}</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[#94A3B8] block text-[10px]">CALMAR RATIO</span>
-              <span className="text-lg font-bold text-[#F59E0B]">{metrics?.calmarRatio ? metrics.calmarRatio.toFixed(2) : '—'}</span>
+              <span className="text-lg font-bold text-[#F59E0B]">{metrics?.calmarRatio ? metrics.calmarRatio.toFixed(2) : 'â€”'}</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[#94A3B8] block text-[10px]">RECOVERY FACTOR</span>
-              <span className="text-lg font-bold text-[#00C896]">{metrics?.recoveryFactor ? metrics.recoveryFactor.toFixed(1) : '—'}</span>
+              <span className="text-lg font-bold text-[#00C896]">{metrics?.recoveryFactor ? metrics.recoveryFactor.toFixed(1) : 'â€”'}</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[#94A3B8] block text-[10px]">MAX DRAWDOWN</span>
-              <span className="text-lg font-bold text-[#F6465D]">{metrics?.maxDrawdownPercent !== undefined ? `${metrics.maxDrawdownPercent.toFixed(2)}%` : '—'}</span>
+              <span className="text-lg font-bold text-[#F6465D]">{metrics?.maxDrawdownPercent !== undefined ? `${metrics.maxDrawdownPercent.toFixed(2)}%` : 'â€”'}</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[#94A3B8] block text-[10px]">AVG RISK-REWARD</span>
-              <span className="text-lg font-bold text-[#F59E0B]">{metrics?.avgRiskRewardRatio ? `${metrics.avgRiskRewardRatio.toFixed(2)}:1` : '—'}</span>
+              <span className="text-lg font-bold text-[#F59E0B]">{metrics?.avgRiskRewardRatio ? `${metrics.avgRiskRewardRatio.toFixed(2)}:1` : 'â€”'}</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[#94A3B8] block text-[10px]">AVG HOLD TIME</span>
-              <span className="text-lg font-bold text-white">{metrics?.avgHoldTimeMinutes ? `${metrics.avgHoldTimeMinutes} mins` : '—'}</span>
+              <span className="text-lg font-bold text-white">{metrics?.avgHoldTimeMinutes ? `${metrics.avgHoldTimeMinutes} mins` : 'â€”'}</span>
             </div>
           </div>
         </div>
@@ -231,7 +232,7 @@ export const AnalysisPage: React.FC = () => {
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-[#94A3B8]">Active Regime:</span>
-                <span className="text-[#00C896] font-bold">{regime?.regime ?? '—'}</span>
+                <span className="text-[#00C896] font-bold">{regime?.regime ?? 'â€”'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#94A3B8]">ATR Volatility:</span>
@@ -243,7 +244,7 @@ export const AnalysisPage: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-[#94A3B8]">Trading Session:</span>
-                <span className="text-white font-bold">{regime?.session ?? '—'}</span>
+                <span className="text-white font-bold">{regime?.session ?? 'â€”'}</span>
               </div>
             </div>
           </div>
@@ -305,7 +306,7 @@ export const AnalysisPage: React.FC = () => {
                 </div>
                 <p className="text-[#94A3B8] text-[11px]">{rec.supportingEvidenceText}</p>
                 <div className="flex justify-between text-[10px] text-[#94A3B8] pt-1 border-t border-[#1E293B]/50">
-                  <span>Target: {rec.targetParameter} ({rec.currentValue} → {rec.recommendedValue})</span>
+                  <span>Target: {rec.targetParameter} ({rec.currentValue} â†’ {rec.recommendedValue})</span>
                   <span>Evidentiary Trades: {rec.historicalTradeIds.join(', ')}</span>
                 </div>
               </div>
@@ -384,3 +385,4 @@ export const AnalysisPage: React.FC = () => {
     </motion.div>
   );
 };
+
