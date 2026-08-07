@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { toISTTime } from '../../utils/time';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -411,7 +411,7 @@ export const LiveTradingPage: React.FC = () => {
             <form onSubmit={handleOrderSubmit} className="bg-[#0B0E14] border border-[#1E293B] p-2.5 rounded-lg space-y-2 text-xs">
               <div className="flex items-center justify-between border-b border-[#1E293B] pb-1">
                 <span className="text-[11px] font-bold text-[#F8FAFC]">
-                  Execution â€” {activeSymbol}
+                  Execution - {activeSymbol}
                 </span>
                 <div className="flex items-center space-x-1">
                   <button
