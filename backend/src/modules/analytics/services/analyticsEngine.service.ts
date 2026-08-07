@@ -23,16 +23,16 @@ export class AnalyticsEngineService {
 
     const winRate = totalTrades > 0 ? (wins.length / totalTrades) * 100 : 0;
     
-    const grossProfit = wins.reduce((sum, t) => sum + (t.netPnL > 0 ? t.netPnL : 0), 0);
-    const grossLoss = losses.reduce((sum, t) => sum + Math.abs(t.netPnL < 0 ? t.netPnL : 0), 0);
+    const grossProfit = wins.reduce((sum, t) => sum + ((t.netPnL ?? 0) > 0 ? (t.netPnL ?? 0) : 0), 0);
+    const grossLoss = losses.reduce((sum, t) => sum + Math.abs((t.netPnL ?? 0) < 0 ? (t.netPnL ?? 0) : 0), 0);
     const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? 99 : 0;
 
     let peakEquity = 0;
     let currentEquity = 0;
     let maxDrawdown = 0;
 
-    trades.sort((a, b) => a.closedAt.getTime() - b.closedAt.getTime()).forEach((t) => {
-      currentEquity += t.netPnL;
+    trades.sort((a, b) => (a.closedAt?.getTime() || 0) - (b.closedAt?.getTime() || 0)).forEach((t) => {
+      currentEquity += t.netPnL ?? 0;
       if (currentEquity > peakEquity) {
         peakEquity = currentEquity;
       }
@@ -46,10 +46,10 @@ export class AnalyticsEngineService {
     const assumedInitialBalance = 10000;
     const maxDrawdownPercent = (maxDrawdown / assumedInitialBalance) * 100;
 
-    const avgRiskRewardRatio = trades.reduce((sum, t) => sum + (t.rewardPercent / (t.riskPercent || 1)), 0) / totalTrades;
-    const avgHoldTimeMinutes = trades.reduce((sum, t) => sum + (t.durationSeconds / 60), 0) / totalTrades;
-    const avgTradingFee = trades.reduce((sum, t) => sum + t.tradingFee, 0) / totalTrades;
-    const avgNetProfit = trades.reduce((sum, t) => sum + t.netPnL, 0) / totalTrades;
+    const avgRiskRewardRatio = trades.reduce((sum, t) => sum + ((t.rewardPercent ?? 0) / (t.riskPercent || 1)), 0) / (totalTrades || 1);
+    const avgHoldTimeMinutes = trades.reduce((sum, t) => sum + ((t.durationSeconds ?? 0) / 60), 0) / (totalTrades || 1);
+    const avgTradingFee = trades.reduce((sum, t) => sum + (t.tradingFee ?? 0), 0) / (totalTrades || 1);
+    const avgNetProfit = trades.reduce((sum, t) => sum + (t.netPnL ?? 0), 0) / (totalTrades || 1);
 
     // Approximations for advanced ratios without daily returns
     const sharpeRatio = profitFactor > 1 ? profitFactor * Math.sqrt(totalTrades) / 2 : 0; 

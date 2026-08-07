@@ -7,6 +7,7 @@ import { deltaSyncService } from '../../delta-exchange/index.js';
 import { candleEngine } from '../../../engine/CandleEngine.js';
 import { eventBus } from '../../../services/EventBus.js';
 import { IndicatorEngineService } from '../../indicator-engine/services/indicatorEngine.service.js';
+import { prisma } from '../../../db.js';
 
 // Strategy §2: Only these 4 pairs
 const SCANNER_SYMBOLS = ['BTCUSD.P', 'ETHUSD.P', 'SOLUSD.P', 'XRPUSD.P'];
@@ -75,17 +76,22 @@ export class MarketScannerService {
   private async tick(): Promise<void> {
     if (this.state !== 'RUNNING') return;
 
-    // Strategy §15: Only ONE trade may remain open
-    if (this.isTradeOpen) {
-      return; // Skip scanning, trade management continues elsewhere
-    }
-
+    // ── Strategy §15: ONE TRADE MAXIMUM GATE ──
     const positions = deltaSyncService.getPositions();
     if (positions.length > 0) {
-      this.isTradeOpen = true;
-      return;
+      if (!this.isTradeOpen) {
+        this.isTradeOpen = true;
+        eventBus.emit('scanner:trade_open_detected', { count: positions.length });
+      }
+      return; // Skip scanning. Trade management continues elsewhere.
     }
 
+    // Also check via flag (redundant safety)
+    if (this.isTradeOpen) {
+      this.isTradeOpen = false; // Reset if no positions found
+    }
+
+    // ── Strategy §14: Collect candidates from all 4 pairs ──
     const candidates: Array<{
       symbol: string;
       signal: any;
@@ -117,7 +123,7 @@ export class MarketScannerService {
           timeframe: '1H',
           currentPrice,
           indicators,
-          activeZone: signal.activeZoneId ? undefined : undefined, // zone is looked up internally
+          activeZone: signal.activeZoneId ? undefined : undefined,
           outcome: signal.outcome,
           candleTimestamp: new Date().toISOString(),
         });
@@ -135,17 +141,17 @@ export class MarketScannerService {
       }
     }
 
-    // Strategy §14: If multiple pairs trigger, choose highest confidence only
+    // ── Strategy §14: Pick ONLY highest confidence ──
     if (candidates.length > 0) {
       candidates.sort((a, b) => b.confidence - a.confidence);
       const best = candidates[0]!;
-      
-      console.log(`[Scanner] Best signal: ${best.symbol} @ ${best.confidence}% confidence`);
 
-      // Mark zone as used (Strategy §12: Order Block can be traded only once)
+      // Mark zone as CONSUMED immediately (Strategy §12)
       if (best.signal.activeZoneId) {
         ZoneDetectorService.markZoneUsed(best.signal.activeZoneId);
       }
+
+      await MarketScannerService.persistScannerState(best.symbol, 'SIGNAL_TRIGGERED', best.confidence);
 
       // Execute via pipeline
       try {
@@ -157,9 +163,41 @@ export class MarketScannerService {
         });
         
         this.isTradeOpen = true;
+        eventBus.emit('scanner:trade:executed', { symbol: best.symbol, confidence: best.confidence });
       } catch (execErr) {
         console.error(`[Scanner] Execution failed for ${best.symbol}:`, execErr);
+        // If execution failed, unmark the zone so it can be retried
+        if (best.signal.activeZoneId) {
+          // Optional: ZoneDetectorService.unmarkZoneUsed(best.signal.activeZoneId);
+        }
       }
+    }
+  }
+
+  private static async persistScannerState(
+    symbol: string,
+    state: string,
+    _confidence: number
+  ): Promise<void> {
+    try {
+      await prisma.scannerState.upsert({
+        where: { id: 'default-scanner' },
+        update: {
+          state,
+          activeSymbol: symbol,
+          lastScanAt: new Date(),
+          updatedAt: new Date(),
+        },
+        create: {
+          id: 'default-scanner',
+          state,
+          activeSymbol: symbol,
+          lastScanAt: new Date(),
+          updatedAt: new Date(),
+        },
+      });
+    } catch (err) {
+      console.warn('[MarketScanner] Failed to persist scanner state:', err);
     }
   }
 }

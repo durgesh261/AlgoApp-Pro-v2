@@ -81,7 +81,7 @@ export const ReplayPage: React.FC = () => {
 
       {/* Interactive TradingView Chart Workspace */}
       <div className="h-[420px] w-full">
-        <TradingViewChartWorkspace initialSymbol={activeSymbol} initialTimeframe="1H" isReplayActive={true} />
+        <TradingViewChartWorkspace initialSymbol={activeSymbol} />
       </div>
 
       {/* Replay Control Bar & Slider */}
@@ -189,23 +189,23 @@ export const ReplayPage: React.FC = () => {
             </div>
             <div className="flex justify-between">
               <span className="text-[#94A3B8]">Open</span>
-              <span className="text-[#F8FAFC] font-bold">${candle?.open.toLocaleString() ?? '63,850.00'}</span>
+              <span className="text-[#F8FAFC] font-bold">${candle?.open.toLocaleString() ?? '0.00'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[#94A3B8]">High</span>
-              <span className="text-[#00C896] font-bold">${candle?.high.toLocaleString() ?? '64,500.00'}</span>
+              <span className="text-[#00C896] font-bold">${candle?.high.toLocaleString() ?? '0.00'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[#94A3B8]">Low</span>
-              <span className="text-[#F6465D] font-bold">${candle?.low.toLocaleString() ?? '63,650.00'}</span>
+              <span className="text-[#F6465D] font-bold">${candle?.low.toLocaleString() ?? '0.00'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-[#94A3B8]">Close</span>
-              <span className="text-[#F8FAFC] font-bold">${candle?.close.toLocaleString() ?? '64,250.00'}</span>
+              <span className="text-[#F8FAFC] font-bold">${candle?.close.toLocaleString() ?? '0.00'}</span>
             </div>
             <div className="flex justify-between pt-1 border-t border-[#1E293B]">
               <span className="text-[#94A3B8]">Volume</span>
-              <span className="text-[#3B82F6] font-bold">{candle?.volume.toLocaleString() ?? '2,140.2'}</span>
+              <span className="text-[#3B82F6] font-bold">{candle?.volume.toLocaleString() ?? '0'}</span>
             </div>
           </div>
         </div>

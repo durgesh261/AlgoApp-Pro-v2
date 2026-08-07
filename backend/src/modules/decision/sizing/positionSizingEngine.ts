@@ -23,14 +23,13 @@ export class PositionSizingEngine {
       entryPrice: input.entryPrice,
       stopLossPrice: input.stopLossPrice,
       direction,
-      maxLeverageCap: input.maxLeverageCap,
     });
 
     return {
-      positionSize: riskResult.positionValueUsd,
+      positionSize: riskResult.notionalValue,
       contractQuantity: riskResult.positionSize,
-      riskAmount: riskResult.maxRiskAmountUsd,
-      marginRequired: riskResult.accountBalance,
+      riskAmount: riskResult.riskAmount,
+      marginRequired: riskResult.marginRequired,
       leverage: riskResult.leverage,
       entryPrice: riskResult.entryPrice,
       stopLossPrice: riskResult.stopLossPrice,

@@ -1,12 +1,5 @@
 type WebSocketState = 'CONNECTING' | 'CONNECTED' | 'RECONNECTING' | 'DISCONNECTED';
 
-export interface LiveTrade {
-  price: number;
-  size: number;
-  timestamp: number; // in milliseconds
-  symbol: string;
-}
-
 export interface LiveTicker {
   markPrice: number;
   indexPrice: number;
@@ -17,39 +10,35 @@ type EventCallback = (data: any) => void;
 
 class ChartWebSocketService {
   private ws: WebSocket | null = null;
-  private url = 'wss://socket.india.delta.exchange';
+  // Connect to YOUR backend WebSocket, NOT directly to Delta
+  private url = (import.meta as any).env?.VITE_WS_URL || 'ws://localhost:4000/ws';
   private state: WebSocketState = 'DISCONNECTED';
-  
   private currentSymbol: string | null = null;
-
-  private listeners: Record<'stateChange' | 'trade' | 'ticker', EventCallback[]> = {
+  private listeners: Record<'stateChange' | 'ticker' | 'candle', EventCallback[]> = {
     stateChange: [],
-    trade: [],
     ticker: [],
+    candle: [],
   };
-
   private reconnectTimer: NodeJS.Timeout | null = null;
   private pingTimer: NodeJS.Timeout | null = null;
 
   public connect(symbol: string) {
     if (this.ws && (this.state === 'CONNECTED' || this.state === 'CONNECTING')) {
-      if (this.currentSymbol === symbol) return; // already connected to this symbol
-      // Need to resubscribe to new symbol
-      this.unsubscribeCurrent();
+      if (this.currentSymbol === symbol) return;
       this.currentSymbol = symbol;
-      this.subscribeCurrent();
+      this.subscribeSymbol(symbol);
       return;
     }
 
     this.currentSymbol = symbol;
     this.setState('CONNECTING');
-    
+
     try {
       this.ws = new WebSocket(this.url);
-      
+
       this.ws.onopen = () => {
         this.setState('CONNECTED');
-        this.subscribeCurrent();
+        this.subscribeSymbol(symbol);
         this.startPing();
       };
 
@@ -62,7 +51,7 @@ class ChartWebSocketService {
       };
 
       this.ws.onerror = (error) => {
-        console.error('Delta WebSocket Error:', error);
+        console.error('Backend WebSocket Error:', error);
         this.ws?.close();
       };
     } catch (e) {
@@ -85,14 +74,12 @@ class ChartWebSocketService {
     this.setState('DISCONNECTED');
   }
 
-  public on(event: 'stateChange' | 'trade' | 'ticker', callback: EventCallback) {
+  public on(event: 'stateChange' | 'ticker' | 'candle', callback: EventCallback) {
     this.listeners[event].push(callback);
-    if (event === 'stateChange') {
-      callback(this.state);
-    }
+    if (event === 'stateChange') callback(this.state);
   }
 
-  public off(event: 'stateChange' | 'trade' | 'ticker', callback: EventCallback) {
+  public off(event: 'stateChange' | 'ticker' | 'candle', callback: EventCallback) {
     this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
   }
 
@@ -101,83 +88,40 @@ class ChartWebSocketService {
     this.emit('stateChange', newState);
   }
 
-  private emit(event: 'stateChange' | 'trade' | 'ticker', data: any) {
+  private emit(event: 'stateChange' | 'ticker' | 'candle', data: any) {
     (this.listeners[event] || []).forEach(cb => cb(data));
   }
 
-  private getAppSymbol(deltaSymbol: string) {
-    const map: Record<string, string> = {
-      'BTCUSD': 'BTCUSD.P',
-      'ETHUSD': 'ETHUSD.P',
-      'SOLUSD': 'SOLUSD.P',
-      'XRPUSD': 'XRPUSD.P',
-    };
-    return map[deltaSymbol] || `${deltaSymbol}.P`;
-  }
-
-  private subscribeCurrent() {
+  private subscribeSymbol(symbol: string) {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
-
-    const symbols = ['BTCUSD', 'ETHUSD', 'SOLUSD', 'XRPUSD'];
-    const msg = {
+    this.ws.send(JSON.stringify({
       type: 'subscribe',
-      payload: {
-        channels: [
-          { name: 'v2/trades', symbols: symbols },
-          { name: 'v2/ticker', symbols: symbols }
-        ]
-      }
-    };
-    this.ws?.send(JSON.stringify(msg));
-  }
-
-  private unsubscribeCurrent() {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
-
-    const symbols = ['BTCUSD', 'ETHUSD', 'SOLUSD', 'XRPUSD'];
-    const msg = {
-      type: 'unsubscribe',
-      payload: {
-        channels: [
-          { name: 'v2/trades', symbols: symbols },
-          { name: 'v2/ticker', symbols: symbols }
-        ]
-      }
-    };
-    this.ws.send(JSON.stringify(msg));
+      channel: 'ticker',
+      symbols: [symbol],
+    }));
   }
 
   private handleMessage(event: MessageEvent) {
     try {
       const data = JSON.parse(event.data);
 
-      if (data.type === 'v2/trades' && Array.isArray(data.trades)) {
-        data.trades.forEach((t: any) => {
-          const trade: LiveTrade = {
-            price: parseFloat(t.price),
-            size: parseFloat(t.size),
-            timestamp: t.timestamp ? parseInt(t.timestamp) : parseInt(t.timestamp_ms || Date.now().toString()),
-            symbol: this.getAppSymbol(data.symbol)
-          };
-          if (trade.timestamp > 1000000000000000) trade.timestamp = Math.floor(trade.timestamp / 1000);
-          this.emit('trade', trade);
-        });
-      }
-
-      if (data.type === 'v2/ticker' && data.symbol) {
-        const t = data;
+      if (data.type === 'ticker' && data.symbol) {
         const ticker: LiveTicker = {
-          markPrice: parseFloat(t.close || t.mark_price || 0),
-          indexPrice: parseFloat(t.spot_price || t.index_price || 0),
-          symbol: this.getAppSymbol(data.symbol)
+          markPrice: parseFloat(data.markPrice || 0),
+          indexPrice: parseFloat(data.indexPrice || 0),
+          symbol: data.symbol,
         };
         if (ticker.markPrice > 0) {
           this.emit('ticker', ticker);
         }
       }
 
+      if (data.type === 'candle' && data.symbol) {
+        this.emit('candle', data);
+      }
+
     } catch (e) {
-      // Ignore errors
+      // Ignore parse errors
     }
   }
 

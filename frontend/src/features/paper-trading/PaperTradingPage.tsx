@@ -20,7 +20,7 @@ export const PaperTradingPage: React.FC = () => {
 
   const [side, setSide] = useState<PaperOrderSide>(PaperOrderSide.BUY);
   const [orderType, setOrderType] = useState<PaperOrderType>(PaperOrderType.MARKET);
-  const [price, setPrice] = useState('64250.00');
+  const [price, setPrice] = useState('0.00');
   const [quantity, setQuantity] = useState('0.10');
   const [leverage, setLeverage] = useState('10');
   const [stopLoss, setStopLoss] = useState('');

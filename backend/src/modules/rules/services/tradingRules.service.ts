@@ -58,8 +58,8 @@ export class TradingRulesService {
       configVersion: config.configVersion,
       supportedPairs: JSON.parse(config.supportedPairsJson),
       supportedTimeframe: config.supportedTimeframe,
-      confidenceBonuses: JSON.parse(config.bonusesJson),
-      riskRules: JSON.parse(config.riskRulesJson),
+      confidenceBonuses: JSON.parse(config.bonusesJson || '{}'),
+      riskRules: JSON.parse(config.riskRulesJson || '{}'),
       updatedAt: config.updatedAt.toISOString(),
     };
   }
@@ -89,8 +89,8 @@ export class TradingRulesService {
       configVersion: updated.configVersion,
       supportedPairs: JSON.parse(updated.supportedPairsJson),
       supportedTimeframe: updated.supportedTimeframe,
-      confidenceBonuses: JSON.parse(updated.bonusesJson),
-      riskRules: JSON.parse(updated.riskRulesJson),
+      confidenceBonuses: JSON.parse(updated.bonusesJson || '{}'),
+      riskRules: JSON.parse(updated.riskRulesJson || '{}'),
       updatedAt: updated.updatedAt.toISOString(),
     };
   }

@@ -4,7 +4,6 @@ import { orderLifecycleService } from './OrderLifecycleService.js';
 import { tradeAccountingTrigger } from '../../trade-accounting/TradeAccountingTrigger.js';
 import { candleEngine } from '../../../engine/CandleEngine.js';
 import { eventBus } from '../../../services/EventBus.js';
-
 export interface OrderExecutionRequest {
   symbol: string;
   side: 'buy' | 'sell';
@@ -220,7 +219,7 @@ export class ExecutionEngineService {
     });
 
     // 12. Client Order ID Idempotency Check
-    const clientOrderId = req.clientOrderId || `ORD-${Date.now()}`;
+    const clientOrderId = req.clientOrderId || `ORD-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
     const existingOrder = orderLifecycleService.getOrder(clientOrderId);
     const isUnique = !existingOrder || existingOrder.state === 'FILLED' || existingOrder.state === 'CANCELLED';
     results.push({

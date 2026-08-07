@@ -1,16 +1,18 @@
 import { CandleDto, IngestCandleInput, MarketEventType } from '@algoapp/shared';
+import { prisma } from '../../../db.js';
 import { MarketDataValidator } from './marketDataValidator.js';
 import { MarketEventGenerator } from './marketEventGenerator.js';
-
 import { candleEngine } from '../../../engine/CandleEngine.js';
 
-let historicalCandlesStore: CandleDto[] = [];
-
 export class CandleStoreService {
+  /**
+   * Get candles from DB first, fall back to Delta API, then memory.
+   * Candles are now PERSISTED to SQLite (Strategy §24).
+   */
   public static async getCandles(
     symbol: string,
     timeframeOrLimit: string | number = '1H',
-    limitNum: number = 1000
+    limitNum: number = 500
   ): Promise<CandleDto[]> {
     let timeframe: '15M' | '1H' = '1H';
     let limit = limitNum;
@@ -22,7 +24,7 @@ export class CandleStoreService {
       timeframe = timeframeOrLimit;
     }
 
-    // Check if candleEngine already has live aggregated 1H candles
+    // 1. Try live candle engine first (most recent)
     if (timeframe === '1H') {
       const live1HCandles = candleEngine.get1HCandles(symbol);
       if (live1HCandles.length >= 10) {
@@ -30,6 +32,38 @@ export class CandleStoreService {
       }
     }
 
+    // 2. Try database (persisted across restarts)
+    try {
+      const dbCandles = await prisma.marketCandle.findMany({
+        where: { symbol, timeframe },
+        orderBy: { timestamp: 'desc' },
+        take: limit,
+      });
+
+      if (dbCandles.length >= 10) {
+        const candles: CandleDto[] = dbCandles.reverse().map((c) => ({
+          id: c.id,
+          symbol: c.symbol,
+          timeframe: c.timeframe as '1H' | '15M',
+          open: c.open,
+          high: c.high,
+          low: c.low,
+          close: c.close,
+          volume: c.volume,
+          timestamp: c.timestamp.toISOString(),
+        }));
+        
+        // Seed the candle engine with DB data
+        if (timeframe === '1H') {
+          candleEngine.setInitial1HCandles(symbol, candles);
+        }
+        return candles;
+      }
+    } catch (err) {
+      console.warn('[CandleStore] DB read error:', err);
+    }
+
+    // 3. Fetch from Delta Exchange API
     const symbolMap: Record<string, string> = {
       'BTCUSD.P': 'BTCUSD',
       'ETHUSD.P': 'ETHUSD',
@@ -44,58 +78,51 @@ export class CandleStoreService {
 
     try {
       const url = `https://api.india.delta.exchange/v2/chart/history?resolution=${resolution}&symbol=${deltaSymbol}&from=${from}&to=${to}`;
-      const res = await fetch(url).catch(() => fetch(`https://api.delta.exchange/v2/chart/history?resolution=${resolution}&symbol=${deltaSymbol}&from=${from}&to=${to}`));
+      const res = await fetch(url).catch(() => 
+        fetch(`https://api.delta.exchange/v2/chart/history?resolution=${resolution}&symbol=${deltaSymbol}&from=${from}&to=${to}`)
+      );
       const data: any = await res.json();
 
-      if (data && data.success && data.result && Array.isArray(data.result.c)) {
-        const c = data.result.c;
-        const o = data.result.o;
-        const h = data.result.h;
-        const l = data.result.l;
-        const v = data.result.v;
-        const t = data.result.t;
-
+      if (data?.success && data.result && Array.isArray(data.result.c)) {
         const candles: CandleDto[] = [];
-        for (let i = 0; i < c.length; i++) {
+        for (let i = 0; i < data.result.c.length; i++) {
           candles.push({
-            id: `CNDL-${symbol}-${t[i]}`,
+            id: `CNDL-${symbol}-${data.result.t[i]}`,
             symbol,
             timeframe,
-            open: o[i],
-            high: h[i],
-            low: l[i],
-            close: c[i],
-            volume: v[i],
-            timestamp: new Date(t[i] * 1000).toISOString(),
+            open: data.result.o[i],
+            high: data.result.h[i],
+            low: data.result.l[i],
+            close: data.result.c[i],
+            volume: data.result.v[i],
+            timestamp: new Date(data.result.t[i] * 1000).toISOString(),
           });
         }
+
         if (candles.length > 0) {
+          // Persist to DB
+          await this.persistCandles(candles);
+          
           if (timeframe === '1H') {
             candleEngine.setInitial1HCandles(symbol, candles);
           }
           return candles.slice(-limit);
         }
       }
-    } catch {
-      // Fallback to memory store if offline
+    } catch (err) {
+      console.warn('[CandleStore] API fetch error:', err);
     }
 
-    const filtered = historicalCandlesStore.filter((c) => c.symbol === symbol && c.timeframe === timeframe);
-    return filtered.slice(-limit);
+    return [];
   }
 
+  /**
+   * Ingest a single candle and persist to DB.
+   */
   public static async ingestCandle(input: IngestCandleInput): Promise<CandleDto> {
     const validation = MarketDataValidator.validateCandle(input);
     if (!validation.valid) {
       throw new Error(validation.reason || 'Invalid candle data.');
-    }
-
-    // Duplicate timestamp check
-    const existing = historicalCandlesStore.find(
-      (c) => c.symbol === input.symbol && c.timestamp === input.timestamp
-    );
-    if (existing) {
-      throw new Error(`DUPLICATE_CANDLE: Candle at timestamp ${input.timestamp} already exists.`);
     }
 
     const candle: CandleDto = {
@@ -110,10 +137,54 @@ export class CandleStoreService {
       timestamp: input.timestamp,
     };
 
-    historicalCandlesStore.push(candle);
+    // Persist to DB
+    await this.persistCandles([candle]);
 
     await MarketEventGenerator.emitEvent(input.symbol, MarketEventType.NEW_CANDLE, candle);
 
     return candle;
+  }
+
+  /**
+   * Persist candles to SQLite database.
+   */
+  private static async persistCandles(candles: CandleDto[]): Promise<void> {
+    if (candles.length === 0) return;
+
+    try {
+      const operations = candles.map((c) => 
+        prisma.marketCandle.upsert({
+          where: {
+            symbol_timeframe_timestamp: {
+              symbol: c.symbol,
+              timeframe: c.timeframe,
+              timestamp: new Date(c.timestamp),
+            },
+          },
+          update: {
+            open: c.open,
+            high: c.high,
+            low: c.low,
+            close: c.close,
+            volume: c.volume,
+          },
+          create: {
+            id: c.id,
+            symbol: c.symbol,
+            timeframe: c.timeframe,
+            open: c.open,
+            high: c.high,
+            low: c.low,
+            close: c.close,
+            volume: c.volume,
+            timestamp: new Date(c.timestamp),
+          },
+        })
+      );
+
+      await prisma.$transaction(operations);
+    } catch (err) {
+      console.warn('[CandleStore] DB persist error:', err);
+    }
   }
 }

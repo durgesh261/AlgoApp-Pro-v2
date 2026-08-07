@@ -242,7 +242,7 @@ export class LiveNewsService {
     // Persist to Prisma
     for (const news of newsList) {
       try {
-        await prisma.newsCache.upsert({
+        await prisma.newsEvent.upsert({
           where: { articleId: news.id },
           update: {},
           create: {
@@ -261,12 +261,12 @@ export class LiveNewsService {
     }
 
     // Load from DB
-    const dbNews = await prisma.newsCache.findMany({
+    const dbNews = await prisma.newsEvent.findMany({
       orderBy: { publishedAt: 'desc' },
       take: 100
     });
 
-    this.cachedNews = dbNews.map(n => JSON.parse(n.metadataJson || '{}') as LiveNewsItemDto);
+    this.cachedNews = dbNews.map((n: any) => JSON.parse(n.metadataJson || '{}') as LiveNewsItemDto);
     this.lastFetched = Date.now();
   }
 }

@@ -9,7 +9,7 @@ generator client {
 
 model User {
   id              String   @id @default(uuid())
-  displayName     String   @default("Algo Trader") @map("display_name")
+  displayName     String   @default("QuantEdge Trader") @map("display_name")
   themePreference String   @default("dark") @map("theme_preference")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
@@ -20,7 +20,7 @@ model User {
 model SystemSettings {
   id                    String   @id @default("default-settings")
   defaultCurrency       String   @default("USD") @map("default_currency")
-  timezone              String   @default("UTC")
+  timezone              String   @default("Asia/Kolkata")
   maxStaleSignalSeconds Int      @default(60) @map("max_stale_signal_seconds")
   isKillSwitchActive    Boolean  @default(false) @map("is_kill_switch_active")
   deltaApiKey           String?  @map("delta_api_key")
@@ -32,138 +32,112 @@ model SystemSettings {
   @@map("system_settings")
 }
 
-model PaperWallet {
-  id              String   @id @default("default-paper-wallet")
-  virtualBalance  Float    @default(10.0) @map("virtual_balance")
-  availableMargin Float    @default(10.0) @map("available_margin")
-  usedMargin      Float    @default(0.0) @map("used_margin")
-  realizedPnL     Float    @default(0.0) @map("realized_pnl")
-  unrealizedPnL   Float    @default(0.0) @map("unrealized_pnl")
-  equity          Float    @default(10.0)
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+model MarketCandle {
+  id        String   @id @default(uuid())
+  symbol    String
+  timeframe String   @default("1H")
+  open      Float
+  high      Float
+  low       Float
+  close     Float
+  volume    Float
+  timestamp DateTime
 
-  @@map("paper_wallets")
+  @@unique([symbol, timeframe, timestamp])
+  @@index([symbol, timestamp])
+  @@map("market_candles")
 }
 
-model PaperOrder {
-  id              String   @id @default(uuid())
-  symbol          String
-  side            String
-  orderType       String   @map("order_type")
-  price           Float?
-  stopPrice       Float?   @map("stop_price")
-  quantity        Float
-  filledQuantity  Float    @default(0.0) @map("filled_quantity")
-  status          String   @default("PENDING")
-  stopLoss        Float?   @map("stop_loss")
-  takeProfit      Float?   @map("take_profit")
-  bracketParentId String?  @map("bracket_parent_id")
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
-
-  @@index([symbol, status])
-  @@map("paper_orders")
-}
-
-model PaperPosition {
-  id              String   @id @default(uuid())
-  symbol          String
-  side            String
-  entryPrice      Float    @map("entry_price")
-  markPrice       Float    @map("mark_price")
-  quantity        Float
-  notionalValue   Float    @map("notional_value")
-  unrealizedPnL   Float    @default(0.0) @map("unrealized_pnl")
-  realizedPnL     Float    @default(0.0) @map("realized_pnl")
-  leverage        Float    @default(10.0)
-  marginAllocated Float    @map("margin_allocated")
-  stopLoss        Float?   @map("stop_loss")
-  takeProfit      Float?   @map("take_profit")
-  openedAt        DateTime @default(now()) @map("opened_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
-
-  @@index([symbol])
-  @@map("paper_positions")
-}
-
-model PaperRiskConfig {
-  id                     String   @id @default("default-paper-risk")
-  maxDailyLoss           Float    @default(1000.0) @map("max_daily_loss")
-  maxDrawdownPercent     Float    @default(5.0) @map("max_drawdown_percent")
-  maxOpenPositions       Int      @default(10) @map("max_open_positions")
-  maxRiskPerTradePercent Float    @default(2.0) @map("max_risk_per_trade_percent")
-  isEmergencyStopActive  Boolean  @default(false) @map("is_emergency_stop_active")
-  createdAt              DateTime @default(now()) @map("created_at")
-  updatedAt              DateTime @updatedAt @map("updated_at")
-
-  @@map("paper_risk_configs")
-}
-
-model PaperTradeJournal {
+model MarketSnapshot {
   id           String   @id @default(uuid())
-  eventType    String   @map("event_type")
-  symbol       String?
-  action       String
-  details      String
-  metadataJson String?  @map("metadata_json")
+  symbol       String   @unique
+  currentPrice Float    @map("current_price")
+  spread       Float?
+  session      String?
+  trend        String?
+  volatility   String?
   timestamp    DateTime @default(now())
 
-  @@index([symbol, eventType])
-  @@map("paper_trade_journals")
+  @@map("market_snapshots")
 }
 
-model SupplyZone {
+model MarketEvent {
+  id          String   @id @default(uuid())
+  symbol      String
+  eventType   String   @map("event_type")
+  payloadJson String   @map("payload_json")
+  timestamp   DateTime @default(now())
+
+  @@index([symbol, timestamp])
+  @@map("market_events")
+}
+
+model OrderBlock {
   id         String   @id @default(uuid())
   symbol     String
   timeframe  String   @default("1H")
+  type       String   
   upperPrice Float    @map("upper_price")
   lowerPrice Float    @map("lower_price")
-  source     String   @default("PIT_LITE")
-  strength   Float    @default(80.0)
+  source     String   @default("NATIVE_ENGINE") 
+  strength   Float
   width      Float
+  widthPercent Float  @map("width_percent") 
   freshness  Float    @default(100.0)
   touchCount Int      @default(0) @map("touch_count")
-  status     String   @default("FRESH")
+  status     String   @default("FRESH") 
+  isTraded   Boolean  @default(false) @map("is_traded") 
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
-  @@index([symbol, status])
-  @@map("supply_zones")
+  @@index([symbol, status, isTraded])
+  @@index([symbol, timeframe, createdAt])
+  @@map("order_blocks")
 }
 
-model DemandZone {
+model StructureHistoryRecord {
+  id          String   @id @default(uuid())
+  symbol      String
+  timeframe   String   @default("1H")
+  eventType   String   @map("event_type") 
+  direction   String   
+  brokenLevel Float    @map("broken_level")
+  isInternal  Boolean  @default(false) @map("is_internal")
+  candleTime  DateTime @map("candle_time")
+  detectedAt  DateTime @default(now()) @map("detected_at")
+
+  @@index([symbol, timeframe, candleTime])
+  @@map("structure_history_records")
+}
+
+model LiquiditySweepRecord {
   id         String   @id @default(uuid())
   symbol     String
   timeframe  String   @default("1H")
-  upperPrice Float    @map("upper_price")
-  lowerPrice Float    @map("lower_price")
-  source     String   @default("PIT_LITE")
-  strength   Float    @default(80.0)
-  width      Float
-  freshness  Float    @default(100.0)
-  touchCount Int      @default(0) @map("touch_count")
-  status     String   @default("FRESH")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  sweepType  String   @map("sweep_type") 
+  level      Float
+  candleTime DateTime @map("candle_time")
+  detectedAt DateTime @default(now()) @map("detected_at")
 
-  @@index([symbol, status])
-  @@map("demand_zones")
+  @@index([symbol, timeframe, candleTime])
+  @@map("liquidity_sweep_records")
 }
 
-model StrategySignalLog {
+model StrategySignalRecord {
   id              String   @id @default(uuid())
   symbol          String
   timeframe       String   @default("1H")
-  outcome         String
+  outcome         String   
   price           Float
+  stopLossPrice   Float?   @map("stop_loss_price")
+  takeProfitPrice Float?   @map("take_profit_price")
   activeZoneId    String?  @map("active_zone_id")
   rationale       String
-  confidenceScore Float    @default(90.0) @map("confidence_score")
-  timestamp       DateTime @default(now())
+  confidenceScore Float    @map("confidence_score")
+  createdAt       DateTime @default(now()) @map("created_at")
 
-  @@index([symbol, timestamp])
-  @@map("strategy_signal_logs")
+  @@index([symbol, timeframe, createdAt])
+  @@map("strategy_signal_records")
 }
 
 model DecisionLog {
@@ -171,13 +145,20 @@ model DecisionLog {
   signalId          String   @map("signal_id")
   symbol            String
   timeframe         String   @default("1H")
-  decisionState     String   @map("decision_state")
+  decisionState     String   @map("decision_state") 
+  outcome           String   
+  entryPrice        Float    @map("entry_price")
+  stopLossPrice     Float    @map("stop_loss_price")
+  takeProfitPrice   Float    @map("take_profit_price")
+  positionSize      Float    @map("position_size")
+  leverage          Float
+  riskPercent       Float    @map("risk_percent")
   confidenceScore   Float    @map("confidence_score")
   reasonCodesJson   String   @map("reason_codes_json")
   inputSnapshotHash String   @map("input_snapshot_hash")
   timestamp         DateTime @default(now())
 
-  @@index([symbol, decisionState])
+  @@index([symbol, decisionState, timestamp])
   @@map("decision_logs")
 }
 
@@ -220,25 +201,235 @@ model DecisionReason {
   @@map("decision_reasons")
 }
 
-model ReplayMetadata {
+model ExchangeBalance {
   id              String   @id @default(uuid())
-  explanationId   String   @unique @map("explanation_id")
-  snapshotHash    String   @map("snapshot_hash")
-  confidenceScore Float    @map("confidence_score")
-  metadataJson    String   @map("metadata_json")
-  createdAt       DateTime @default(now()) @map("created_at")
+  assetSymbol     String   @map("asset_symbol")
+  balance         Float    @default(0)
+  availableBalance Float   @default(0) @map("available_balance")
+  marginAmount    Float    @default(0) @map("margin_amount")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
-  @@map("replay_metadata")
+  @@unique([assetSymbol])
+  @@map("exchange_balances")
+}
+
+model ExchangePosition {
+  id            String   @id @default(uuid())
+  productSymbol String   @map("product_symbol")
+  side          String
+  size          Float
+  entryPrice    Float    @map("entry_price")
+  markPrice     Float    @map("mark_price")
+  liquidationPrice Float? @map("liquidation_price")
+  marginAmount  Float    @map("margin_amount")
+  leverage      Float
+  unrealizedPnl Float    @default(0) @map("unrealized_pnl")
+  realizedPnl   Float    @default(0) @map("realized_pnl")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@unique([productSymbol])
+  @@map("exchange_positions")
+}
+
+model ExchangeOrder {
+  id              String   @id @default(uuid())
+  orderId         String   @unique @map("order_id")
+  clientOrderId   String?  @map("client_order_id")
+  productSymbol   String   @map("product_symbol")
+  side            String
+  orderType       String   @map("order_type")
+  size            Float
+  price           Float?
+  stopPrice       Float?   @map("stop_price")
+  filledSize      Float    @default(0) @map("filled_size")
+  state           String   
+  stopLoss        Float?   @map("stop_loss")
+  takeProfit      Float?   @map("take_profit")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([productSymbol, state])
+  @@map("exchange_orders")
+}
+
+model TradeLedger {
+  id                  String   @id @default(uuid())
+  tradeId             String   @unique @map("trade_id")
+  exchangeOrderId     String   @map("exchange_order_id")
+  exchangeTradeId     String?  @map("exchange_trade_id")
+  symbol              String
+  timeframe           String   @default("1H")
+  strategyProfileId   String?  @map("strategy_profile_id")
+  strategyVersion     String   @default("1.0.0") @map("strategy_version")
+  indicatorVersion    String   @default("1.0.0") @map("indicator_version")
+  ruleVersion         String   @default("1.0.0") @map("rule_version")
+  decisionVersion     String   @default("1.0.0") @map("decision_version")
+  executionMode       String   @map("execution_mode") 
+  side                String
+  entryPrice          Float    @map("entry_price")
+  exitPrice           Float?   @map("exit_price")
+  quantity            Float
+  marginUsed          Float    @map("margin_used")
+  leverage            Float
+  riskPercent         Float    @map("risk_percent")
+  rewardPercent       Float?   @map("reward_percent")
+  stopLoss            Float    @map("stop_loss")
+  takeProfit          Float    @map("take_profit")
+  grossPnL            Float?   @map("gross_pnl")
+  tradingFee          Float?   @map("trading_fee")
+  fundingFee          Float?   @map("funding_fee")
+  tax                 Float?
+  netPnL              Float?   @map("net_pnl")
+  durationSeconds     Int?     @map("duration_seconds")
+  executionLatencyMs  Float?   @map("execution_latency_ms")
+  decisionConfidence  Float    @map("decision_confidence")
+  decisionExplanation String   @map("decision_explanation")
+  resultStatus        String   @map("result_status") 
+  syncStatus          String   @map("sync_status") 
+  executedAt          DateTime @default(now()) @map("executed_at")
+  closedAt            DateTime? @map("closed_at")
+
+  @@map("trade_ledger")
+}
+
+model ScannerState {
+  id            String   @id @default("default-scanner")
+  state         String   @default("IDLE") 
+  activeSymbol  String?  @map("active_symbol")
+  lastScanAt    DateTime? @map("last_scan_at")
+  lastTradeAt   DateTime? @map("last_trade_at")
+  tradesToday   Int      @default(0) @map("trades_today")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("scanner_states")
+}
+
+model NewsEvent {
+  id             String   @id @default(uuid())
+  articleId      String   @unique @map("article_id")
+  title          String
+  content        String?
+  source         String
+  category       String   @default("GENERAL") 
+  impactLevel    String   @default("MEDIUM") @map("impact_level") 
+  publishedAt    DateTime @map("published_at")
+  sentimentScore Float?   @map("sentiment_score")
+  sentimentLabel String?  @map("sentiment_label")
+  isBlocking     Boolean  @default(false) @map("is_blocking") 
+  metadataJson   String?  @map("metadata_json")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([publishedAt, category, impactLevel])
+  @@map("news_events")
+}
+
+model PortfolioSnapshot {
+  id              String   @id @default(uuid())
+  timestamp       DateTime @default(now())
+  balance         Float    @default(0)
+  equity          Float    @default(0)
+  availableMargin Float    @map("available_margin")
+  usedMargin      Float    @map("used_margin")
+  unrealizedPnL   Float    @default(0) @map("unrealized_pnl")
+  realizedPnL     Float    @default(0) @map("realized_pnl")
+  totalFees       Float    @default(0) @map("total_fees")
+  totalFunding    Float    @default(0) @map("total_funding")
+  openPositions   Int      @default(0) @map("open_positions")
+  snapshotJson    String?  @map("snapshot_json")
+  source          String   @default("DELTA_EXCHANGE") @map("source") 
+
+  @@index([timestamp])
+  @@map("portfolio_snapshots")
+}
+
+model PaperWallet {
+  id              String   @id @default("default-paper-wallet")
+  virtualBalance  Float    @map("virtual_balance") 
+  availableMargin Float    @map("available_margin")
+  usedMargin      Float    @default(0.0) @map("used_margin")
+  realizedPnL     Float    @default(0.0) @map("realized_pnl")
+  unrealizedPnL   Float    @default(0.0) @map("unrealized_pnl")
+  equity          Float
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("paper_wallets")
+}
+
+model PaperRiskConfig {
+  id                     String   @id @default("default-paper-risk")
+  maxDailyLoss           Float    @map("max_daily_loss") 
+  maxDrawdownPercent     Float    @map("max_drawdown_percent") 
+  maxOpenPositions       Int      @default(1) @map("max_open_positions") 
+  maxRiskPerTradePercent Float    @map("max_risk_per_trade_percent") 
+  isEmergencyStopActive  Boolean  @default(false) @map("is_emergency_stop_active")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  @@map("paper_risk_configs")
+}
+
+model PaperOrder {
+  id              String   @id @default(uuid())
+  symbol          String
+  side            String
+  orderType       String   @map("order_type")
+  price           Float?
+  stopPrice       Float?   @map("stop_price")
+  quantity        Float
+  filledQuantity  Float    @default(0.0) @map("filled_quantity")
+  status          String   @default("PENDING")
+  stopLoss        Float?   @map("stop_loss")
+  takeProfit      Float?   @map("take_profit")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([symbol, status])
+  @@map("paper_orders")
+}
+
+model PaperPosition {
+  id              String   @id @default(uuid())
+  symbol          String
+  side            String
+  entryPrice      Float    @map("entry_price")
+  markPrice       Float    @map("mark_price")
+  quantity        Float
+  notionalValue   Float    @map("notional_value")
+  unrealizedPnL   Float    @default(0.0) @map("unrealized_pnl")
+  realizedPnL     Float    @default(0.0) @map("realized_pnl")
+  leverage        Float
+  marginAllocated Float    @map("margin_allocated")
+  stopLoss        Float?   @map("stop_loss")
+  takeProfit      Float?   @map("take_profit")
+  openedAt        DateTime @default(now()) @map("opened_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([symbol])
+  @@map("paper_positions")
+}
+
+model PaperTradeJournal {
+  id           String   @id @default(uuid())
+  eventType    String   @map("event_type")
+  symbol       String?
+  action       String
+  details      String
+  metadataJson String?  @map("metadata_json")
+  timestamp    DateTime @default(now())
+
+  @@index([symbol, eventType])
+  @@map("paper_trade_journals")
 }
 
 model TradingRuleConfig {
   id                 String   @id @default("default-trading-rules")
-  ruleVersion        String   @default("v2.0.0") @map("rule_version")
-  configVersion      String   @default("cfg-2026.08.02") @map("config_version")
-  supportedPairsJson String   @default("[\"BTCUSD.P\",\"ETHUSD.P\",\"SOLUSD.P\",\"XRPUSD.P\"]") @map("supported_pairs_json")
-  supportedTimeframe String   @default("1H") @map("supported_timeframe")
-  bonusesJson        String   @map("bonuses_json")
-  riskRulesJson      String   @map("risk_rules_json")
+  ruleVersion        String   @map("rule_version")
+  configVersion      String   @map("config_version")
+  supportedPairsJson String   @map("supported_pairs_json")
+  supportedTimeframe String   @map("supported_timeframe")
+  bonusesJson        String?  @map("bonuses_json")
+  riskRulesJson      String?  @map("risk_rules_json")
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
@@ -250,51 +441,11 @@ model TradingRuleAudit {
   ruleVersion   String   @map("rule_version")
   configVersion String   @map("config_version")
   action        String
-  changedBy     String   @default("SYSTEM") @map("changed_by")
+  changedBy     String   @map("changed_by")
   payloadJson   String   @map("payload_json")
   timestamp     DateTime @default(now())
 
   @@map("trading_rule_audits")
-}
-
-model MarketCandle {
-  id        String   @id @default(uuid())
-  symbol    String
-  timeframe String   @default("1H")
-  open      Float
-  high      Float
-  low       Float
-  close     Float
-  volume    Float
-  timestamp DateTime
-
-  @@unique([symbol, timeframe, timestamp])
-  @@index([symbol, timestamp])
-  @@map("market_candles")
-}
-
-model MarketSnapshot {
-  id           String   @id @default(uuid())
-  symbol       String   @unique
-  currentPrice Float    @map("current_price")
-  spread       Float
-  session      String   @default("NEW_YORK")
-  trend        String   @default("BULLISH")
-  volatility   String   @default("MEDIUM")
-  timestamp    DateTime @default(now())
-
-  @@map("market_snapshots")
-}
-
-model MarketEvent {
-  id          String   @id @default(uuid())
-  symbol      String
-  eventType   String   @map("event_type")
-  payloadJson String   @map("payload_json")
-  timestamp   DateTime @default(now())
-
-  @@index([symbol, timestamp])
-  @@map("market_events")
 }
 
 model ReplaySession {
@@ -302,7 +453,7 @@ model ReplaySession {
   symbol             String
   timeframe          String   @default("1H")
   currentCandleIndex Int      @default(0) @map("current_candle_index")
-  totalCandles       Int      @default(100) @map("total_candles")
+  totalCandles       Int      @map("total_candles")
   status             String   @default("IDLE")
   speedMultiplier    Float    @default(1.0) @map("speed_multiplier")
   createdAt          DateTime @default(now()) @map("created_at")
@@ -326,8 +477,8 @@ model BacktestSession {
   id            String   @id @default(uuid())
   symbol        String
   timeframe     String   @default("1H")
-  ruleVersion   String   @default("v2.0.0") @map("rule_version")
-  configVersion String   @default("cfg-2026.08.02") @map("config_version")
+  ruleVersion   String   @map("rule_version")
+  configVersion String   @map("config_version")
   startDate     DateTime @map("start_date")
   endDate       DateTime @map("end_date")
   status        String   @default("COMPLETED")
@@ -375,13 +526,13 @@ model BacktestMetric {
 
 model ExecutionSession {
   id            String   @id @default(uuid())
-  mode          String   @default("PAPER")
+  mode          String   @map("execution_mode") 
   pair          String
   timeframe     String   @default("1H")
   decisionId    String   @map("decision_id")
-  ruleVersion   String   @default("v2.0.0") @map("rule_version")
-  configVersion String   @default("cfg-2026.08.02") @map("config_version")
-  adapter       String   @default("PAPER_ADAPTER")
+  ruleVersion   String   @map("rule_version")
+  configVersion String   @map("config_version")
+  adapter       String   @map("adapter") 
   createdAt     DateTime @default(now()) @map("created_at")
 
   @@index([pair, mode])
@@ -395,10 +546,10 @@ model ExecutionRequest {
   decisionId     String   @map("decision_id")
   symbol         String
   side           String
-  mode           String   @default("PAPER")
-  ruleVersion    String   @default("v2.0.0") @map("rule_version")
-  configVersion  String   @default("cfg-2026.08.02") @map("config_version")
-  orderType      String   @default("MARKET") @map("order_type")
+  mode           String   @map("execution_mode") 
+  ruleVersion    String   @map("rule_version")
+  configVersion  String   @map("config_version")
+  orderType      String   @map("order_type")
   quantity       Float
   price          Float?
   stopLoss       Float?   @map("stop_loss")
@@ -442,45 +593,6 @@ model ExecutionJournal {
   @@map("execution_journals")
 }
 
-model WebhookEvent {
-  id          String   @id @default(uuid())
-  symbol      String
-  timeframe   String   @default("1H")
-  payloadJson String   @map("payload_json")
-  signature   String?
-  status      String   @default("PROCESSED")
-  timestamp   DateTime @default(now())
-
-  @@index([symbol, timestamp])
-  @@map("webhook_events")
-}
-
-model WebhookError {
-  id         String   @id @default(uuid())
-  symbol     String?
-  errorType  String   @map("error_type")
-  message    String
-  rawPayload String   @map("raw_payload")
-  timestamp  DateTime @default(now())
-
-  @@index([timestamp])
-  @@map("webhook_errors")
-}
-
-model ConnectionHealth {
-  id               String   @id @default("tradingview-health")
-  status           String   @default("CONNECTED")
-  lastWebhookAt    DateTime @default(now()) @map("last_webhook_at")
-  totalWebhooks    Int      @default(0) @map("total_webhooks")
-  duplicateCount   Int      @default(0) @map("duplicate_count")
-  droppedCount     Int      @default(0) @map("dropped_count")
-  malformedCount   Int      @default(0) @map("malformed_count")
-  averageLatencyMs Float    @default(0.0) @map("average_latency_ms")
-  updatedAt        DateTime @updatedAt @map("updated_at")
-
-  @@map("connection_health")
-}
-
 model PipelineTrace {
   id              String   @id @default(uuid())
   traceId         String   @unique @map("trace_id")
@@ -519,56 +631,17 @@ model StrategyProfile {
   @@map("strategy_profiles")
 }
 
-model TradeLedger {
-  id                  String   @id @default(uuid())
-  tradeId             String   @unique @map("trade_id")
-  exchangeOrderId     String   @map("exchange_order_id")
-  exchangeTradeId     String?  @map("exchange_trade_id")
-  symbol              String
-  timeframe           String   @default("1H")
-  strategyProfileId   String   @map("strategy_profile_id")
-  strategyVersion     String   @default("1.0.0") @map("strategy_version")
-  indicatorVersion    String   @default("1.0.0") @map("indicator_version")
-  ruleVersion         String   @default("1.0.0") @map("rule_version")
-  decisionVersion     String   @default("1.0.0") @map("decision_version")
-  executionMode       String   @default("PAPER") @map("execution_mode")
-  side                String
-  entryPrice          Float    @map("entry_price")
-  exitPrice           Float    @map("exit_price")
-  quantity            Float
-  marginUsed          Float    @map("margin_used")
-  leverage            Float
-  riskPercent         Float    @map("risk_percent")
-  rewardPercent       Float    @map("reward_percent")
-  stopLoss            Float    @map("stop_loss")
-  takeProfit          Float    @map("take_profit")
-  grossPnL            Float    @map("gross_pnl")
-  tradingFee          Float    @map("trading_fee")
-  fundingFee          Float    @map("funding_fee")
-  tax                 Float
-  netPnL              Float    @map("net_pnl")
-  durationSeconds     Int      @map("duration_seconds")
-  executionLatencyMs  Float    @map("execution_latency_ms")
-  decisionConfidence  Float    @map("decision_confidence")
-  decisionExplanation String   @map("decision_explanation")
-  resultStatus        String   @map("result_status")
-  syncStatus          String   @default("SIMULATED") @map("sync_status")
-  executedAt          DateTime @default(now()) @map("executed_at")
-  closedAt            DateTime @default(now()) @map("closed_at")
-
-  @@map("trade_ledger")
-}
 
 model ChallengeSession {
   id                        String   @id @default("default-20day-challenge")
   startDate                 DateTime @default(now()) @map("start_date")
   currentDay                Int      @default(1) @map("current_day")
   remainingDays             Int      @default(20) @map("remaining_days")
-  initialBalance            Float    @default(10.0) @map("initial_balance")
-  currentBalance            Float    @default(10.0) @map("current_balance")
+  initialBalance            Float     @map("initial_balance")
+  currentBalance            Float     @map("current_balance")
   grossProfit               Float    @default(0.0) @map("gross_profit")
   netProfit                 Float    @default(0.0) @map("net_profit")
-  dailyTargetPercent        Float    @default(0.5) @map("daily_target_percent")
+  dailyTargetPercent        Float     @map("daily_target_percent")
   totalTargetPercent        Float    @default(10.0) @map("total_target_percent")
   maxDailyDrawdownPercent   Float    @default(5.0) @map("max_daily_drawdown_percent")
   maxOverallDrawdownPercent Float    @default(10.0) @map("max_overall_drawdown_percent")
@@ -586,10 +659,10 @@ model ChallengeSession {
 
 model WalletState {
   id                 String   @id @default("default-wallet-state")
-  currentBalance     Float    @default(10.0) @map("current_balance")
-  availableBalance   Float    @default(10.0) @map("available_balance")
+  currentBalance     Float     @map("current_balance")
+  availableBalance   Float     @map("available_balance")
   usedMargin         Float    @default(0.0) @map("used_margin")
-  equity             Float    @default(10.0)
+  equity             Float    
   realizedPnL        Float    @default(0.0) @map("realized_pnl")
   unrealizedPnL      Float    @default(0.0) @map("unrealized_pnl")
   grossPnL           Float    @default(0.0) @map("gross_pnl")
@@ -597,7 +670,7 @@ model WalletState {
   dailyProfit        Float    @default(0.0) @map("daily_profit")
   weeklyProfit       Float    @default(0.0) @map("weekly_profit")
   monthlyProfit      Float    @default(0.0) @map("monthly_profit")
-  peakEquity         Float    @default(10.0) @map("peak_equity")
+  peakEquity         Float     @map("peak_equity")
   maxDrawdownPercent Float    @default(0.0) @map("max_drawdown_percent")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
@@ -788,20 +861,6 @@ model ZoneHistoryRecord {
   @@map("zone_history_records")
 }
 
-model StructureHistoryRecord {
-  id          String   @id @default(uuid())
-  symbol      String
-  timeframe   String   @default("1H")
-  eventType   String   @map("event_type") // BOS | CHOCH
-  direction   String // BULLISH | BEARISH
-  brokenLevel Float    @map("broken_level")
-  isInternal  Boolean  @default(false) @map("is_internal")
-  candleTime  DateTime @map("candle_time")
-  detectedAt  DateTime @default(now()) @map("detected_at")
-
-  @@index([symbol, timeframe, candleTime])
-  @@map("structure_history_records")
-}
 
 model IndicatorValidationReportRecord {
   id              String   @id @default(uuid())
@@ -837,22 +896,6 @@ model StrategyDecisionRecord {
   @@map("strategy_decision_records")
 }
 
-model StrategySignalRecord {
-  id              String   @id @default(uuid())
-  symbol          String
-  timeframe       String   @default("1H")
-  outcome         String
-  price           Float
-  stopLossPrice   Float?   @map("stop_loss_price")
-  takeProfitPrice Float?   @map("take_profit_price")
-  activeZoneId    String?  @map("active_zone_id")
-  rationale       String
-  confidenceScore Float    @map("confidence_score")
-  createdAt       DateTime @default(now()) @map("created_at")
-
-  @@index([symbol, timeframe])
-  @@map("strategy_signal_records")
-}
 
 model StrategyExecutionAuditRecord {
   id               String   @id @default(uuid())
@@ -871,21 +914,6 @@ model StrategyExecutionAuditRecord {
   @@map("strategy_execution_audit_records")
 }
 
-model NewsCache {
-  id             String   @id @default(uuid())
-  articleId      String   @unique @map("article_id")
-  title          String
-  content        String?
-  source         String
-  publishedAt    DateTime @map("published_at")
-  sentimentScore Float?   @map("sentiment_score")
-  sentimentLabel String?  @map("sentiment_label")
-  metadataJson   String?  @map("metadata_json")
-  createdAt      DateTime @default(now()) @map("created_at")
-
-  @@index([publishedAt, source])
-  @@map("news_caches")
-}
 
 model SystemLog {
   id        String   @id @default(uuid())
@@ -921,17 +949,4 @@ model ApplicationVersion {
   isCurrent     Boolean  @default(false) @map("is_current")
 
   @@map("application_versions")
-}
-
-model PortfolioSnapshot {
-  id              String   @id @default(uuid())
-  timestamp       DateTime @default(now())
-  totalEquity     Float    @map("total_equity")
-  availableMargin Float    @map("available_margin")
-  usedMargin      Float    @map("used_margin")
-  openPositions   Int      @map("open_positions")
-  snapshotJson    String?  @map("snapshot_json")
-
-  @@index([timestamp])
-  @@map("portfolio_snapshots")
 }

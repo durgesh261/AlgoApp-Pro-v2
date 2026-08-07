@@ -1,24 +1,6 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: algoapp-postgres
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgrespassword2026
-      POSTGRES_DB: algoapp_pro_v2
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   backend:
     build:
       context: .
@@ -28,15 +10,14 @@ services:
     environment:
       NODE_ENV: production
       PORT: 4000
-      DATABASE_URL: postgresql://postgres:postgrespassword2026@postgres:5432/algoapp_pro_v2
+      DATABASE_URL: "file:./prisma/dev.db"
       TRADINGVIEW_WEBHOOK_SECRET: tv_sec_prod_882910
       DELTA_API_KEY: ${DELTA_API_KEY:-""}
       DELTA_API_SECRET: ${DELTA_API_SECRET:-""}
     ports:
       - "4000:4000"
-    depends_on:
-      postgres:
-        condition: service_healthy
+    volumes:
+      - sqlite_data:/app/backend/prisma
 
 volumes:
-  pgdata:
+  sqlite_data:

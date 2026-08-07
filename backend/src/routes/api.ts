@@ -38,3 +38,17 @@ enterpriseApiRouter.get('/events/status', (_req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// Kill Switch Endpoints
+enterpriseApiRouter.post('/kill-switch/activate', async (req: Request, res: Response) => {
+  const { KillSwitchService } = await import('../modules/kill-switch/services/KillSwitchService.js');
+  const closePositions = req.body?.closePositions === true;
+  KillSwitchService.activate(closePositions);
+  return res.json({ success: true, message: 'Kill Switch Activated', state: KillSwitchService.getState() });
+});
+
+enterpriseApiRouter.post('/kill-switch/deactivate', async (_req: Request, res: Response) => {
+  const { KillSwitchService } = await import('../modules/kill-switch/services/KillSwitchService.js');
+  KillSwitchService.deactivate();
+  return res.json({ success: true, message: 'Kill Switch Deactivated', state: KillSwitchService.getState() });
+});

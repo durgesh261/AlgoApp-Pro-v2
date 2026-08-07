@@ -23,7 +23,7 @@ import { IndicatorValidationPage } from './features/validation/IndicatorValidati
 import { OperationsCenterPage } from './features/operations/OperationsCenterPage';
 import { ProductionDashboardPage } from './features/production/ProductionDashboardPage';
 import { SystemMonitorPage } from './features/system-monitor/SystemMonitorPage';
-import { TradingViewSetupPage } from './features/tradingview/TradingViewSetupPage';
+import { MarketDataStatusPage } from './features/tradingview/MarketDataStatusPage';
 import { TradeAccountingPage } from './features/accounting/TradeAccountingPage';
 import { TradeReviewPage } from './features/review/TradeReviewPage';
 import { ChallengePage } from './features/challenge/ChallengePage';
@@ -57,7 +57,7 @@ export const App: React.FC = () => {
           <Route path="/operations" element={<OperationsCenterPage />} />
           <Route path="/production-dashboard" element={<ProductionDashboardPage />} />
           <Route path="/system-monitor" element={<SystemMonitorPage />} />
-          <Route path="/tradingview" element={<TradingViewSetupPage />} />
+          <Route path="/tradingview" element={<MarketDataStatusPage />} />
           <Route path="/trade-accounting" element={<TradeAccountingPage />} />
           <Route path="/trade-review" element={<TradeReviewPage />} />
           <Route path="/challenge" element={<ChallengePage />} />

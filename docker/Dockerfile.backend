@@ -5,6 +5,7 @@ COPY shared ./shared
 COPY backend ./backend
 
 RUN npm install
+ENV DATABASE_URL="file:./dev.db"
 RUN npm run build --workspace=shared
 RUN npm run build --workspace=backend
 

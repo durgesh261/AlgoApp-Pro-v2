@@ -121,6 +121,35 @@ export class DecisionEngineService {
       reasonCodes.push(structResult.reasonCode);
     }
 
+    // ── News Filter Check (Strategy §21) ──
+    const { NewsFilterEngine } = await import('../../news/services/NewsFilterEngine.js');
+    await NewsFilterEngine.fetchLatestEvents(); // Refresh if stale
+    
+    if (NewsFilterEngine.isBlocking()) {
+      reasonCodes.push('NEWS_FILTER_BLOCKING' as any);
+      
+      const blockedDecision: DecisionDto = {
+        id: `DEC-${Date.now()}`,
+        symbol,
+        timeframe,
+        state: DecisionState.SKIP,
+        outcome,
+        entryPrice: currentPrice,
+        stopLossPrice: currentPrice,
+        takeProfitPrice: currentPrice,
+        positionSize: 0,
+        leverage: 0,
+        riskPercent: 0,
+        confidenceScore: 0,
+        reasonCodes,
+        inputSnapshotHash: '',
+        createdAt: new Date().toISOString(),
+      };
+      
+      decisionLogs.unshift(blockedDecision);
+      return blockedDecision;
+    }
+
     // 6. Liquidity Sweeps (FVGs disabled per strategy §7)
     const liqResult = LiquidityValidator.validate(
       outcome,

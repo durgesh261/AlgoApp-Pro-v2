@@ -82,8 +82,15 @@ export class ZoneDetectorService {
     }
 
     const merged = ZoneMergerService.detectAndMergeZones(detectedZones);
-    activeZonesStore.set(symbol, merged);
-    return merged;
+    
+    // ── Strategy §12: Filter out permanently used/consumed blocks ──
+    const activeZones = merged.filter(z => 
+      z.status !== ZoneStatus.CONSUMED && 
+      z.status !== ZoneStatus.BROKEN
+    );
+    
+    activeZonesStore.set(symbol, activeZones);
+    return activeZones;
   }
 
   public static async getZones(symbol?: string): Promise<ZoneDto[]> {

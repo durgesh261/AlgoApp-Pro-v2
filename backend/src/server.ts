@@ -3,6 +3,7 @@ import { config } from './config/index.js';
 import { logger } from './logger/index.js';
 import { JournalAutomationService } from './modules/journal/services/journalAutomation.service.js';
 import { marketScanner } from './modules/live-trading/services/MarketScannerService.js';
+import { WebSocketServer } from './websocket/WebSocketServer.js';
 
 const app = createApp();
 
@@ -47,8 +48,13 @@ const server = app.listen(config.port, () => {
   }, 'QuantEdge AI Backend Server Initialized');
 });
 
+// ── NEW: WebSocket Server for Frontend ─────────────────────────────
+const wsServer = new WebSocketServer(server);
+wsServer.initialize();
+
 function handleShutdown(signal: string): void {
   logger.info(`Received ${signal}. Initiating graceful shutdown...`);
+  wsServer.shutdown();
   deltaSyncService.stop();
   server.close(() => {
     logger.info('HTTP server closed successfully.');

@@ -15,6 +15,7 @@ RUN npm ci
 COPY . .
 
 # Build all workspace packages
+ENV DATABASE_URL="file:./dev.db"
 RUN npm run build
 
 # Production Runtime Image for Backend
