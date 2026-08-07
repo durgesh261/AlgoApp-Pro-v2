@@ -59,7 +59,7 @@ export const ExecutionModal: React.FC<ExecutionModalProps> = ({
   const notionalValue = size * numericPrice;
   const requiredMargin = notionalValue / leverage;
 
-  // 1.5% Max Risk Calculation
+  // 35% Max Risk Calculation
   const perUnitRisk = numericSL > 0 ? Math.abs(numericPrice - numericSL) : 0;
   const totalRiskUsd = perUnitRisk * size;
   const riskPercentOfEquity = totalEquity > 0 ? (totalRiskUsd / totalEquity) * 100 : 0;
@@ -325,13 +325,13 @@ export const ExecutionModal: React.FC<ExecutionModalProps> = ({
               <div className="col-span-2 flex items-center justify-between text-[10px] border-t border-slate-800 pt-2">
                 <span className="text-slate-400">Risk:Reward: <strong className="text-indigo-400">{riskRewardRatio}</strong></span>
                 <span className={isRiskExceeded ? 'text-rose-400 font-bold' : 'text-slate-300'}>
-                  Risk on Equity: <strong>{riskPercentOfEquity.toFixed(2)}%</strong> (Max: 1.5%)
+                  Risk on Equity: <strong>{riskPercentOfEquity.toFixed(2)}%</strong> (Max: 35%)
                 </span>
               </div>
               {isRiskExceeded && (
                 <div className="col-span-2 flex items-center space-x-1.5 text-[10px] text-rose-400 bg-rose-500/10 p-1.5 rounded border border-rose-500/30">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                  <span>Violates 1.5% max risk policy rule. Reduce size or tighten SL.</span>
+                  <span>Violates 35% max risk policy rule. Reduce size or tighten SL.</span>
                 </div>
               )}
             </div>

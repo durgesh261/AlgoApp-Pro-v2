@@ -161,7 +161,7 @@ export const Header: React.FC = () => {
 
           {/* Timeframe Segmented Selector */}
           <div className="flex items-center bg-[#0B0E14] border border-[#1E293B] p-0.5 rounded-lg text-xs">
-            {(['15M', '1H'] as TradingTimeframe[]).map((tf) => (
+            {(['1H'] as TradingTimeframe[]).map((tf) => (
               <button
                 key={tf}
                 onClick={() => {
@@ -215,17 +215,19 @@ export const Header: React.FC = () => {
 
       {/* Right Telemetry & Actions */}
       <div className="flex items-center space-x-2.5">
-        {/* Developer Mode Switch */}
-        <button
-          onClick={toggleDeveloperMode}
-          className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold border transition-colors ${
-            isDeveloperMode
-              ? 'bg-[#F59E0B]/20 text-[#F59E0B] border-[#F59E0B]/40'
-              : 'bg-[#1E293B] text-[#94A3B8] border-[#334155] hover:text-white'
-          }`}
-        >
-          <span>{isDeveloperMode ? 'DEV MODE ON' : 'DEV MODE'}</span>
-        </button>
+        {/* Developer Mode Switch — HIDDEN IN PRODUCTION */}
+        {import.meta.env.DEV && (
+          <button
+            onClick={toggleDeveloperMode}
+            className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold border transition-colors ${
+              isDeveloperMode
+                ? 'bg-[#F59E0B]/20 text-[#F59E0B] border-[#F59E0B]/40'
+                : 'bg-[#1E293B] text-[#94A3B8] border-[#334155] hover:text-white'
+            }`}
+          >
+            <span>{isDeveloperMode ? 'DEV MODE ON' : 'DEV MODE'}</span>
+          </button>
+        )}
 
         {/* Developer Mode Hard Reset DB Button */}
         {isDeveloperMode && (

@@ -55,7 +55,7 @@ export const DashboardPage: React.FC = () => {
       } else if (query.includes('news') || query.includes('macro')) {
         response = `Macro indicators and latest institutional news feeds are currently neutral to bullish. Capital flows are actively shifting towards large-cap assets like ${activeSymbol}.`;
       } else if (query.includes('risk') || query.includes('leverage')) {
-        response = `Based on your current portfolio margin and the active 1.5% Risk Sizing Rule, I strongly recommend keeping leverage below 10x for this setup to avoid liquidation cascades.`;
+        response = `Based on your current portfolio margin and the active 35% Max Risk Rule, I strongly recommend keeping leverage below 10x for this setup to avoid liquidation cascades.`;
       } else if (query.includes('support') || query.includes('resistance')) {
         response = `Local support for ${activeSymbol} is heavily defended around the -2% standard deviation VWAP band, with immediate resistance located at the previous daily high volume node.`;
       }
@@ -91,7 +91,7 @@ export const DashboardPage: React.FC = () => {
     { id: 4, label: 'Wallet Balance Synced with Exchange', passed: (wallet?.walletBalance ?? 0) > 0 },
     { id: 5, label: 'Strategy Profile Active (1H)', passed: true },
     { id: 6, label: 'Emergency Kill Switch Inactive', passed: true },
-    { id: 7, label: '1.5% Risk Sizing Rule Enforced', passed: true },
+    { id: 7, label: '35% Max Risk Rule Enforced', passed: true },
   ];
 
   const handlePreTradeSubmit = async () => {
@@ -210,16 +210,16 @@ export const DashboardPage: React.FC = () => {
             {/* Risk Sizing Calculator */}
             <div className="bg-slate-950 border border-slate-800 p-3 rounded-lg space-y-2 text-xs">
               <div className="text-[11px] font-bold text-white border-b border-slate-800 pb-1">
-                Risk Sizing (1.5% Max Risk Rule)
+                Risk Sizing (35% Max Risk Rule)
               </div>
               <div className="flex justify-between text-[11px]">
                 <span className="text-slate-400">Account Equity:</span>
                 <ValueDisplay value={wallet?.totalEquity} format="currency" size="sm" isLoading={isSummaryLoading} />
               </div>
               <div className="flex justify-between text-[11px]">
-                <span className="text-slate-400">Max Risk (1.5%):</span>
+                <span className="text-slate-400">Max Risk (35%):</span>
                 <ValueDisplay
-                  value={(wallet?.totalEquity || 0) * 0.015}
+                  value={(wallet?.totalEquity || 0) * 0.35}
                   format="currency"
                   decimals={4}
                   size="sm"
@@ -280,7 +280,7 @@ export const DashboardPage: React.FC = () => {
             className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg shadow-lg flex items-center justify-center space-x-2 transition-colors font-mono"
           >
             <Send className="w-4 h-4" />
-            <span>SUBMIT PRE-TRADE RISK CONFIRMATION</span>
+            <span>VIEW ACTIVE TRADE STATUS</span>
           </button>
         </div>
       </div>

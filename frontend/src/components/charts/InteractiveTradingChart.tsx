@@ -3,7 +3,7 @@ import { TradingViewChartWorkspace } from './TradingViewChartWorkspace';
 
 export const InteractiveTradingChart: React.FC<{
   initialSymbol?: string;
-  initialTimeframe?: '15M' | '1H';
+  initialTimeframe?: '1H'; // Strategy §8: ONLY 1H
   isReplayActive?: boolean;
   onSelectTrade?: (tradeId: string) => void;
 }> = (props) => {

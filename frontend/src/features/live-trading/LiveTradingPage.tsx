@@ -358,7 +358,7 @@ export const LiveTradingPage: React.FC = () => {
             <div className="pt-2 border-t border-[#1E293B] space-y-1.5">
               <div className="text-[10px] text-[#94A3B8] uppercase font-bold px-1">Active Timeframe</div>
               <div className="grid grid-cols-2 gap-2">
-                {(['15M', '1H'] as const).map((tf) => (
+                {(['1H'] as const).map((tf) => (
                   <button
                     key={tf}
                     onClick={() => setActiveTimeframe(tf)}
