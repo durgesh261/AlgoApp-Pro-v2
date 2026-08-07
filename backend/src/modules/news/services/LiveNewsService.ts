@@ -41,9 +41,12 @@ export class LiveNewsService {
   public static async refreshNews(): Promise<void> {
     const newsList: LiveNewsItemDto[] = [];
 
-    // 1. Fetch from live public crypto news aggregator
+    // 1. Fetch from live public crypto news aggregator (CryptoCompare)
     try {
-      const res = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN');
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 6000);
+      const res = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN', { signal: controller.signal });
+      clearTimeout(timeout);
       const data: any = await res.json();
       if (data && data.Data && Array.isArray(data.Data)) {
         for (const item of data.Data.slice(0, 30)) {
@@ -101,102 +104,137 @@ export class LiveNewsService {
           });
         }
       }
-    } catch {
-      // Fallback
+      console.log(`[LiveNewsService] CryptoCompare: fetched ${newsList.length} articles`);
+    } catch (err) {
+      console.error('[LiveNewsService] CryptoCompare fetch failed:', err instanceof Error ? err.message : err);
     }
 
-    // 2. Fetch USA Finance & Global Macro News
+    // 2. Fetch USA Finance & Global Macro News (saurav.tech NewsAPI mirror)
     try {
       const endpoints = [
         'https://saurav.tech/NewsAPI/top-headlines/category/business/us.json',
-        'https://saurav.tech/NewsAPI/top-headlines/category/general/us.json' // for war / global geopolitics
+        'https://saurav.tech/NewsAPI/top-headlines/category/general/us.json'
       ];
 
       for (const endpoint of endpoints) {
-        const res = await fetch(endpoint);
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 6000);
+          const res = await fetch(endpoint, { signal: controller.signal });
+          clearTimeout(timeout);
+          const data: any = await res.json();
+          if (data && data.status === 'ok' && Array.isArray(data.articles)) {
+            for (const item of data.articles.slice(0, 15)) {
+              const title = item.title || '';
+              const desc = item.description || '';
+              const fullText = `${title} ${desc}`.toLowerCase();
+
+              let category: NewsCategory = 'MACRO_ECONOMY';
+              if (fullText.includes('war') || fullText.includes('military') || fullText.includes('geopolitics') || fullText.includes('trade')) {
+                category = 'MACRO_ECONOMY';
+              } else if (fullText.includes('crypto') || fullText.includes('bitcoin')) {
+                category = 'CRYPTO';
+              }
+
+              let sentiment: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'NEUTRAL';
+              if (fullText.includes('grow') || fullText.includes('up') || fullText.includes('deal') || fullText.includes('peace')) {
+                sentiment = 'BULLISH';
+              } else if (fullText.includes('war') || fullText.includes('crash') || fullText.includes('tension') || fullText.includes('conflict') || fullText.includes('drop')) {
+                sentiment = 'BEARISH';
+              }
+
+              let importance: NewsImportance = 'MEDIUM';
+              if (fullText.includes('war') || fullText.includes('federal') || fullText.includes('election') || fullText.includes('crisis')) {
+                importance = 'HIGH';
+              }
+
+              const symbols: string[] = ['MARKET'];
+              if (title === '[Removed]') continue;
+
+              const cleanTitle = (item.title || '').substring(0, 20).replace(/[^a-zA-Z0-9]/g, '');
+              newsList.push({
+                id: `NEWS-US-${cleanTitle}`,
+                headline: item.title,
+                summary: item.description ? item.description.substring(0, 300) + '...' : '',
+                source: item.source?.name || item.author || 'Global News',
+                url: item.url || '',
+                category,
+                importance,
+                sentiment,
+                symbols,
+                publishedAt: item.publishedAt || new Date().toISOString(),
+                impactScore: importance === 'HIGH' ? 9 : importance === 'MEDIUM' ? 7 : 4,
+              });
+            }
+          }
+        } catch (err) {
+          console.error(`[LiveNewsService] saurav.tech fetch failed for ${endpoint}:`, err instanceof Error ? err.message : err);
+        }
+      }
+    } catch (err) {
+      console.error('[LiveNewsService] NewsAPI macro fetch failed:', err instanceof Error ? err.message : err);
+    }
+
+    // 3. CryptoPanic as third backup source (no API key required for public feed)
+    if (newsList.length < 5) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 6000);
+        const res = await fetch('https://cryptopanic.com/api/free/v1/posts/?auth_token=public&kind=news&public=true', { signal: controller.signal });
+        clearTimeout(timeout);
         const data: any = await res.json();
-        if (data && data.status === 'ok' && Array.isArray(data.articles)) {
-          for (const item of data.articles.slice(0, 15)) {
+        if (data && Array.isArray(data.results)) {
+          for (const item of data.results.slice(0, 20)) {
             const title = item.title || '';
-            const desc = item.description || '';
-            const fullText = `${title} ${desc}`.toLowerCase();
-
-            let category: NewsCategory = 'MACRO_ECONOMY';
-            if (fullText.includes('war') || fullText.includes('military') || fullText.includes('geopolitics') || fullText.includes('trade')) {
-              category = 'MACRO_ECONOMY'; 
-            } else if (fullText.includes('crypto') || fullText.includes('bitcoin')) {
-              category = 'CRYPTO';
+            const fullText = title.toLowerCase();
+            const symbols: string[] = [];
+            if (item.currencies) {
+              for (const c of item.currencies) {
+                if (['BTC','ETH','SOL','XRP'].includes(c.code)) symbols.push(c.code);
+              }
             }
-
-            let sentiment: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'NEUTRAL';
-            if (fullText.includes('grow') || fullText.includes('up') || fullText.includes('deal') || fullText.includes('peace')) {
-              sentiment = 'BULLISH';
-            } else if (fullText.includes('war') || fullText.includes('crash') || fullText.includes('tension') || fullText.includes('conflict') || fullText.includes('drop')) {
-              sentiment = 'BEARISH';
-            }
-
-            let importance: NewsImportance = 'MEDIUM';
-            if (fullText.includes('war') || fullText.includes('federal') || fullText.includes('election') || fullText.includes('crisis')) {
-              importance = 'HIGH';
-            }
-
-            const symbols: string[] = ['MARKET']; // General macro news affects the broad market
-            
-            // Skip empty or removed items
-            if (title === '[Removed]') continue;
-
-            const cleanTitle = (item.title || '').substring(0, 20).replace(/[^a-zA-Z0-9]/g, '');
+            if (symbols.length === 0) symbols.push('MARKET');
+            const cleanTitle = title.substring(0, 20).replace(/[^a-zA-Z0-9]/g, '');
             newsList.push({
-              id: `NEWS-US-${cleanTitle}`,
-              headline: item.title,
-              summary: item.description ? item.description.substring(0, 300) + '...' : '',
-              source: item.source?.name || item.author || 'Global News',
+              id: `NEWS-CP-${cleanTitle}`,
+              headline: title,
+              summary: '',
+              source: item.source?.title || 'CryptoPanic',
               url: item.url || '',
-              category,
-              importance,
-              sentiment,
+              category: 'CRYPTO',
+              importance: 'MEDIUM',
+              sentiment: fullText.includes('bull') || fullText.includes('surge') ? 'BULLISH' : fullText.includes('crash') || fullText.includes('bear') ? 'BEARISH' : 'NEUTRAL',
               symbols,
-              publishedAt: item.publishedAt || new Date().toISOString(),
-              impactScore: importance === 'HIGH' ? 9 : importance === 'MEDIUM' ? 7 : 4,
+              publishedAt: item.published_at || new Date().toISOString(),
+              impactScore: 6,
             });
           }
         }
+        console.log(`[LiveNewsService] CryptoPanic: fetched ${newsList.length} total articles`);
+      } catch (err) {
+        console.error('[LiveNewsService] CryptoPanic fetch failed:', err instanceof Error ? err.message : err);
       }
-    } catch {
-      // Fallback for NewsAPI
     }
 
     // Sort all news by latest first
     newsList.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
     if (newsList.length === 0) {
-      // High-grade institutional curated feeds
+      // All external providers failed — serve offline placeholders and log a warning
+      console.warn('[LiveNewsService] All news providers failed. Serving offline placeholder news.');
       newsList.push(
         {
-          id: 'NEWS-INIT-1',
-          headline: 'Federal Reserve Monetary Policy & Liquidity Outlook for Digital Assets',
-          summary: 'Institutional capital flows into spot crypto markets remain elevated amid macroeconomic stabilization and clear rate trajectory.',
-          source: 'Institutional Macro',
-          url: 'https://www.federalreserve.gov',
-          category: 'MACRO_ECONOMY',
+          id: 'NEWS-OFFLINE-1',
+          headline: '[OFFLINE] News providers unavailable — check backend logs for errors',
+          summary: 'CryptoCompare, saurav.tech, and CryptoPanic all failed to respond. The app is running in offline news mode.',
+          source: 'QuantEdge AI System',
+          url: '',
+          category: 'CRYPTO',
           importance: 'HIGH',
-          sentiment: 'BULLISH',
-          symbols: ['BTC', 'ETH'],
+          sentiment: 'NEUTRAL',
+          symbols: ['MARKET'],
           publishedAt: new Date().toISOString(),
-          impactScore: 9,
-        },
-        {
-          id: 'NEWS-INIT-2',
-          headline: 'Perpetual Futures Liquidity & Open Interest Concentration on Delta Exchange',
-          summary: 'Order book depth on major USD contracts shows persistent demand absorption around institutional 1H order blocks.',
-          source: 'Delta Market Pulse',
-          url: 'https://www.delta.exchange',
-          category: 'DELTA_EXCHANGE',
-          importance: 'MEDIUM',
-          sentiment: 'BULLISH',
-          symbols: ['BTC', 'ETH', 'SOL', 'XRP'],
-          publishedAt: new Date(Date.now() - 1800000).toISOString(),
-          impactScore: 8,
+          impactScore: 5,
         }
       );
     }

@@ -269,7 +269,27 @@ export class ExecutionEngineService {
         restClient.getProduct(req.symbol.replace('.P', '')) ||
         restClient.getProduct(req.symbol.replace('.P', 'USD')) ||
         restClient.getProduct(req.symbol.replace('.P', 'USDT'));
-      const productId = product ? product.id : 1;
+
+      // Hard guard: if no matching product found, reject with a clear message
+      if (!product) {
+        const latencyMs = Date.now() - startTime;
+        console.warn(`[ExecutionEngine] No matching Delta product for symbol: ${req.symbol}`);
+        const result: ExecutionResult = {
+          success: false,
+          clientOrderId,
+          symbol: req.symbol,
+          side: req.side,
+          orderType: req.orderType,
+          size: req.size,
+          state: 'REJECTED',
+          latencyMs,
+          message: `No matching Delta product found for symbol '${req.symbol}'. Products may not have loaded yet — check backend logs.`,
+        };
+        this.recordHistory(result);
+        return result;
+      }
+
+      const productId = product.id;
 
       // Delta Exchange size = integer lots. contract_value tells us ETH per lot (e.g. 0.01 ETH/lot)
       const contractValue = product?.contract_value ? parseFloat(product.contract_value) : null;
@@ -295,15 +315,17 @@ export class ExecutionEngineService {
       const deltaOrderType = deltaOrderTypeMap[req.orderType] || req.orderType;
       const isMarket = req.orderType === 'market';
 
-      // Build order payload — only include defined optional fields
+      // Build order payload — use the RESOLVED product's actual symbol, not the raw .P symbol
+      const resolvedSymbol = product.symbol || req.symbol.replace('.P', '');
       const orderPayload: Record<string, any> = {
         product_id: productId,
-        product_symbol: req.symbol,
+        product_symbol: resolvedSymbol,   // ✅ use Delta's own symbol, not "ETHUSD.P"
         size: orderSize,
         side: req.side,
         order_type: deltaOrderType,
         client_order_id: safeClientOrderId,
       };
+      console.log(`[ExecutionEngine] Symbol resolved: ${req.symbol} → ${resolvedSymbol} (product_id: ${productId})`);
       if (!isMarket && req.price !== undefined) orderPayload['price'] = req.price;
       if (req.stopPrice !== undefined) orderPayload['stop_price'] = req.stopPrice;
       if (req.stopLossPrice !== undefined) orderPayload['stop_loss'] = req.stopLossPrice;
