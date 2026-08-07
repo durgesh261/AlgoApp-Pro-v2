@@ -13,7 +13,7 @@
 
 ## Purpose
 
-Define the long-term product direction and measurable customer value for AlgoApp Pro v2.
+Define the long-term product direction and measurable customer value for QuantEdge AI.
 
 ## Scope
 
@@ -21,7 +21,7 @@ The vision addresses retail and professional self-directed traders using control
 
 ## Vision and users
 
-AlgoApp Pro v2 enables a trader to move from hypothesis to controlled execution with one coherent evidence trail. Primary users are strategy authors, active traders, risk reviewers, and operators. Each needs an understandable view of data freshness, signal rationale, exposure, execution state, and performance.
+QuantEdge AI enables a trader to move from hypothesis to controlled execution with one coherent evidence trail. Primary users are strategy authors, active traders, risk reviewers, and operators. Each needs an understandable view of data freshness, signal rationale, exposure, execution state, and performance.
 
 ## Outcomes and principles
 

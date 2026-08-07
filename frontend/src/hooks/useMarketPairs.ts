@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { marketDataApi, strategyApi } from '../services/api';
 import type { CandleDto, ZoneDto } from '@algoapp/shared';
+import { chartWebSocketService, LiveTicker } from '../services/ChartWebSocketService';
 
 // Matches the symbols seeded in the backend's MarketSnapshotService.
 export const WATCHLIST_SYMBOLS = ['BTCUSD.P', 'ETHUSD.P', 'SOLUSD.P', 'XRPUSD.P'];
@@ -107,6 +108,27 @@ export function useMarketPairs(pollMs = 2000) {
     const id = setInterval(fetchAll, pollMs);
     return () => clearInterval(id);
   }, [fetchAll, pollMs]);
+
+  useEffect(() => {
+    const handleTicker = (ticker: LiveTicker) => {
+      setPairs((prev) => {
+        const p = prev[ticker.symbol];
+        if (!p || p.price === ticker.markPrice) return prev;
+        return {
+          ...prev,
+          [ticker.symbol]: {
+            ...p,
+            price: ticker.markPrice,
+            priceLabel: formatPrice(ticker.markPrice),
+          }
+        };
+      });
+    };
+    chartWebSocketService.on('ticker', handleTicker);
+    return () => {
+      chartWebSocketService.off('ticker', handleTicker);
+    };
+  }, []);
 
   return {
     pairs,

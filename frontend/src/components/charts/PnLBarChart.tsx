@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { paperTradingApi } from '../../services/api';
+import { tradeAccountingApi } from '../../services/api';
 import { EmptyState } from '../ui/EmptyState';
 import { WidgetSkeleton } from '../ui/SkeletonLoader';
 import { BarChart2 } from 'lucide-react';
@@ -15,15 +15,16 @@ export const PnLBarChart: React.FC = () => {
 
   useEffect(() => {
     let active = true;
-    paperTradingApi
-      .getClosedPositions()
+    tradeAccountingApi
+      .getLedger()
       .then((res) => {
         if (!active) return;
         const closed = res.data ?? [];
         const byDay = new Map<string, number>();
         for (const pos of closed) {
-          const day = new Date(pos.updatedAt).toLocaleDateString(undefined, { weekday: 'short' });
-          byDay.set(day, (byDay.get(day) ?? 0) + pos.realizedPnL);
+          if (!pos.closedAt) continue;
+          const day = new Date(pos.closedAt).toLocaleDateString(undefined, { weekday: 'short' });
+          byDay.set(day, (byDay.get(day) ?? 0) + pos.netPnL);
         }
         setData(Array.from(byDay.entries()).map(([date, realized]) => ({ date, realized })));
       })

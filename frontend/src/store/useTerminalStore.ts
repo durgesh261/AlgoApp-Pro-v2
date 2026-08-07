@@ -46,10 +46,14 @@ interface TerminalState {
   activeProfileId: string;
   isSidebarCollapsed: boolean;
   isMarketWatchOpen: boolean;
+  marketWatchWidth: number;
+  liveTradingLeftColWidth: number;
+  liveTradingRightColWidth: number;
   isCommandPaletteOpen: boolean;
   isDeveloperMode: boolean;
   systemStatus: SystemStatus;
   widgets: WidgetVisibilityState;
+  isAlgoRunning: boolean;
 
   setActivePage: (page: TerminalPage) => void;
   setActiveSymbol: (symbol: string) => void;
@@ -59,15 +63,34 @@ interface TerminalState {
   setSidebarCollapsed: (collapsed: boolean) => void;
   toggleMarketWatch: () => void;
   setMarketWatchOpen: (open: boolean) => void;
+  setMarketWatchWidth: (width: number) => void;
+  setLiveTradingLeftColWidth: (width: number) => void;
+  setLiveTradingRightColWidth: (width: number) => void;
   toggleCommandPalette: () => void;
   setCommandPaletteOpen: (open: boolean) => void;
   toggleDeveloperMode: () => void;
   setDeveloperMode: (enabled: boolean) => void;
   setSystemStatus: (status: SystemStatus) => void;
+  setIsAlgoRunning: (running: boolean) => void;
 
   toggleWidget: (widgetKey: keyof WidgetVisibilityState) => void;
   resetWidgetLayout: () => void;
 }
+
+const savedWidths = (() => {
+  try {
+    const mw = localStorage.getItem('algoapp_mw_width');
+    const ltc = localStorage.getItem('algoapp_ltc_width');
+    const rtc = localStorage.getItem('algoapp_rtc_width');
+    return {
+      mw: mw ? Number(mw) : 260,
+      ltc: ltc ? Number(ltc) : 220,
+      rtc: rtc ? Number(rtc) : 320,
+    };
+  } catch {
+    return { mw: 260, ltc: 220, rtc: 320 };
+  }
+})();
 
 export const useTerminalStore = create<TerminalState>((set, get) => ({
   activePage: TerminalPage.DASHBOARD,
@@ -75,11 +98,15 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
   activeTimeframe: '1H',
   activeProfileId: 'DEF-1H-PROF',
   isSidebarCollapsed: false,
-  isMarketWatchOpen: true,
+  isMarketWatchOpen: false,
+  marketWatchWidth: savedWidths.mw,
+  liveTradingLeftColWidth: savedWidths.ltc,
+  liveTradingRightColWidth: savedWidths.rtc,
   isCommandPaletteOpen: false,
   isDeveloperMode: false,
   systemStatus: SystemStatus.HEALTHY,
   widgets: loadInitialWidgetState(),
+  isAlgoRunning: true,
 
   setActivePage: (page) => set({ activePage: page }),
   setActiveSymbol: (symbol) => set({ activeSymbol: symbol }),
@@ -89,11 +116,33 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
   setSidebarCollapsed: (collapsed) => set({ isSidebarCollapsed: collapsed }),
   toggleMarketWatch: () => set((state) => ({ isMarketWatchOpen: !state.isMarketWatchOpen })),
   setMarketWatchOpen: (open) => set({ isMarketWatchOpen: open }),
+  setMarketWatchWidth: (width) => {
+    const clamped = Math.min(Math.max(width, 180), 550);
+    set({ marketWatchWidth: clamped });
+    try {
+      localStorage.setItem('algoapp_mw_width', String(clamped));
+    } catch {}
+  },
+  setLiveTradingLeftColWidth: (width) => {
+    const clamped = Math.min(Math.max(width, 160), 450);
+    set({ liveTradingLeftColWidth: clamped });
+    try {
+      localStorage.setItem('algoapp_ltc_width', String(clamped));
+    } catch {}
+  },
+  setLiveTradingRightColWidth: (width) => {
+    const clamped = Math.min(Math.max(width, 240), 550);
+    set({ liveTradingRightColWidth: clamped });
+    try {
+      localStorage.setItem('algoapp_rtc_width', String(clamped));
+    } catch {}
+  },
   toggleCommandPalette: () => set((state) => ({ isCommandPaletteOpen: !state.isCommandPaletteOpen })),
   setCommandPaletteOpen: (open) => set({ isCommandPaletteOpen: open }),
   toggleDeveloperMode: () => set((state) => ({ isDeveloperMode: !state.isDeveloperMode })),
   setDeveloperMode: (enabled) => set({ isDeveloperMode: enabled }),
   setSystemStatus: (status) => set({ systemStatus: status }),
+  setIsAlgoRunning: (running) => set({ isAlgoRunning: running }),
 
   toggleWidget: (widgetKey) => {
     const currentWidgets = get().widgets;

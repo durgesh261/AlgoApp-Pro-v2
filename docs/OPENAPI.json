@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "AlgoApp Pro v2 REST API",
+    "title": "QuantEdge AI REST API",
     "description": "Institutional-Grade Algorithmic Trading Platform API for Crypto Perpetual Futures.",
     "version": "1.0.0"
   },

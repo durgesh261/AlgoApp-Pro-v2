@@ -21,7 +21,6 @@ class ChartWebSocketService {
   private state: WebSocketState = 'DISCONNECTED';
   
   private currentSymbol: string | null = null;
-  private currentDeltaSymbol: string | null = null;
 
   private listeners: Record<'stateChange' | 'trade' | 'ticker', EventCallback[]> = {
     stateChange: [],
@@ -38,13 +37,11 @@ class ChartWebSocketService {
       // Need to resubscribe to new symbol
       this.unsubscribeCurrent();
       this.currentSymbol = symbol;
-      this.currentDeltaSymbol = this.getDeltaSymbol(symbol);
       this.subscribeCurrent();
       return;
     }
 
     this.currentSymbol = symbol;
-    this.currentDeltaSymbol = this.getDeltaSymbol(symbol);
     this.setState('CONNECTING');
     
     try {
@@ -108,25 +105,26 @@ class ChartWebSocketService {
     (this.listeners[event] || []).forEach(cb => cb(data));
   }
 
-  private getDeltaSymbol(symbol: string) {
+  private getAppSymbol(deltaSymbol: string) {
     const map: Record<string, string> = {
-      'BTCUSD.P': 'BTCUSD',
-      'ETHUSD.P': 'ETHUSD',
-      'SOLUSD.P': 'SOLUSD',
-      'XRPUSD.P': 'XRPUSD',
+      'BTCUSD': 'BTCUSD.P',
+      'ETHUSD': 'ETHUSD.P',
+      'SOLUSD': 'SOLUSD.P',
+      'XRPUSD': 'XRPUSD.P',
     };
-    return map[symbol] || symbol.replace('.P', '');
+    return map[deltaSymbol] || `${deltaSymbol}.P`;
   }
 
   private subscribeCurrent() {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN || !this.currentDeltaSymbol) return;
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
 
+    const symbols = ['BTCUSD', 'ETHUSD', 'SOLUSD', 'XRPUSD'];
     const msg = {
       type: 'subscribe',
       payload: {
         channels: [
-          { name: 'v2/trades', symbols: [this.currentDeltaSymbol] },
-          { name: 'v2/ticker', symbols: [this.currentDeltaSymbol] }
+          { name: 'v2/trades', symbols: symbols },
+          { name: 'v2/ticker', symbols: symbols }
         ]
       }
     };
@@ -134,14 +132,15 @@ class ChartWebSocketService {
   }
 
   private unsubscribeCurrent() {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN || !this.currentDeltaSymbol) return;
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
 
+    const symbols = ['BTCUSD', 'ETHUSD', 'SOLUSD', 'XRPUSD'];
     const msg = {
       type: 'unsubscribe',
       payload: {
         channels: [
-          { name: 'v2/trades', symbols: [this.currentDeltaSymbol] },
-          { name: 'v2/ticker', symbols: [this.currentDeltaSymbol] }
+          { name: 'v2/trades', symbols: symbols },
+          { name: 'v2/ticker', symbols: symbols }
         ]
       }
     };
@@ -152,25 +151,25 @@ class ChartWebSocketService {
     try {
       const data = JSON.parse(event.data);
 
-      if (data.type === 'v2/trades' && data.symbol === this.currentDeltaSymbol && Array.isArray(data.trades)) {
+      if (data.type === 'v2/trades' && Array.isArray(data.trades)) {
         data.trades.forEach((t: any) => {
           const trade: LiveTrade = {
             price: parseFloat(t.price),
             size: parseFloat(t.size),
             timestamp: t.timestamp ? parseInt(t.timestamp) : parseInt(t.timestamp_ms || Date.now().toString()),
-            symbol: this.currentSymbol!
+            symbol: this.getAppSymbol(data.symbol)
           };
           if (trade.timestamp > 1000000000000000) trade.timestamp = Math.floor(trade.timestamp / 1000);
           this.emit('trade', trade);
         });
       }
 
-      if (data.type === 'v2/ticker' && data.symbol === this.currentDeltaSymbol) {
+      if (data.type === 'v2/ticker' && data.symbol) {
         const t = data;
         const ticker: LiveTicker = {
-          markPrice: parseFloat(t.mark_price || t.close || 0),
+          markPrice: parseFloat(t.close || t.mark_price || 0),
           indexPrice: parseFloat(t.spot_price || t.index_price || 0),
-          symbol: this.currentSymbol!
+          symbol: this.getAppSymbol(data.symbol)
         };
         if (ticker.markPrice > 0) {
           this.emit('ticker', ticker);

@@ -27,13 +27,15 @@ import {
   Cpu,
   FileText,
   LineChart,
-  Trophy
+  Trophy,
+  Newspaper
 } from 'lucide-react';
 
 const liveNavigationItems = [
   { name: 'Dashboard', path: '/', icon: LayoutDashboard },
   { name: 'Live Portfolio', path: '/portfolio', icon: PieChart },
   { name: 'Live Trading', path: '/live-trading', icon: Activity },
+  { name: 'Live News & Macro', path: '/news', icon: Newspaper },
   { name: 'Orders', path: '/orders', icon: ListOrdered },
   { name: 'Positions', path: '/positions', icon: Layers },
   { name: 'Trade History', path: '/history', icon: History },
@@ -83,15 +85,15 @@ export const Sidebar: React.FC = () => {
       {/* App Branding Header */}
       <div className="h-14 px-3 flex items-center justify-between border-b border-[#1E293B] shrink-0">
         <div className="flex items-center space-x-2.5 overflow-hidden">
-          <div className="w-8 h-8 bg-[#3B82F6] rounded-lg flex items-center justify-center font-bold text-white text-sm shadow-md shrink-0">
-            A
+          <div className="w-8 h-8 bg-gradient-to-br from-[#3B82F6] to-[#6366F1] rounded-lg flex items-center justify-center font-extrabold text-white text-sm shadow-md shrink-0">
+            Q
           </div>
           {!isSidebarCollapsed && (
             <div className="flex flex-col overflow-hidden">
               <span className="text-sm font-bold text-[#F8FAFC] tracking-wide leading-none truncate">
-                AlgoApp <span className="text-[#3B82F6]">Terminal</span>
+                QuantEdge <span className="text-[#3B82F6]">AI</span>
               </span>
-              <span className="text-[10px] text-[#00C896] font-mono mt-0.5 font-semibold">v5.0 Live Trading</span>
+              <span className="text-[10px] text-[#00C896] font-mono mt-0.5 font-semibold">Live Trading</span>
             </div>
           )}
         </div>

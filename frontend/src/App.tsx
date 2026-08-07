@@ -11,6 +11,7 @@ import { TradeJournalPage } from './features/journal/TradeJournalPage';
 import { AnalyticsPage } from './features/analytics/AnalyticsPage';
 import { StrategyProfilesPage } from './features/strategy-profiles/StrategyProfilesPage';
 import { SettingsPage } from './features/settings/SettingsPage';
+import { LiveNewsCenterPage } from './features/news/LiveNewsCenterPage';
 
 // Developer Mode Views
 import { PaperTradingPage } from './features/paper-trading/PaperTradingPage';
@@ -37,6 +38,7 @@ export const App: React.FC = () => {
           <Route path="/" element={<DashboardPage />} />
           <Route path="/portfolio" element={<PortfolioDashboardPage />} />
           <Route path="/live-trading" element={<LiveTradingPage />} />
+          <Route path="/news" element={<LiveNewsCenterPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/positions" element={<PositionsPage />} />
           <Route path="/history" element={<TradeHistoryPage />} />

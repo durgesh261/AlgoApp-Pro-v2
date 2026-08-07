@@ -1,4 +1,4 @@
-# AlgoApp Pro v5.0 — Trading Intelligence & Adaptive Strategy Platform Report
+# QuantEdge AI — Trading Intelligence & Adaptive Strategy Platform Report
 
 **Audit Leads**: Principal Software Architect, Lead Quantitative Analyst, Trading Systems Auditor, and DevOps Lead  
 **Audit Date**: August 3, 2026  
@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary & 10-Module Platform Matrix
 
-**AlgoApp Pro v5.0** introduces a deterministic **Trading Intelligence & Adaptive Strategy Platform**. The system continuously analyzes completed trades, calculates multi-dimensional trade quality scores (0–100), monitors strategy risk-adjusted performance (Sharpe, Sortino, Calmar), classifies market regimes, and delivers non-automated, evidence-backed strategy recommendations to the trader.
+**QuantEdge AI** introduces a deterministic **Trading Intelligence & Adaptive Strategy Platform**. The system continuously analyzes completed trades, calculates multi-dimensional trade quality scores (0–100), monitors strategy risk-adjusted performance (Sharpe, Sortino, Calmar), classifies market regimes, and delivers non-automated, evidence-backed strategy recommendations to the trader.
 
 | Module | Module Name | Status | Key Features & Metrics |
 | :--- | :--- | :--- | :--- |
@@ -42,6 +42,6 @@ The Strategy Recommendation Engine provides evidentiary recommendations backed b
 
 ```
 Status: VERIFIED & APPROVED
-Tag: v5.0.0-trading-intelligence
+Tag:-intelligence
 Readiness Score: 100%
 ```

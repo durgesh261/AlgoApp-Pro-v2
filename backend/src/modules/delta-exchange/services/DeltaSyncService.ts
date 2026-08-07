@@ -42,6 +42,12 @@ export class DeltaSyncService {
         onConnect: () => {
           this.health.wsStatus = 'CONNECTED';
           this.updateAggregateStatus();
+          const pairs = this.rest.getAllSupportedPairs();
+          const allSymbols = Array.from(new Set([...pairs, 'BTCUSD', 'ETHUSD', 'SOLUSD', 'XRPUSD', 'BTCUSD.P', 'ETHUSD.P', 'SOLUSD.P', 'XRPUSD.P']));
+          this.ws.subscribe('v2/ticker', allSymbols);
+          this.ws.subscribe('v2/positions');
+          this.ws.subscribe('v2/orders');
+          this.ws.subscribe('v2/wallet');
           eventBus.emit('delta:ws:connected');
         },
         onDisconnect: () => {
@@ -166,6 +172,88 @@ export class DeltaSyncService {
   private handleWsWallet(data: any): void {
     eventBus.emit('wallet:live', data);
     void this.reconcile();
+  }
+
+  public async updateCredentials(
+    credentials: { apiKey: string; apiSecret: string },
+    isTestnet: boolean = false
+  ): Promise<{ success: boolean; message?: string }> {
+    this.stop();
+
+    this.rest = new DeltaRestClient(credentials, isTestnet);
+    this.ws = new DeltaWebSocketClient(
+      credentials,
+      {
+        onTicker: (data) => this.handleTicker(data),
+        onPosition: (data) => this.handleWsPosition(data),
+        onOrder: (data) => this.handleWsOrder(data),
+        onWallet: (data) => this.handleWsWallet(data),
+        onConnect: () => {
+          this.health.wsStatus = 'CONNECTED';
+          this.updateAggregateStatus();
+          eventBus.emit('delta:ws:connected');
+        },
+        onDisconnect: () => {
+          this.health.wsStatus = 'DISCONNECTED';
+          this.updateAggregateStatus();
+          eventBus.emit('delta:ws:disconnected');
+        },
+        onError: () => {
+          this.health.wsStatus = 'RECONNECTING';
+          this.updateAggregateStatus();
+        },
+      },
+      isTestnet
+    );
+
+    if (!credentials.apiKey || !credentials.apiSecret) {
+      this.health.status = 'DISCONNECTED';
+      this.health.restStatus = 'UNCONFIGURED';
+      this.health.wsStatus = 'DISCONNECTED';
+      this.latestBalances = [];
+      this.latestPositions = [];
+      this.latestOrders = [];
+      return { success: true, message: 'Credentials cleared' };
+    }
+
+    try {
+      await this.start();
+      return { success: true, message: 'Delta Exchange connection initialized' };
+    } catch (err: any) {
+      this.health.status = 'ERROR';
+      this.health.restStatus = 'ERROR';
+      return { success: false, message: err?.message || 'Failed to start Delta sync' };
+    }
+  }
+
+  public static async testCredentials(
+    credentials: { apiKey: string; apiSecret: string },
+    isTestnet: boolean = false
+  ): Promise<{ success: boolean; latencyMs: number; message: string; data?: any }> {
+    const startTime = Date.now();
+    try {
+      const testRest = new DeltaRestClient(credentials, isTestnet);
+      await testRest.loadProducts();
+      const balances = await testRest.getWalletBalances();
+      const latencyMs = Date.now() - startTime;
+      return {
+        success: true,
+        latencyMs,
+        message: `Successfully connected to Delta Exchange (${isTestnet ? 'Testnet' : 'Live India'}). Retrieved ${balances.length} balance assets.`,
+        data: {
+          balancesCount: balances.length,
+          productsCount: testRest.getAllSupportedPairs().length,
+        },
+      };
+    } catch (err: any) {
+      const latencyMs = Date.now() - startTime;
+      const errorMsg = err?.response?.data?.error?.message || err?.message || 'Authentication failed. Please verify API Key & Secret.';
+      return {
+        success: false,
+        latencyMs,
+        message: `Connection failed: ${errorMsg}`,
+      };
+    }
   }
 
   public stop(): void {

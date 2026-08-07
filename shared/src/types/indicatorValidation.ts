@@ -1,9 +1,10 @@
 import { BaseZone } from './indicatorEngine.js';
+import { TradingTimeframe } from './strategyProfile.js';
 
 export interface TradingViewBenchmarkZone {
   id: string;
   symbol: string;
-  timeframe: '1H';
+  timeframe: TradingTimeframe;
   type: 'SUPPLY' | 'DEMAND';
   upperPrice: number;
   lowerPrice: number;
@@ -28,6 +29,7 @@ export interface ValidationReportDto {
   overallAccuracy: number; // 0 - 100%
   pairAccuracy: Record<string, number>;
   zoneAccuracy: number;
+  trendAccuracy?: number | undefined;
   averagePriceDiff: number;
   bestPair: string;
   worstPair: string;
@@ -42,3 +44,4 @@ export interface RunValidationInput {
   symbol?: string | undefined;
   replayCandles?: boolean | undefined;
 }
+

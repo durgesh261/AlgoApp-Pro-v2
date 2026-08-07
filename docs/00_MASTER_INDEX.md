@@ -11,7 +11,7 @@
 
 ## Purpose
 
-This index is the authoritative entry point for the AlgoApp Pro v2 documentation system and defines intended reading order and ownership boundaries.
+This index is the authoritative entry point for the QuantEdge AI documentation system and defines intended reading order and ownership boundaries.
 
 ## Scope
 

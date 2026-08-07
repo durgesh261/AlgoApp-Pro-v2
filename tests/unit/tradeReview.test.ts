@@ -1,9 +1,49 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { TradeReviewEngineService } from '../../backend/src/modules/trade-review/services/tradeReviewEngine.service';
 import { AiTradeReviewService } from '../../backend/src/modules/trade-review/services/aiTradeReview.service';
 import { TradeJournalService } from '../../backend/src/modules/trade-review/services/tradeJournal.service';
 import { ChartSnapshotService } from '../../backend/src/modules/trade-review/services/chartSnapshot.service';
 import { TradeReviewExporterService } from '../../backend/src/modules/trade-review/services/tradeReviewExporter.service';
+
+vi.mock('../../backend/src/modules/trade-accounting/services/tradeSync.service.js', () => {
+  return {
+    tradeSyncService: {
+      getLedgerEntries: vi.fn().mockResolvedValue([
+        {
+          id: 'mock-uuid',
+          tradeId: 'TRD-TEST-100',
+          exchangeOrderId: 'mock-order-id',
+          symbol: 'BTCUSD.P',
+          timeframe: '1H',
+          strategyProfileId: 'DEF-1H-PROF',
+          side: 'LONG',
+          entryPrice: 60000,
+          exitPrice: 65000,
+          quantity: 1,
+          marginUsed: 100,
+          leverage: 10,
+          riskPercent: 1,
+          rewardPercent: 2,
+          stopLoss: 59000,
+          takeProfit: 65000,
+          grossPnL: 5000,
+          tradingFee: 10,
+          fundingFee: 2,
+          tax: 50,
+          netPnL: 4938,
+          durationSeconds: 3600,
+          executionLatencyMs: 120,
+          decisionConfidence: 95,
+          decisionExplanation: 'Test reason',
+          resultStatus: 'WIN',
+          syncStatus: 'SYNCED',
+          executedAt: new Date(),
+          closedAt: new Date(),
+        }
+      ])
+    }
+  }
+});
 
 describe('Professional Trade Review Center Test Suite', () => {
   const reviewEngine = new TradeReviewEngineService();

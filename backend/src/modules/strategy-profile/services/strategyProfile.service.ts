@@ -24,10 +24,10 @@ const default1HProfile: StrategyProfileDto = {
     obSize: 5,
   },
   riskConfig: {
-    challengeMode: true,
-    maxRiskPerTradePercent: 1.5,
-    maxDailyDrawdownPercent: 5.0,
-    maxOpenPositions: 5,
+    challengeMode: false,
+    maxRiskPerTradePercent: 35.0,
+    maxDailyDrawdownPercent: 100.0,
+    maxOpenPositions: 1,
     dynamicLeverage: true,
   },
   executionConfig: {
@@ -36,7 +36,7 @@ const default1HProfile: StrategyProfileDto = {
   indicatorConfig: {
     mergeThreshold: 0.4,
     freshnessDecay: 0.015,
-    maxTouches: 2,
+    maxTouches: 1,
     scoreWeights: {
       zoneStrength: 0.3,
       freshness: 0.25,
@@ -46,7 +46,7 @@ const default1HProfile: StrategyProfileDto = {
     },
   },
   decisionConfig: {
-    confidenceThreshold: 75.0,
+    confidenceThreshold: 85.0,
     minZoneScore: 70.0,
     momentumRules: true,
   },
@@ -54,61 +54,7 @@ const default1HProfile: StrategyProfileDto = {
   updatedAt: '2026-08-03T12:00:00Z',
 };
 
-const default15MProfile: StrategyProfileDto = {
-  id: 'DEF-15M-PROF',
-  name: 'Default 15M Scalp Profile',
-  description: 'Fast 15M scalping profile with tighter ATR bounds and higher sensitivity',
-  version: '1.0.0',
-  isActive: true,
-  pair: 'BTCUSD.P',
-  timeframe: '15M',
-  patConfig: {
-    zigzagLen: 5,
-    liquidityLen: 20,
-    atrPeriod: 14,
-    obShowCount: 3,
-    trendLineLen: 15,
-  },
-  smcConfig: {
-    swingLen: 30,
-    internalShow: true,
-    swingShow: true,
-    atrFilterThreshold: 1.8,
-    mitigationSource: 'High/Low',
-    obSize: 5,
-  },
-  riskConfig: {
-    challengeMode: true,
-    maxRiskPerTradePercent: 1.0,
-    maxDailyDrawdownPercent: 3.0,
-    maxOpenPositions: 3,
-    dynamicLeverage: true,
-  },
-  executionConfig: {
-    defaultMode: 'PAPER',
-  },
-  indicatorConfig: {
-    mergeThreshold: 0.35,
-    freshnessDecay: 0.025,
-    maxTouches: 2,
-    scoreWeights: {
-      zoneStrength: 0.3,
-      freshness: 0.3,
-      trend: 0.15,
-      liquidity: 0.15,
-      merged: 0.1,
-    },
-  },
-  decisionConfig: {
-    confidenceThreshold: 72.0,
-    minZoneScore: 68.0,
-    momentumRules: true,
-  },
-  createdAt: '2026-08-03T12:00:00Z',
-  updatedAt: '2026-08-03T12:00:00Z',
-};
-
-let profilesStore: StrategyProfileDto[] = [default1HProfile, default15MProfile];
+let profilesStore: StrategyProfileDto[] = [default1HProfile];
 
 export class StrategyProfileService {
   public async getProfiles(): Promise<StrategyProfileDto[]> {

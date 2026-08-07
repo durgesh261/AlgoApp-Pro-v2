@@ -1,6 +1,6 @@
 # Delta Exchange Integration Specification & Architecture
 
-**Document Version**: v1.0.0  
+**Document Version**:  
 **Target Exchange**: Delta Exchange (India & Global Derivatives)  
 **Supported Assets**: Perpetual Futures (`BTCUSD.P`, `ETHUSD.P`, `SOLUSD.P`, `XRPUSD.P`)  
 
@@ -107,7 +107,7 @@ export function generateDeltaSignature(
 
 ## 6. Platform Emergency Kill Switch Integration
 
-AlgoApp Pro v2 includes a platform-wide emergency stop mechanism (`EmergencyKillSwitch`).
+QuantEdge AI includes a platform-wide emergency stop mechanism (`EmergencyKillSwitch`).
 
 ### Kill Switch Enforcement Rules
 1. When **`isEmergencyStopActive === true`**:

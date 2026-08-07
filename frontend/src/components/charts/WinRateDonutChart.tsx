@@ -1,32 +1,37 @@
 import React, { useEffect, useState } from 'react';
-import { paperTradingApi } from '../../services/api';
-import { PaperAnalyticsDto } from '@algoapp/shared';
+import { tradeAccountingApi } from '../../services/api';
+import { TradeLedgerEntryDto } from '@algoapp/shared';
 import { EmptyState } from '../ui/EmptyState';
 import { WidgetSkeleton } from '../ui/SkeletonLoader';
 import { PieChart } from 'lucide-react';
 
 export const WinRateDonutChart: React.FC = () => {
-  const [data, setData] = useState<PaperAnalyticsDto | null>(null);
+  const [data, setData] = useState<TradeLedgerEntryDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
-    paperTradingApi
-      .getAnalytics()
+    tradeAccountingApi
+      .getLedger()
       .then((res) => { if (active) setData(res.data); })
-      .catch(() => { if (active) setData(null); })
+      .catch(() => { if (active) setData([]); })
       .finally(() => { if (active) setIsLoading(false); });
     return () => { active = false; };
   }, []);
 
   if (isLoading) return <WidgetSkeleton />;
 
-  const wins = data?.winningTrades ?? 0;
-  const losses = data?.losingTrades ?? 0;
-  const total = data?.totalTrades ?? 0;
-  const breakeven = Math.max(0, total - wins - losses);
-  const winRatePercent = data?.winRatePercent ?? 0;
-  const profitFactor = data?.profitFactor;
+  const closed = data.filter(d => d.closedAt != null);
+  const wins = closed.filter(d => d.resultStatus === 'WIN').length;
+  const losses = closed.filter(d => d.resultStatus === 'LOSS').length;
+  const breakeven = closed.filter(d => d.resultStatus === 'BREAKEVEN').length;
+  const total = wins + losses + breakeven;
+  
+  const winRatePercent = total > 0 ? (wins / total) * 100 : 0;
+  
+  const grossWin = closed.filter(d => d.resultStatus === 'WIN').reduce((s, d) => s + d.netPnL, 0);
+  const grossLoss = Math.abs(closed.filter(d => d.resultStatus === 'LOSS').reduce((s, d) => s + d.netPnL, 0));
+  const profitFactor = grossLoss > 0 ? grossWin / grossLoss : (grossWin > 0 ? 99 : undefined);
 
   if (total === 0) {
     return (

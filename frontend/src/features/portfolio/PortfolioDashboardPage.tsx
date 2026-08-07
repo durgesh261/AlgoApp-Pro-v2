@@ -53,7 +53,7 @@ export const PortfolioDashboardPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <Building2 className="w-6 h-6 text-indigo-400" />
             <h1 className="text-xl font-bold tracking-tight text-white font-mono">
-              Institutional Quant & HFT Portfolio Management
+              QuantEdge AI
             </h1>
           </div>
           <p className="text-xs text-slate-400 mt-1">

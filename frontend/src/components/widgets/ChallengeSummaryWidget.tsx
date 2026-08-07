@@ -13,14 +13,16 @@ export const ChallengeSummaryWidget: React.FC = () => {
 
   const challenge: ChallengeStateDto | undefined = challengeData?.data;
 
-  const currentDay = challenge?.currentDay ?? 1;
-  const remainingDays = challenge?.remainingDays ?? 20;
-  const initialBalance = challenge?.initialBalance ?? 10.0;
-  const currentBalance = challenge?.currentBalance ?? 10.0;
-  const netProfit = challenge?.netProfit ?? 0.0;
+  const currentDay = challenge?.currentDay ?? 0;
+  const remainingDays = challenge?.remainingDays ?? 0;
+  const initialBalance = challenge?.initialBalance ?? 0;
+  const currentBalance = challenge?.currentBalance ?? 0;
+  const netProfit = challenge?.netProfit ?? 0;
   const targetPercent = challenge?.totalTargetPercent ?? 10.0;
   const targetProfitUsd = initialBalance * (targetPercent / 100);
   const progressPercent = Math.min(100, Math.max(0, (netProfit / targetProfitUsd) * 100));
+  const dailyDrawdownPercent = challenge?.maxDailyDrawdownPercent ?? 5.0;
+  const dailyDrawdownUsd = initialBalance * (dailyDrawdownPercent / 100);
 
   return (
     <div className="bg-[#161D2A] border border-[#1E293B] rounded-xl p-4 space-y-4 shadow-sm">
@@ -44,7 +46,7 @@ export const ChallengeSummaryWidget: React.FC = () => {
         </div>
 
         <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
-          <span className="text-[11px] text-[#94A3B8] block">10% Profit Target Line</span>
+          <span className="text-[11px] text-[#94A3B8] block">{targetPercent}% Profit Target Line</span>
           <div className="text-xl font-bold text-[#F8FAFC] mt-0.5">${(initialBalance + targetProfitUsd).toFixed(2)}</div>
           <span className="text-[10px] text-[#94A3B8] flex items-center gap-0.5">
             <Target className="w-3 h-3 text-[#3B82F6]" /> ${Math.max(0, targetProfitUsd - netProfit).toFixed(2)} Remaining
@@ -52,8 +54,8 @@ export const ChallengeSummaryWidget: React.FC = () => {
         </div>
 
         <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
-          <span className="text-[11px] text-[#94A3B8] block">Daily Drawdown Limit (5%)</span>
-          <div className="text-xl font-bold text-[#F6465D] mt-0.5">-${(initialBalance * 0.05).toFixed(2)}</div>
+          <span className="text-[11px] text-[#94A3B8] block">Daily Drawdown Limit ({dailyDrawdownPercent}%)</span>
+          <div className="text-xl font-bold text-[#F6465D] mt-0.5">-${dailyDrawdownUsd.toFixed(2)}</div>
           <span className="text-[10px] text-[#94A3B8] flex items-center gap-0.5">
             <AlertCircle className="w-3 h-3 text-[#00C896]" /> Limit Active
           </span>

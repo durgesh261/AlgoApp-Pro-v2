@@ -10,6 +10,7 @@ let defaultAdapter = new DeltaAdapter(DeltaEnvironment.SANDBOX, true);
 const sandboxClient = new DeltaSandboxClient();
 
 export const getDeltaHealth = async (req: Request, res: Response): Promise<void> => {
+  console.log('HIT DELTA HEALTH');
   const health = await defaultAdapter.health();
   const response: ApiResponse<typeof health> = {
     success: true,
@@ -25,9 +26,9 @@ export const getDeltaHealth = async (req: Request, res: Response): Promise<void>
 export const connectDelta = async (req: Request, res: Response): Promise<void> => {
   const { environment } = req.body;
   if (environment === DeltaEnvironment.PRODUCTION) {
-    defaultAdapter = new DeltaAdapter(DeltaEnvironment.PRODUCTION, true);
+    defaultAdapter = new DeltaAdapter(DeltaEnvironment.PRODUCTION, false);
   } else {
-    defaultAdapter = new DeltaAdapter(DeltaEnvironment.SANDBOX, true);
+    defaultAdapter = new DeltaAdapter(DeltaEnvironment.SANDBOX, false);
   }
   await defaultAdapter.connect();
   const health = await defaultAdapter.health();

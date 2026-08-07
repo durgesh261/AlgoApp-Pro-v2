@@ -1,25 +1,37 @@
-import { CandleDto, MarketStructure } from '@algoapp/shared';
-import { PivotPoint } from './pivotEngine.js';
+import {
+  CandleDto,
+  MarketStructure,
+  MarketStructureEventDto,
+  PivotPointDto,
+  TradingTimeframe,
+} from '@algoapp/shared';
 
-export interface StructureEvent {
-  index: number;
-  time: string;
-  type: 'BOS' | 'CHOCH';
-  direction: 'BULLISH' | 'BEARISH';
-  brokenLevel: number;
-  isInternal: boolean;
-}
+export type StructureEvent = MarketStructureEventDto;
 
 export class MarketStructureEngine {
+  /**
+   * Bar-by-bar chronological evaluation of Market Structure (BOS & CHoCH)
+   * for both Swing Structure and Internal Structure matching LuxAlgo & UAlgo.
+   */
   public static evaluateStructure(
     symbol: string,
     candles: CandleDto[],
-    pivotsInternal: PivotPoint[],
-    pivotsSwing: PivotPoint[]
-  ): { marketStructure: MarketStructure; events: StructureEvent[] } {
-    const events: StructureEvent[] = [];
-    let internalTrend: 'BULLISH' | 'BEARISH' = 'BULLISH';
+    pivotsInternal: PivotPointDto[],
+    pivotsSwing: PivotPointDto[],
+    timeframe: TradingTimeframe = '1H'
+  ): {
+    marketStructure: MarketStructure;
+    events: MarketStructureEventDto[];
+    swingEvents: MarketStructureEventDto[];
+    internalEvents: MarketStructureEventDto[];
+  } {
+    const events: MarketStructureEventDto[] = [];
+    const swingEvents: MarketStructureEventDto[] = [];
+    const internalEvents: MarketStructureEventDto[] = [];
+
     let swingTrend: 'BULLISH' | 'BEARISH' = 'BULLISH';
+    let internalTrend: 'BULLISH' | 'BEARISH' = 'BULLISH';
+
     let lastBosTime: string | undefined = undefined;
     let lastChochTime: string | undefined = undefined;
     let lastPivotType: 'HIGH' | 'LOW' | undefined = undefined;
@@ -29,72 +41,155 @@ export class MarketStructureEngine {
       return {
         marketStructure: {
           symbol,
-          timeframe: '1H',
+          timeframe,
           trend: 'BULLISH',
           internalTrend: 'BULLISH',
           swingTrend: 'BULLISH',
           liquiditySwept: false,
         },
         events,
+        swingEvents,
+        internalEvents,
       };
     }
 
-    // Process Swing Structure
-    let lastSwingHigh = pivotsSwing.filter((p) => p.type === 'HIGH').pop();
-    let lastSwingLow = pivotsSwing.filter((p) => p.type === 'LOW').pop();
+    // Sort pivots chronologically
+    const sortedSwingPivots = [...pivotsSwing].sort((a, b) => a.index - b.index);
+    const sortedInternalPivots = [...pivotsInternal].sort((a, b) => a.index - b.index);
 
-    if (pivotsSwing.length > 0) {
-      const lastP = pivotsSwing[pivotsSwing.length - 1]!;
-      lastPivotType = lastP.type;
-      lastPivotPrice = lastP.price;
-    }
+    // Track latest active confirmed swing levels
+    let activeSwingHigh: PivotPointDto | null = null;
+    let activeSwingLow: PivotPointDto | null = null;
 
-    const latestCandle = candles[candles.length - 1]!;
+    let activeInternalHigh: PivotPointDto | null = null;
+    let activeInternalLow: PivotPointDto | null = null;
 
-    if (lastSwingHigh && latestCandle.close > lastSwingHigh.price) {
-      const isBearish: boolean = (swingTrend as string) === 'BEARISH';
-      const type: 'BOS' | 'CHOCH' = isBearish ? 'CHOCH' : 'BOS';
-      swingTrend = 'BULLISH';
-      lastBosTime = latestCandle.timestamp;
-      if (type === 'CHOCH') lastChochTime = latestCandle.timestamp;
-      events.push({
-        index: candles.length - 1,
-        time: latestCandle.timestamp,
-        type,
-        direction: 'BULLISH',
-        brokenLevel: lastSwingHigh.price,
-        isInternal: false,
-      });
-    } else if (lastSwingLow && latestCandle.close < lastSwingLow.price) {
-      const isBullish: boolean = (swingTrend as string) === 'BULLISH';
-      const type: 'BOS' | 'CHOCH' = isBullish ? 'CHOCH' : 'BOS';
-      swingTrend = 'BEARISH';
-      lastBosTime = latestCandle.timestamp;
-      if (type === 'CHOCH') lastChochTime = latestCandle.timestamp;
-      events.push({
-        index: candles.length - 1,
-        time: latestCandle.timestamp,
-        type,
-        direction: 'BEARISH',
-        brokenLevel: lastSwingLow.price,
-        isInternal: false,
-      });
-    }
+    let swingPivotIdx = 0;
+    let internalPivotIdx = 0;
 
-    // Process Internal Structure
-    let lastInternalHigh = pivotsInternal.filter((p) => p.type === 'HIGH').pop();
-    let lastInternalLow = pivotsInternal.filter((p) => p.type === 'LOW').pop();
+    // Bar-by-bar chronological sweep
+    for (let i = 0; i < candles.length; i++) {
+      const candle = candles[i]!;
 
-    if (lastInternalHigh && latestCandle.close > lastInternalHigh.price) {
-      internalTrend = 'BULLISH';
-    } else if (lastInternalLow && latestCandle.close < lastInternalLow.price) {
-      internalTrend = 'BEARISH';
+      // 1. Ingest any swing pivots confirmed at or before this candle index
+      while (
+        swingPivotIdx < sortedSwingPivots.length &&
+        sortedSwingPivots[swingPivotIdx]!.confirmedAtIndex <= i
+      ) {
+        const p = sortedSwingPivots[swingPivotIdx]!;
+        if (p.type === 'HIGH') {
+          activeSwingHigh = p;
+        } else {
+          activeSwingLow = p;
+        }
+        lastPivotType = p.type;
+        lastPivotPrice = p.price;
+        swingPivotIdx++;
+      }
+
+      // 2. Ingest any internal pivots confirmed at or before this candle index
+      while (
+        internalPivotIdx < sortedInternalPivots.length &&
+        sortedInternalPivots[internalPivotIdx]!.confirmedAtIndex <= i
+      ) {
+        const p = sortedInternalPivots[internalPivotIdx]!;
+        if (p.type === 'HIGH') {
+          activeInternalHigh = p;
+        } else {
+          activeInternalLow = p;
+        }
+        internalPivotIdx++;
+      }
+
+      // 3. Evaluate Swing Structure Breakouts (Bar Close Confirmation)
+      if (activeSwingHigh && candle.close > activeSwingHigh.price) {
+        const isReversal = swingTrend === 'BEARISH';
+        const type = isReversal ? 'CHOCH' : 'BOS';
+        swingTrend = 'BULLISH';
+        lastBosTime = candle.timestamp;
+        if (type === 'CHOCH') lastChochTime = candle.timestamp;
+
+        const evt: MarketStructureEventDto = {
+          index: i,
+          time: candle.timestamp,
+          type,
+          direction: 'BULLISH',
+          brokenLevel: activeSwingHigh.price,
+          isInternal: false,
+          confirmationCandleIndex: i,
+        };
+        events.push(evt);
+        swingEvents.push(evt);
+
+        // Consume broken high so it doesn't trigger repeatedly on consecutive bars
+        activeSwingHigh = null;
+      } else if (activeSwingLow && candle.close < activeSwingLow.price) {
+        const isReversal = swingTrend === 'BULLISH';
+        const type = isReversal ? 'CHOCH' : 'BOS';
+        swingTrend = 'BEARISH';
+        lastBosTime = candle.timestamp;
+        if (type === 'CHOCH') lastChochTime = candle.timestamp;
+
+        const evt: MarketStructureEventDto = {
+          index: i,
+          time: candle.timestamp,
+          type,
+          direction: 'BEARISH',
+          brokenLevel: activeSwingLow.price,
+          isInternal: false,
+          confirmationCandleIndex: i,
+        };
+        events.push(evt);
+        swingEvents.push(evt);
+
+        // Consume broken low
+        activeSwingLow = null;
+      }
+
+      // 4. Evaluate Internal Structure Breakouts (Bar Close Confirmation)
+      if (activeInternalHigh && candle.close > activeInternalHigh.price) {
+        const isReversal = internalTrend === 'BEARISH';
+        const type = isReversal ? 'CHOCH' : 'BOS';
+        internalTrend = 'BULLISH';
+
+        const evt: MarketStructureEventDto = {
+          index: i,
+          time: candle.timestamp,
+          type,
+          direction: 'BULLISH',
+          brokenLevel: activeInternalHigh.price,
+          isInternal: true,
+          confirmationCandleIndex: i,
+        };
+        events.push(evt);
+        internalEvents.push(evt);
+
+        activeInternalHigh = null;
+      } else if (activeInternalLow && candle.close < activeInternalLow.price) {
+        const isReversal = internalTrend === 'BULLISH';
+        const type = isReversal ? 'CHOCH' : 'BOS';
+        internalTrend = 'BEARISH';
+
+        const evt: MarketStructureEventDto = {
+          index: i,
+          time: candle.timestamp,
+          type,
+          direction: 'BEARISH',
+          brokenLevel: activeInternalLow.price,
+          isInternal: true,
+          confirmationCandleIndex: i,
+        };
+        events.push(evt);
+        internalEvents.push(evt);
+
+        activeInternalLow = null;
+      }
     }
 
     return {
       marketStructure: {
         symbol,
-        timeframe: '1H',
+        timeframe,
         trend: swingTrend,
         internalTrend,
         swingTrend,
@@ -105,6 +200,8 @@ export class MarketStructureEngine {
         liquiditySwept: false,
       },
       events,
+      swingEvents,
+      internalEvents,
     };
   }
 }

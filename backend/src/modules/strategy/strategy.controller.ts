@@ -3,6 +3,7 @@ import { ApiResponse } from '@algoapp/shared';
 import { evaluateStrategySignalSchema, getZonesQuerySchema } from '@algoapp/shared';
 import { ZoneDetectorService } from './services/zoneDetector.service.js';
 import { StrategySignalService } from './services/strategySignal.service.js';
+import { StrategyPipelineService } from './services/strategyPipeline.service.js';
 
 export const getStrategyZones = async (req: Request, res: Response): Promise<void> => {
   const query = getZonesQuerySchema.parse(req.query);
@@ -42,6 +43,26 @@ export const evaluateStrategySignal = async (req: Request, res: Response): Promi
     data: signal,
     meta: {
       requestId: (req as any).correlationId || 'req-eval-strategy-signal',
+      timestamp: new Date().toISOString(),
+    },
+  };
+  res.json(response);
+};
+
+export const runStrategyPipelineHandler = async (req: Request, res: Response): Promise<void> => {
+  const { symbol, timeframe, candles, autoExecute } = req.body;
+  const result = await StrategyPipelineService.runPipeline({
+    symbol: symbol || 'BTCUSD.P',
+    timeframe: timeframe || '1H',
+    candles: candles || [],
+    autoExecute: autoExecute !== false,
+  });
+
+  const response: ApiResponse<typeof result> = {
+    success: true,
+    data: result,
+    meta: {
+      requestId: (req as any).correlationId || 'req-strategy-pipeline',
       timestamp: new Date().toISOString(),
     },
   };

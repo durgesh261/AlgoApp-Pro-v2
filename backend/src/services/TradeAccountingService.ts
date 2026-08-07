@@ -1,4 +1,5 @@
 import { eventBus } from './EventBus.js';
+import { TradeAccountingService as ModuleTradeAccountingService } from '../modules/trade-accounting/services/tradeAccounting.service.js';
 
 export interface TradeCalculationResult {
   symbol: string;
@@ -16,7 +17,7 @@ export interface TradeCalculationResult {
 
 export class TradeAccountingService {
   /**
-   * Computes true Net PnL with taker fee (0.05%), funding rate fee, and Indian crypto tax (30% STCG).
+   * Computes true Net PnL with Delta Exchange India fees, funding rates, and Indian crypto tax (30% STCG).
    */
   public calculateNetPnL(params: {
     symbol: string;
@@ -24,24 +25,35 @@ export class TradeAccountingService {
     entryPrice: number;
     exitPrice: number;
     quantity: number;
-    fundingFee?: number;
+    fundingFee?: number | undefined;
+    leverage?: number | undefined;
+    isEntryMaker?: boolean | undefined;
+    isExitMaker?: boolean | undefined;
   }): TradeCalculationResult {
-    const { symbol, side, entryPrice, exitPrice, quantity, fundingFee = 0 } = params;
+    const {
+      symbol,
+      side,
+      entryPrice,
+      exitPrice,
+      quantity,
+      fundingFee,
+      leverage = 1,
+      isEntryMaker = false,
+      isExitMaker = false,
+    } = params;
 
-    const grossPnl =
-      side === 'LONG'
-        ? (exitPrice - entryPrice) * quantity
-        : (entryPrice - exitPrice) * quantity;
-
-    // Standard 0.05% (5 bps) taker fee on exit notional
-    const tradingFee = exitPrice * quantity * 0.0005;
-    // 30% STCG on positive profits
-    const tax = Math.max(0, grossPnl * 0.3);
-    const netPnl = grossPnl - tradingFee - fundingFee - tax;
-
-    let resultStatus: 'WIN' | 'LOSS' | 'BREAKEVEN' = 'BREAKEVEN';
-    if (netPnl > 0.0001) resultStatus = 'WIN';
-    else if (netPnl < -0.0001) resultStatus = 'LOSS';
+    const calc = ModuleTradeAccountingService.calculateAccounting({
+      tradeId: `TRD-${Date.now()}`,
+      symbol,
+      side,
+      entryPrice,
+      exitPrice,
+      quantity,
+      leverage,
+      isEntryMaker,
+      isExitMaker,
+      actualFundingFee: fundingFee,
+    });
 
     const result: TradeCalculationResult = {
       symbol,
@@ -49,12 +61,12 @@ export class TradeAccountingService {
       entryPrice,
       exitPrice,
       quantity,
-      grossPnl,
-      tradingFee,
-      fundingFee,
-      tax,
-      netPnl,
-      resultStatus,
+      grossPnl: calc.grossPnL,
+      tradingFee: calc.tradingFee,
+      fundingFee: calc.fundingFee,
+      tax: calc.tax,
+      netPnl: calc.netPnL,
+      resultStatus: calc.resultStatus,
     };
 
     eventBus.emit('trade:accounted', result);

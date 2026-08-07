@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile for AlgoApp Pro v2 Monorepo
+# Multi-stage Dockerfile for QuantEdge AI Monorepo
 FROM node:20-alpine AS builder
 
 WORKDIR /app

@@ -1,4 +1,4 @@
-# AlgoApp Pro v2 — Version 2.0 Production Refactor Audit Report
+# QuantEdge AI — Version 2.0 Production Refactor Audit Report
 
 **Date**: August 3, 2026  
 **Refactor Scope**: Design System Standardization, 100% Live API Data Wiring, Layout Polish, & Action Verification  
@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-Version 2.0 represents the **production-hardened refactor of AlgoApp Pro v2**. Every frontend page has been audited for design system alignment, typography (`font-mono`, `font-mono-tabular`), spacing (`space-y-5`, `gap-3`), responsive container layouts, and 100% live REST API integration.
+Version 2.0 represents the **production-hardened refactor of QuantEdge AI**. Every frontend page has been audited for design system alignment, typography (`font-mono`, `font-mono-tabular`), spacing (`space-y-5`, `gap-3`), responsive container layouts, and 100% live REST API integration.
 
 All mock datasets and static placeholders have been replaced with live TanStack Query hooks fetching data from Express TypeScript services backed by PostgreSQL / Prisma ORM.
 

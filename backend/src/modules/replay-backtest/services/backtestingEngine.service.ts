@@ -76,9 +76,6 @@ export class BacktestingEngineService {
   }
 
   public static async getBacktestSessions(): Promise<BacktestSessionDto[]> {
-    if (historicalBacktests.length === 0) {
-      await this.runBacktest({ symbol: 'BTCUSD.P' });
-    }
     return historicalBacktests;
   }
 }

@@ -85,7 +85,7 @@ export const IndicatorValidationPage: React.FC = () => {
             Indicator Engine Validation Dashboard
           </h1>
           <p className="text-xs text-[#94A3B8] mt-0.5">
-            Quantitative benchmark verification: TradingView zones vs AlgoApp deterministic Indicator Engine output.
+            Quantitative benchmark verification: TradingView zones vs QuantEdge AI deterministic Indicator Engine output.
           </p>
         </div>
 
@@ -123,14 +123,14 @@ export const IndicatorValidationPage: React.FC = () => {
         <div className="bg-[#161D2A] border border-[#1E293B] p-3 rounded-xl">
           <span className="text-[10px] text-[#94A3B8] uppercase block">Overall Accuracy</span>
           <div className="text-xl font-bold text-[#00C896] mt-0.5 font-mono-tabular">
-            {latestReport?.overallAccuracy ?? 94.2}%
+            {latestReport?.overallAccuracy ?? 0}%
           </div>
         </div>
 
         <div className="bg-[#161D2A] border border-[#1E293B] p-3 rounded-xl">
           <span className="text-[10px] text-[#94A3B8] uppercase block">Avg Price Boundary Delta</span>
           <div className="text-xl font-bold text-[#3B82F6] mt-0.5 font-mono-tabular">
-            ${latestReport?.averagePriceDiff ?? 12.40}
+            ${latestReport?.averagePriceDiff ?? 0}
           </div>
         </div>
 
@@ -153,7 +153,7 @@ export const IndicatorValidationPage: React.FC = () => {
         <div className="bg-[#161D2A] border border-[#1E293B] p-3 rounded-xl">
           <span className="text-[10px] text-[#94A3B8] uppercase block">Total Zones Compared</span>
           <div className="text-xl font-bold text-[#F8FAFC] mt-0.5 font-mono-tabular">
-            {latestReport?.totalCompared ?? 12}
+            {latestReport?.totalCompared ?? 0}
           </div>
         </div>
       </div>
@@ -193,7 +193,7 @@ export const IndicatorValidationPage: React.FC = () => {
           <div className="flex items-center space-x-3">
             <h2 className="text-xs font-bold text-[#F8FAFC] uppercase tracking-wider flex items-center gap-2">
               <Layers className="w-4 h-4 text-[#00C896]" />
-              TradingView vs AlgoApp Zone Comparison Grid ({filteredComparisons.length})
+              TradingView vs QuantEdge AI Zone Comparison Grid ({filteredComparisons.length})
             </h2>
 
             <div className="flex items-center space-x-1.5">
@@ -245,7 +245,7 @@ export const IndicatorValidationPage: React.FC = () => {
                 <th className="py-2.5 px-3">Symbol</th>
                 <th className="py-2.5 px-3">Zone Type</th>
                 <th className="py-2.5 px-3 text-right">TradingView Range</th>
-                <th className="py-2.5 px-3 text-right">AlgoApp Range</th>
+                <th className="py-2.5 px-3 text-right">QuantEdge AI Range</th>
                 <th className="py-2.5 px-3 text-right">Overlap %</th>
                 <th className="py-2.5 px-3 text-right">Upper Delta</th>
                 <th className="py-2.5 px-3 text-right">Lower Delta</th>

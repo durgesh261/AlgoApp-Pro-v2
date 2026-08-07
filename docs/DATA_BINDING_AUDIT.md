@@ -1,4 +1,4 @@
-# AlgoApp Pro v4.1 — Complete Data Binding Audit Report (`docs/DATA_BINDING_AUDIT.md`)
+# QuantEdge AI — Complete Data Binding Audit Report (`docs/DATA_BINDING_AUDIT.md`)
 
 **Date**: August 3, 2026  
 **Audited Target**: Frontend Data Sources & Component Bindings  

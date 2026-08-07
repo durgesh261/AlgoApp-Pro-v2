@@ -155,13 +155,13 @@ export const ReplayPage: React.FC = () => {
         {/* Timeline Slider */}
         <div className="space-y-1 pt-2">
           <div className="flex justify-between text-[10px] text-[#94A3B8]">
-            <span>Candle #{session ? session.currentCandleIndex + 1 : 1} of {session?.totalCandles ?? 20}</span>
+            <span>Candle #{session ? session.currentCandleIndex + 1 : 1} of {session?.totalCandles ?? 0}</span>
             <span>{candle?.timestamp ?? '2026-08-02T19:00:00Z'}</span>
           </div>
           <input
             type="range"
             min={0}
-            max={(session?.totalCandles ?? 20) - 1}
+            max={(session?.totalCandles ?? 0) - 1}
             value={session?.currentCandleIndex ?? 0}
             onChange={(e) =>
               controlMutation.mutate({ action: ReplayControlAction.JUMP_TO_INDEX, targetIndex: parseInt(e.target.value) })

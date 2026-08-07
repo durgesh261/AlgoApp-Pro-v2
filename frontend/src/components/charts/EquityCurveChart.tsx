@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { paperTradingApi } from '../../services/api';
-import { PaperAnalyticsDto } from '@algoapp/shared';
+import { tradeAccountingApi } from '../../services/api';
+import { TradeLedgerEntryDto } from '@algoapp/shared';
 import { EmptyState } from '../ui/EmptyState';
 import { WidgetSkeleton } from '../ui/SkeletonLoader';
 import { TrendingUp } from 'lucide-react';
@@ -11,27 +11,31 @@ interface Point {
 }
 
 export const EquityCurveChart: React.FC = () => {
-  const [data, setData] = useState<PaperAnalyticsDto | null>(null);
+  const [data, setData] = useState<TradeLedgerEntryDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hovered, setHovered] = useState<Point | null>(null);
 
   useEffect(() => {
     let active = true;
-    paperTradingApi
-      .getAnalytics()
-      .then((res) => { if (active) setData(res.data); })
-      .catch(() => { if (active) setData(null); })
+    tradeAccountingApi
+      .getLedger()
+      .then((res) => { if (active) setData(res.data.reverse()); }) // reverse to get oldest first for curve
+      .catch(() => { if (active) setData([]); })
       .finally(() => { if (active) setIsLoading(false); });
     return () => { active = false; };
   }, []);
 
   if (isLoading) return <WidgetSkeleton />;
 
-  const raw = data?.equityCurve ?? [];
-  const points: Point[] = raw.map((p) => ({
-    label: (p.time ?? p.timestamp ?? '').slice(11, 16) || (p.time ?? p.timestamp ?? ''),
-    equity: p.equity,
-  }));
+  const raw = data.filter(d => d.closedAt != null);
+  let cumulative = 10000; // start with a nominal 10k baseline
+  const points: Point[] = raw.map((p) => {
+    cumulative += p.netPnL;
+    return {
+      label: new Date(p.closedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+      equity: cumulative,
+    };
+  });
 
   if (points.length === 0) {
     return (

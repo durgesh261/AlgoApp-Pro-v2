@@ -51,4 +51,12 @@ export class PaperJournalService {
     journalEntries.unshift(entry);
     return entry;
   }
+
+  public static async logAction(
+    action: string,
+    details: string,
+    symbol?: string
+  ): Promise<PaperTradeJournalDto> {
+    return this.logEntry(PaperJournalEventType.ORDER_FILL, action, details, symbol);
+  }
 }

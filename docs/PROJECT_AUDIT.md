@@ -1,4 +1,4 @@
-# Project Audit & Architecture Assessment — AlgoApp Pro v2
+# Project Audit & Architecture Assessment — QuantEdge AI
 
 ## Table of Contents
 
@@ -24,7 +24,7 @@
 
 ## 1. Repository Summary
 
-**AlgoApp Pro v2** is a production-grade algorithmic trading platform designed for strategy research, controlled signal processing, risk governance, automated/manual execution through Delta Exchange, and operational transparency.
+**QuantEdge AI** is a production-grade algorithmic trading platform designed for strategy research, controlled signal processing, risk governance, automated/manual execution through Delta Exchange, and operational transparency.
 
 ### Current Repository State
 - **Type**: Documentation-Only Blueprint Repository.
@@ -195,7 +195,7 @@ flowchart TD
 ### Overall Architecture Readiness Score: **88 / 100**
 
 #### Evaluation Summary
-The documentation suite for **AlgoApp Pro v2** represents an exceptionally well-thought-out, risk-averse, and modern system design. By establishing strict domain boundaries (separating Strategy, Risk, Decision, and Execution), mandating string-based decimal precision for financial transactions, enforcing a PostgreSQL Transactional Outbox pattern, and treating venue state reconciliation as an essential safety gate, the architecture effectively prevents the most dangerous failure modes common in automated trading platforms.
+The documentation suite for **QuantEdge AI** represents an exceptionally well-thought-out, risk-averse, and modern system design. By establishing strict domain boundaries (separating Strategy, Risk, Decision, and Execution), mandating string-based decimal precision for financial transactions, enforcing a PostgreSQL Transactional Outbox pattern, and treating venue state reconciliation as an essential safety gate, the architecture effectively prevents the most dangerous failure modes common in automated trading platforms.
 
 #### Sign-Off Condition for Implementation Phase
 Engineering may proceed with Phase 1 (Foundation & Identity) implementation once the following prerequisites are met:
@@ -204,4 +204,4 @@ Engineering may proceed with Phase 1 (Foundation & Identity) implementation once
 3. Formalizing initial ADRs for Authentication Provider and Message Broker selection.
 
 *Audited and Approved by:*
-**Lead Software Engineer — AlgoApp Pro v2**
+**Lead Software Engineer — QuantEdge AI**

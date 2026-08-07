@@ -28,7 +28,7 @@ export const AnalysisPage: React.FC = () => {
 
   const { data: metricsData } = useQuery({
     queryKey: ['strategyMetrics'],
-    queryFn: intelligenceApi.getStrategyMetrics,
+    queryFn: () => intelligenceApi.getStrategyMetrics(),
   });
 
   const { data: regimeData } = useQuery({
@@ -76,7 +76,7 @@ export const AnalysisPage: React.FC = () => {
         <div>
           <h1 className="text-lg font-bold text-[#F8FAFC] flex items-center gap-2">
             <LineChart className="w-5 h-5 text-[#3B82F6]" />
-            Version 5.0 Trading Intelligence & Adaptive Strategy Platform — {activeSymbol} ({activeTimeframe})
+            Trading Intelligence & Adaptive Strategy Platform — {activeSymbol} ({activeTimeframe})
           </h1>
           <p className="text-xs text-[#94A3B8] mt-0.5">
             Empirical trade quality scoring, Sharpe/Sortino performance monitoring, regime detection, and evidence-backed recommendations.
@@ -111,13 +111,13 @@ export const AnalysisPage: React.FC = () => {
 
             <div className="flex items-baseline space-x-3 mb-3">
               <span className="text-4xl font-extrabold text-[#00C896] font-mono-tabular">
-                {score?.overallScore ?? 94.2}
+                {score?.overallScore ?? 0}
               </span>
               <span className="text-xs text-[#94A3B8]">/ 100 Quality Rating</span>
             </div>
 
             <p className="text-xs text-[#94A3B8] leading-relaxed bg-[#0B0E14] p-2.5 rounded-lg border border-[#1E293B]">
-              {score?.journalCorrelation ?? 'HIGH_DISCIPLINE_ALIGNED: Trade executed strictly according to 1H Demand Retest plan.'}
+              {score?.journalCorrelation ?? '—'}
             </p>
           </div>
 
@@ -136,35 +136,35 @@ export const AnalysisPage: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[10px] text-[#94A3B8] block uppercase">Entry Quality</span>
-              <span className="text-lg font-bold text-[#00C896]">{score?.entryQuality ?? 92.5}%</span>
+              <span className="text-lg font-bold text-[#00C896]">{score?.entryQuality ?? 0}%</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[10px] text-[#94A3B8] block uppercase">Exit Quality</span>
-              <span className="text-lg font-bold text-[#00C896]">{score?.exitQuality ?? 95.0}%</span>
+              <span className="text-lg font-bold text-[#00C896]">{score?.exitQuality ?? 0}%</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[10px] text-[#94A3B8] block uppercase">Timing Quality</span>
-              <span className="text-lg font-bold text-[#3B82F6]">{score?.timingQuality ?? 98.0}%</span>
+              <span className="text-lg font-bold text-[#3B82F6]">{score?.timingQuality ?? 0}%</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[10px] text-[#94A3B8] block uppercase">Zone Quality</span>
-              <span className="text-lg font-bold text-[#00C896]">{score?.zoneQuality ?? 96.0}%</span>
+              <span className="text-lg font-bold text-[#00C896]">{score?.zoneQuality ?? 0}%</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[10px] text-[#94A3B8] block uppercase">RR Quality</span>
-              <span className="text-lg font-bold text-[#F59E0B]">{score?.rrQuality ?? 91.0}%</span>
+              <span className="text-lg font-bold text-[#F59E0B]">{score?.rrQuality ?? 0}%</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[10px] text-[#94A3B8] block uppercase">Confidence Accuracy</span>
-              <span className="text-lg font-bold text-[#00C896]">{score?.confidenceAccuracy ?? 98.5}%</span>
+              <span className="text-lg font-bold text-[#00C896]">{score?.confidenceAccuracy ?? 0}%</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[10px] text-[#94A3B8] block uppercase">Execution Accuracy</span>
-              <span className="text-lg font-bold text-[#3B82F6]">{score?.executionAccuracy ?? 96.5}%</span>
+              <span className="text-lg font-bold text-[#3B82F6]">{score?.executionAccuracy ?? 0}%</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[10px] text-[#94A3B8] block uppercase">Market Regime</span>
-              <span className="text-xs font-bold text-[#00C896]">{regime?.regime ?? 'TRENDING_BULLISH'}</span>
+              <span className="text-xs font-bold text-[#00C896]">{regime?.regime ?? '—'}</span>
             </div>
           </div>
         </div>
@@ -177,7 +177,7 @@ export const AnalysisPage: React.FC = () => {
           <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
             <div className="flex items-center space-x-2">
               <TrendingUp className="w-5 h-5 text-[#00C896]" />
-              <h2 className="text-xs font-bold text-white uppercase tracking-wider">Strategy Performance Monitor ({metrics?.profileName ?? 'Default 1H Profile'})</h2>
+              <h2 className="text-xs font-bold text-white uppercase tracking-wider">Strategy Performance Monitor ({metrics?.profileName ?? '—'})</h2>
             </div>
             <span className="text-[10px] bg-[#3B82F6]/20 text-[#3B82F6] px-2 py-0.5 rounded font-bold">
               SHARPE: {metrics?.sharpeRatio ? metrics.sharpeRatio.toFixed(2) : '—'}
@@ -231,19 +231,19 @@ export const AnalysisPage: React.FC = () => {
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-[#94A3B8]">Active Regime:</span>
-                <span className="text-[#00C896] font-bold">{regime?.regime ?? 'TRENDING_BULLISH'}</span>
+                <span className="text-[#00C896] font-bold">{regime?.regime ?? '—'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#94A3B8]">ATR Volatility:</span>
-                <span className="text-white font-bold">${regime?.atr ?? 450.0} ({regime?.volatilityPercent ?? 1.45}%)</span>
+                <span className="text-white font-bold">${regime?.atr ?? 0} ({regime?.volatilityPercent ?? 0}%)</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#94A3B8]">Trend Strength:</span>
-                <span className="text-[#3B82F6] font-bold">{regime?.trendStrength ?? 88}%</span>
+                <span className="text-[#3B82F6] font-bold">{regime?.trendStrength ?? 0}%</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#94A3B8]">Trading Session:</span>
-                <span className="text-white font-bold">{regime?.session ?? 'New York Session'}</span>
+                <span className="text-white font-bold">{regime?.session ?? '—'}</span>
               </div>
             </div>
           </div>
@@ -326,19 +326,19 @@ export const AnalysisPage: React.FC = () => {
           <div className="grid grid-cols-2 gap-3 text-xs">
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[#94A3B8] block text-[10px]">CONSISTENCY SCORE</span>
-              <span className="text-lg font-bold text-[#00C896]">{analytics?.consistencyScore ?? 94.2}%</span>
+              <span className="text-lg font-bold text-[#00C896]">{analytics?.consistencyScore ?? 0}%</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[#94A3B8] block text-[10px]">DISCIPLINE SCORE</span>
-              <span className="text-lg font-bold text-[#00C896]">{analytics?.disciplineScore ?? 96.0}%</span>
+              <span className="text-lg font-bold text-[#00C896]">{analytics?.disciplineScore ?? 0}%</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[#94A3B8] block text-[10px]">RISK MANAGEMENT SCORE</span>
-              <span className="text-lg font-bold text-[#3B82F6]">{analytics?.riskManagementScore ?? 98.5}%</span>
+              <span className="text-lg font-bold text-[#3B82F6]">{analytics?.riskManagementScore ?? 0}%</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[#94A3B8] block text-[10px]">AVG MISTAKE FREQUENCY</span>
-              <span className="text-lg font-bold text-[#00C896]">{analytics?.avgMistakeFrequencyPerWeek ?? 0.2} / week</span>
+              <span className="text-lg font-bold text-[#00C896]">{analytics?.avgMistakeFrequencyPerWeek ?? 0} / week</span>
             </div>
           </div>
         </div>
@@ -353,19 +353,19 @@ export const AnalysisPage: React.FC = () => {
           <div className="grid grid-cols-2 gap-3 text-xs">
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[#94A3B8] block text-[10px]">DAILY RISK EXPOSURE</span>
-              <span className="text-lg font-bold text-white">{risk?.dailyRiskPercent ?? 1.5}%</span>
+              <span className="text-lg font-bold text-white">{risk?.dailyRiskPercent ?? 0}%</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[#94A3B8] block text-[10px]">RISK DRIFT</span>
-              <span className="text-lg font-bold text-[#00C896]">{risk?.riskDriftPercent ?? 0.2}%</span>
+              <span className="text-lg font-bold text-[#00C896]">{risk?.riskDriftPercent ?? 0}%</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[#94A3B8] block text-[10px]">RISK CONSISTENCY</span>
-              <span className="text-lg font-bold text-[#00C896]">{risk?.riskConsistencyScore ?? 98.5}%</span>
+              <span className="text-lg font-bold text-[#00C896]">{risk?.riskConsistencyScore ?? 0}%</span>
             </div>
             <div className="bg-[#0B0E14] border border-[#1E293B] p-3 rounded-lg">
               <span className="text-[#94A3B8] block text-[10px]">CAPITAL EFFICIENCY</span>
-              <span className="text-lg font-bold text-[#3B82F6]">{risk?.capitalEfficiencyPercent ?? 88.4}%</span>
+              <span className="text-lg font-bold text-[#3B82F6]">{risk?.capitalEfficiencyPercent ?? 0}%</span>
             </div>
           </div>
         </div>

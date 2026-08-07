@@ -5,7 +5,7 @@ import { ChallengeEngineService } from '../../backend/src/modules/trade-accounti
 import { PositionSizingEngineService } from '../../backend/src/modules/trade-accounting/services/positionSizingEngine.service';
 import { TradeSyncService } from '../../backend/src/modules/trade-accounting/services/tradeSync.service';
 
-describe('Trade Accounting & 20-Day Challenge Manager Test Suite', () => {
+describe('Trade Accounting & 20-Day Challenge Manager Test Suite (Delta Exchange India Guidelines)', () => {
   const walletService = new WalletEngineService();
   const challengeService = new ChallengeEngineService();
   const syncService = new TradeSyncService();
@@ -14,27 +14,40 @@ describe('Trade Accounting & 20-Day Challenge Manager Test Suite', () => {
     await challengeService.resetChallenge();
   });
 
-  it('1. TradeAccountingService - calculates exact Gross PnL, Taker/Maker fees, and Net PnL', () => {
-    // Buy 1 BTC @ 60,000, Sell @ 61,000 (Taker fee 0.05%, Funding 0.01%)
-    // Gross PnL = +$1,000
-    // Entry fee = 60,000 * 0.0005 = $30
-    // Exit fee = 61,000 * 0.0005 = $30.50 -> Trading fee = $60.50
-    // Funding fee = 60,000 * 0.0001 = $6.00
-    // Net PnL = 1,000 - 60.50 - 6.00 = $933.50
-    const calc = TradeAccountingService.calculateAccounting(
-      'TRD-1',
-      60000,
-      61000,
-      1.0,
-      10,
-      'LONG',
-      false // Taker
-    );
+  it('1. TradeAccountingService - calculates exact Gross PnL, 18% GST on fees, 0% TDS for Futures, and Net PnL', () => {
+    // Buy 1 BTC @ 60,000, Sell @ 61,000 (Taker fee 0.05%, 18% GST on fees, Funding 0.01%)
+    // Gross PnL = +$1,000.00
+    // Entry base fee = 60,000 * 0.0005 = $30.00
+    // Exit base fee = 61,000 * 0.0005 = $30.50 -> Base Trading Fee = $60.50
+    // 18% GST on fees = $60.50 * 0.18 = $10.89
+    // Total Trading Fee (with GST) = $71.39
+    // Funding Fee = 60,000 * 0.0001 = $6.00
+    // Gross Taxable Gain (deducting fees + GST) = 1,000 - 71.39 - 6.00 = $922.61
+    // STCG Tax (30%) = 922.61 * 0.30 = $276.783
+    // TDS = $0 (0% TDS for Futures as per Delta Exchange India guidelines)
+    // Net Take-Home PnL = 1000 - 71.39 - 6.00 - 276.783 = $645.827
+    const calc = TradeAccountingService.calculateAccounting({
+      tradeId: 'TRD-1',
+      symbol: 'BTCUSD.P',
+      side: 'LONG',
+      entryPrice: 60000,
+      exitPrice: 61000,
+      quantity: 1.0,
+      leverage: 10,
+      isEntryMaker: false,
+      isExitMaker: false,
+    });
 
     expect(calc.grossPnL).toBe(1000);
-    expect(calc.tradingFee).toBe(60.5);
+    expect(calc.feeBreakdown.baseTradingFee).toBe(60.5);
+    expect(calc.gstOnFees).toBe(10.89);
+    expect(calc.tradingFee).toBe(71.39);
     expect(calc.fundingFee).toBe(6);
-    expect(calc.netPnL).toBe(933.5);
+    expect(calc.taxBreakdown.tdsAmount).toBe(0);
+    expect(calc.taxBreakdown.isTdsApplicable).toBe(false);
+    expect(calc.taxBreakdown.lossOffsettingAllowed).toBe(true);
+    expect(calc.tax).toBeCloseTo(276.783, 2);
+    expect(calc.netPnL).toBeCloseTo(645.827, 2);
     expect(calc.marginUsed).toBe(6000);
   });
 
@@ -93,10 +106,10 @@ describe('Trade Accounting & 20-Day Challenge Manager Test Suite', () => {
     // Should reject if margin required > available balance (20.0 > 10.0)
     const check3 = await challengeService.canExecuteTrade(20.0, false);
     expect(check3.allowed).toBe(false);
-    expect(check3.reason).toContain('Insufficient available balance');
+    expect(check3.reason).toContain('Insufficient available margin');
   });
 
-  it('6. TradeSyncService - logs 28-field audit record to Trade Ledger', async () => {
+  it('6. TradeSyncService - logs institutional audit record to Trade Ledger with GST & Tax breakdown', async () => {
     const entry = await syncService.syncTradeFromExchange({
       symbol: 'BTCUSD.P',
       timeframe: '1H',
@@ -113,6 +126,8 @@ describe('Trade Accounting & 20-Day Challenge Manager Test Suite', () => {
     expect(entry.tradeId).toBeDefined();
     expect(entry.symbol).toBe('BTCUSD.P');
     expect(entry.grossPnL).toBe(1000);
+    expect(entry.gstOnFees).toBeGreaterThan(0);
+    expect(entry.isTdsApplicable).toBe(false);
     expect(entry.resultStatus).toBe('WIN');
 
     const ledger = await syncService.getLedgerEntries();

@@ -77,6 +77,16 @@ export interface SystemSettingsDto {
   timezone: string;
   maxStaleSignalSeconds: number;
   isKillSwitchActive: boolean;
+  deltaApiKey?: string;
+  hasDeltaApiSecret?: boolean;
+  deltaEnvironment?: 'PRODUCTION' | 'SANDBOX';
+  deltaHealth?: {
+    status: 'CONNECTED' | 'DISCONNECTED' | 'RECONNECTING' | 'ERROR';
+    restStatus: 'CONNECTED' | 'DEGRADED' | 'ERROR' | 'UNCONFIGURED';
+    wsStatus: 'CONNECTED' | 'DISCONNECTED' | 'RECONNECTING';
+    lastSyncTime: string;
+    reconcileCount: number;
+  };
   updatedAt: string;
 }
 

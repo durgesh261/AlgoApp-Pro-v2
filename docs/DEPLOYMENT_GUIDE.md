@@ -1,4 +1,4 @@
-# AlgoApp Pro v2 — Institutional Deployment Guide
+# QuantEdge AI — Institutional Deployment Guide
 
 ## Prerequisites
 - Node.js v18.0+ or v20.0+

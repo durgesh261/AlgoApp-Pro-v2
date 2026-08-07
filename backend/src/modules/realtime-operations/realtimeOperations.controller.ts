@@ -40,6 +40,37 @@ export const markNotificationRead = async (req: Request, res: Response): Promise
   res.json(response);
 };
 
+export const markAllNotificationsRead = async (req: Request, res: Response): Promise<void> => {
+  const updated = await notifService.markAllAsRead();
+
+  const response: ApiResponse<{ success: boolean }> = {
+    success: true,
+    data: { success: updated },
+    meta: {
+      requestId: (req as any).correlationId || 'req-notification-read-all',
+      timestamp: new Date().toISOString(),
+    },
+  };
+
+  res.json(response);
+};
+
+export const clearNotifications = async (req: Request, res: Response): Promise<void> => {
+  const updated = await notifService.clearAll();
+
+  const response: ApiResponse<{ success: boolean }> = {
+    success: true,
+    data: { success: updated },
+    meta: {
+      requestId: (req as any).correlationId || 'req-notification-clear',
+      timestamp: new Date().toISOString(),
+    },
+  };
+
+  res.json(response);
+};
+
+
 export const getAuditTimeline = async (req: Request, res: Response): Promise<void> => {
   const { tradeId } = req.params;
   const timeline = await auditService.getTimeline(tradeId || 'SAMPLE-TRD-1');

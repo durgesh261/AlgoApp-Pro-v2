@@ -1,6 +1,6 @@
 # Strategy Specification & Quantitative Market Structure Specification
 
-**AlgoApp Pro v2 — Version 2.0.0**  
+**QuantEdge AI — Version 2.0.0**  
 **Document Revision:** 1.0.0  
 **Scope:** Institutional 1H Perpetual Market Structure, Zone Merging, Decision Engine Rules & Risk Management
 
@@ -8,7 +8,7 @@
 
 ## 1. Exact Indicator Configuration
 
-The AlgoApp Pro v2 Strategy Engine integrates parameters derived from two reverse-engineered Pine Script indicators: **Price Action Toolkit Lite (`[UAlgo]`)** and **Smart Money Concepts (`[LuxAlgo]`)**.
+The QuantEdge AI Strategy Engine integrates parameters derived from two reverse-engineered Pine Script indicators: **Price Action Toolkit Lite (`[UAlgo]`)** and **Smart Money Concepts (`[LuxAlgo]`)**.
 
 | Indicator Parameter | Source | Default Value | Active Value | System Purpose |
 | :--- | :--- | :--- | :--- | :--- |
@@ -355,3 +355,151 @@ sequenceDiagram
 | `AT-STRAT-03` | Invalidation | Candle closes at 63,100 (below Demand lower bound) | Zone status set to `BROKEN` | `status = BROKEN, active = false` |
 | `AT-STRAT-04` | Long Trade Execution | Zone retest + CHoCH + Confidence 94.5% | Signal decision `EXECUTE` | `decisionState = EXECUTE` |
 | `AT-STRAT-05` | Low Confidence Skip | Zone retest without liquidity sweep (Confidence 68%) | Signal decision `SKIP` | `decisionState = SKIP` |
+
+---
+
+# Part 3 – Finalized Strategy Rules
+
+The following section constitutes the exact, immutable institutional strategy rules governing the **Version 5.1 Trading Engine**, **Market Scanner Daemon**, **AI Decision Gate**, and **Delta Exchange Execution Interface**.
+
+---
+
+### Rule 1: Universe of Tradable Assets
+- **Tradable Symbols**: Strictly limited to four high-liquidity perpetual contracts on Delta Exchange:
+  1. `BTCUSD.P` (Bitcoin Perpetual)
+  2. `ETHUSD.P` (Ethereum Perpetual)
+  3. `SOLUSD.P` (Solana Perpetual)
+  4. `XRPUSD.P` (Ripple Perpetual)
+- **Constraint**: All other pairs, spot assets, or exotic tokens are strictly rejected and filtered at the ingress layer.
+
+---
+
+### Rule 2: Single Execution Timeframe
+- **Timeframe**: Strictly **1-Hour (1H)** candle resolution.
+- **Enforcement**:
+  - Live 1H candles are constructed dynamically by the native `CandleEngine` from WebSocket trade ticks.
+  - Multi-timeframe noise is eliminated; all pivot lookbacks, ATR windows, and structural confirmations operate uniformly on 1H closes.
+
+---
+
+### Rule 3: Trade Order Blocks Exclusively
+- **Trigger**: Valid trade setups are initiated **only** from confirmed **Smart Money Concepts (SMC)** and **Price Action Toolkit (PAT)** Order Blocks.
+- **Exclusions**: Trendline bounces, generic moving average crossovers, and standalone indicator spikes without an active Order Block are discarded.
+
+---
+
+### Rule 4: Decoupled Fair Value Gap (FVG) Architecture
+- **Policy**: Fair Value Gaps (FVGs) are calculated and tracked in a modular background engine (`FvgEngine`) for structural telemetry, but **ignored for trade entry triggers**.
+- **Design Intent**: Allows instant future activation of FVG confluence scoring without architectural or schema modifications.
+
+---
+
+### Rule 5: First Touch Only
+- **Touch Qualification**: An Order Block is eligible for trade execution **only on its first return (Touch Count $\le 1$)**.
+- **Subsequent Touches**: If an Order Block has been tested $\ge 2$ times (`TESTED` or `DEGRADED`), it is disqualified from initiating any new trade entry.
+
+---
+
+### Rule 6: High-Conviction AI Gate (Confidence $\ge 85\%$)
+- **Gatekeeper**: `AIDecisionCenterService` evaluates a 9-Factor institutional scoring matrix (100 points maximum).
+- **Execution Threshold**: The composite confidence score must be $\ge \mathbf{85\%}$.
+- **Matrix Factors**:
+  1. *1H Trend Alignment (Swing & Internal)* — 15 pts
+  2. *Order Block Freshness ($\ge 80\%$)* — 15 pts
+  3. *First Touch Verification* — 15 pts
+  4. *Market Structure Break Confirmation (BOS / CHoCH)* — 15 pts
+  5. *Liquidity Sweep Confluence (EQH/EQL)* — 10 pts
+  6. *Volume Expansion on Base Breakout* — 10 pts
+  7. *Clean Unmitigated Path to Target* — 10 pts
+  8. *Trading Session Liquidity Window* — 5 pts
+  9. *Delta Market Health & Spread Tightness* — 5 pts
+
+---
+
+### Rule 7: Dynamic Entry Depth based on Order Block Width
+The entry price within the Order Block is determined by its percentage width:
+
+$$\text{OB Width \%} = \frac{\text{Upper Price} - \text{Lower Price}}{\text{Lower Price}} \times 100$$
+
+- **Wide Order Blocks ($\text{Width} > 0.6\%$)**:
+  - *Bullish OB*: Enter **25% deep inside** from the top edge:
+    $$\text{Entry Price} = \text{Upper Price} - 0.25 \times (\text{Upper Price} - \text{Lower Price})$$
+  - *Bearish OB*: Enter **25% deep inside** from the bottom edge:
+    $$\text{Entry Price} = \text{Lower Price} + 0.25 \times (\text{Upper Price} - \text{Lower Price})$$
+- **Narrow Order Blocks ($\text{Width} \le 0.6\%$)**:
+  - *Bullish OB*: Enter directly at the outer top edge ($\text{Entry} = \text{Upper Price}$).
+  - *Bearish OB*: Enter directly at the outer bottom edge ($\text{Entry} = \text{Lower Price}$).
+
+---
+
+### Rule 8: Single-Use Lifetime for Order Blocks
+- **Policy**: An Order Block can be used for **at most one trade**.
+- **State Transition**: Once an Order Block triggers an active trade, it is immediately marked `isUsed = true` and retired from subsequent scan evaluations, regardless of whether the trade finishes in TP or SL.
+
+---
+
+### Rule 9: One Active Trade at a Time
+- **Concurrency Cap**: The engine enforces a strict global position limit of **1 active trade across the entire portfolio**.
+- **Locking**: When a trade is live (`status = IN_TRADE`), all other symbols are locked in telemetry-monitoring mode (`LOCKED_IN_TRADE`). No simultaneous or hedging positions are allowed.
+
+---
+
+### Rule 10: Highest-Confidence Symbol Priority Arbitration
+- **Simultaneous Signal Resolution**: When multiple symbols (e.g., both `BTCUSD.P` and `SOLUSD.P`) touch valid Order Blocks and qualify with Confidence $\ge 85\%$ in the same scanning cycle:
+  - All candidates are ranked by their exact composite confidence score:
+    $$\text{Winner} = \arg\max_{c \in \text{Candidates}} (c.\text{confidenceScore})$$
+  - The highest-confidence candidate is executed immediately.
+  - Remaining candidates are safely discarded.
+
+---
+
+### Rule 11: 100% Account Balance Utilization
+- **Capital Allocation**: Every executed trade allocates **100% of the currently available live USDT balance** on Delta Exchange as initial margin.
+- **Compounding**: Trade equity scales automatically with realized profits and losses.
+
+---
+
+### Rule 12: Maximum Leverage Cap at 100×
+- **Leverage Ceiling**: Dynamic leverage is mathematically calculated to fix risk, subject to a hard cap:
+  $$\text{Leverage} = \min\left(100, \max\left(1, \left\lfloor \frac{35\%}{\text{SL Distance \%}} \right\rceil\right)\right)$$
+- No trade will ever exceed $100\times$ leverage under any market condition.
+
+---
+
+### Rule 13: Fixed Risk at Exactly 35% of Account
+- **Risk Budget**: The Stop Loss is engineered so that if triggered, the total account loss is **strictly fixed at 35% of current equity**:
+  $$\text{Loss at SL} = \text{Account Balance} \times 0.35$$
+- **Stop Loss Placement**:
+  - *Bullish OB*: $\text{Stop Loss} = \text{Lower Price of Order Block}$
+  - *Bearish OB*: $\text{Stop Loss} = \text{Upper Price of Order Block}$
+
+---
+
+### Rule 14: Take Profit at Exactly 60% Account Growth
+- **Target Profit**: The Take Profit level is engineered to deliver **strictly 60% net account growth**:
+  $$\text{Profit at TP} = \text{Account Balance} \times 0.60$$
+- **Target Distance Calculation**:
+  $$\text{TP Distance \%} = \frac{60\%}{\text{Leverage}}$$
+  - *Bullish Trade*: $\text{TP Price} = \text{Entry Price} \times \left(1 + \frac{\text{TP Distance \%}}{100}\right)$
+  - *Bearish Trade*: $\text{TP Price} = \text{Entry Price} \times \left(1 - \frac{\text{TP Distance \%}}{100}\right)$
+- **Fixed Risk/Reward Ratio**: Delivers an asymmetric institutional payoff:
+  $$\text{R:R Ratio} = \frac{60\%}{35\%} \approx 1.71 : 1$$
+
+---
+
+### Rule 15: Immediate Scanner Resumption after Exit
+- **Post-Trade Lifecycle**: The moment an active position hits either Take Profit or Stop Loss:
+  1. The position is closed and accounted for by `TradeAccountingService`.
+  2. The parent Order Block is retired.
+  3. The trade lock is released (`activeTradeSymbol = null`).
+  4. The `MarketScannerService` transitions immediately back to `RUNNING` status and resumes scanning all 4 pairs on the very next market tick.
+
+---
+
+### Rule 16: Manual Scanner Control Plane
+- **Operator Controls**: The trader maintains full supervisory control over the autonomous scanning daemon via the frontend Terminal and REST API:
+  - `POST /api/v1/live-trading/scanner/start` — Initializes and engages autonomous scanning.
+  - `POST /api/v1/live-trading/scanner/pause` — Temporarily freezes signal evaluation while retaining telemetry.
+  - `POST /api/v1/live-trading/scanner/resume` — Unfreezes and re-engages signal evaluation.
+  - `POST /api/v1/live-trading/scanner/stop` — Gracefully halts all scanning activities.
+

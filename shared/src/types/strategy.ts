@@ -1,3 +1,5 @@
+import { TradingTimeframe } from './strategyProfile.js';
+
 export enum ZoneType {
   SUPPLY = 'SUPPLY',
   DEMAND = 'DEMAND',
@@ -28,7 +30,7 @@ export interface ZoneDto {
   id: string;
   symbol: string;
   type: ZoneType;
-  timeframe: '1H';
+  timeframe: TradingTimeframe;
   upperPrice: number;
   lowerPrice: number;
   source: ZoneSource;
@@ -41,14 +43,4 @@ export interface ZoneDto {
   updatedAt: string;
 }
 
-export interface StrategySignalDto {
-  id: string;
-  symbol: string;
-  timeframe: '1H';
-  outcome: StrategySignalOutcome;
-  price: number;
-  activeZoneId?: string | undefined;
-  rationale: string;
-  confidenceScore: number;
-  timestamp: string;
-}
+export type { StrategySignalDto } from './decision.js';

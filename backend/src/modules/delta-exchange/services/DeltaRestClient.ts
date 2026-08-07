@@ -185,12 +185,35 @@ export class DeltaRestClient {
 
   public async getWalletBalances(): Promise<DeltaWalletBalance[]> {
     const res = await this.executeWithRetry(() => this.client.get('/v2/wallet/balances'));
-    return res.data?.result || [];
+    const raw = res.data;
+    // Delta India API returns { result: [...] } or { result: { [currency]: {...} } }
+    if (Array.isArray(raw?.result)) {
+      return raw.result;
+    }
+    // Object format: { result: { USDT: { balance: '...' }, BTC: {...} } }
+    if (raw?.result && typeof raw.result === 'object') {
+      return Object.entries(raw.result).map(([assetSymbol, data]: [string, any]) => ({
+        asset_id: data.asset_id || 0,
+        asset_symbol: assetSymbol,
+        balance: String(data.balance || data.wallet_balance || '0'),
+        available_balance: String(data.available_balance || data.available_margin || '0'),
+        order_margin: String(data.order_margin || '0'),
+        position_margin: String(data.position_margin || '0'),
+        unrealized_pnl: String(data.unrealized_pnl || '0'),
+      }));
+    }
+    return [];
   }
 
   public async getPositions(): Promise<DeltaPosition[]> {
-    const res = await this.executeWithRetry(() => this.client.get('/v2/positions'));
-    return res.data?.result || [];
+    const res = await this.executeWithRetry(() => this.client.get('/v2/positions/margined'));
+    const raw = res.data;
+    if (Array.isArray(raw?.result)) return raw.result;
+    // Some Delta endpoints return { result: { BTCUSD: { ... } } }
+    if (raw?.result && typeof raw.result === 'object') {
+      return Object.values(raw.result) as DeltaPosition[];
+    }
+    return [];
   }
 
   public async getOrders(params?: { status?: string | undefined }): Promise<DeltaOrder[]> {

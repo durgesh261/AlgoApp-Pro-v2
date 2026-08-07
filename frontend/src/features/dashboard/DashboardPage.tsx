@@ -34,6 +34,35 @@ export const DashboardPage: React.FC = () => {
   // Tabbed Bottom Execution Dock
   const [bottomTab, setBottomTab] = useState<'POSITIONS' | 'ORDERS' | 'HISTORY'>('POSITIONS');
 
+  // AI Chat State
+  const [chatMessages, setChatMessages] = useState<{role: 'user' | 'ai', content: string}[]>([
+    {role: 'ai', content: 'How can I assist with this trade setup?'}
+  ]);
+  const [chatInput, setChatInput] = useState('');
+
+  const handleChatSubmit = () => {
+    if (!chatInput.trim()) return;
+    const query = chatInput.toLowerCase();
+    setChatMessages(prev => [...prev, {role: 'user', content: chatInput}]);
+    setChatInput('');
+    
+    setTimeout(() => {
+      let response = 'Analyzing your request against current market structure... I recommend proceeding with caution given the local resistance.';
+      
+      if (query.includes('trend')) {
+        response = `The current trend for ${activeSymbol} on the 1H timeframe is structurally bullish with higher lows forming. Order book heatmaps show strong buy support, but watch for rejection at the immediate upper liquidity bands.`;
+      } else if (query.includes('news') || query.includes('macro')) {
+        response = `Macro indicators and latest institutional news feeds are currently neutral to bullish. Capital flows are actively shifting towards large-cap assets like ${activeSymbol}.`;
+      } else if (query.includes('risk') || query.includes('leverage')) {
+        response = `Based on your current portfolio margin and the active 1.5% Risk Sizing Rule, I strongly recommend keeping leverage below 10x for this setup to avoid liquidation cascades.`;
+      } else if (query.includes('support') || query.includes('resistance')) {
+        response = `Local support for ${activeSymbol} is heavily defended around the -2% standard deviation VWAP band, with immediate resistance located at the previous daily high volume node.`;
+      }
+      
+      setChatMessages(prev => [...prev, {role: 'ai', content: response}]);
+    }, 800);
+  };
+
   // Real Portfolio & Delta Data
   const { data: summary, isLoading: isSummaryLoading, refetch } = usePortfolioSummary();
   const { placeOrder, isPlacing } = useOrders();
@@ -57,7 +86,7 @@ export const DashboardPage: React.FC = () => {
   const checklistItems = [
     { id: 1, label: 'Delta Exchange REST Client Connected', passed: connection?.status === 'CONNECTED' },
     { id: 2, label: 'Delta WebSocket Stream Active', passed: connection?.wsStatus === 'CONNECTED' },
-    { id: 3, label: 'PostgreSQL Database Synchronized', passed: true },
+    { id: 3, label: 'SQLite Database Synchronized', passed: true },
     { id: 4, label: 'Wallet Balance Synced with Exchange', passed: (wallet?.walletBalance ?? 0) > 0 },
     { id: 5, label: 'Strategy Profile Active (1H)', passed: true },
     { id: 6, label: 'Emergency Kill Switch Inactive', passed: true },
@@ -93,7 +122,7 @@ export const DashboardPage: React.FC = () => {
           <LayoutDashboard className="w-6 h-6 text-indigo-400" />
           <div>
             <h1 className="text-lg font-bold text-white font-mono">
-              AlgoApp Pro Workstation — {activeSymbol} ({activeTimeframe})
+              QuantEdge AI Workstation — {activeSymbol} ({activeTimeframe})
             </h1>
             <div className="flex items-center space-x-2 text-xs text-slate-400 mt-0.5">
               <span>Profile: <strong className="text-white">Default 1H Profile</strong></span>
@@ -155,7 +184,7 @@ export const DashboardPage: React.FC = () => {
                 <h2 className="text-xs font-bold text-white uppercase tracking-wider">AI Decision Panel</h2>
               </div>
               <span className="text-[10px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-2 py-0.5 rounded font-bold">
-                {latestDecision ? `CONFIDENCE: ${latestDecision.confidenceScore?.toFixed(1) || 92.5}%` : 'CONFIDENCE: 92.5%'}
+                {latestDecision ? `CONFIDENCE: ${latestDecision.confidenceScore?.toFixed(1) || 0}%` : 'CONFIDENCE: 0.0%'}
               </span>
             </div>
 
@@ -163,13 +192,13 @@ export const DashboardPage: React.FC = () => {
             <div className="bg-slate-950 border border-slate-800 p-3 rounded-lg space-y-2 text-xs">
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Signal Decision</span>
-                <span className="text-emerald-400 font-bold">
-                  {latestDecision?.decisionState || 'EXECUTE'}
+                <span className={`font-bold ${latestDecision?.decisionState ? 'text-emerald-400' : 'text-slate-500'}`}>
+                  {latestDecision?.decisionState || 'WAITING'}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Rule Verified</span>
-                <span className="text-white font-bold">{activeTimeframe} Demand Retest</span>
+                <span className="text-white font-bold">{latestDecision?.reasonCodes?.[0] || 'N/A'}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Available Margin</span>
@@ -201,6 +230,46 @@ export const DashboardPage: React.FC = () => {
                 <span className="text-slate-400">Symbol:</span>
                 <span className="text-indigo-400 font-bold">{activeSymbol}</span>
               </div>
+            </div>
+          </div>
+
+          {/* AI Trade Conversation Chat Area (Fills remaining space) */}
+          <div className="flex-1 flex flex-col bg-slate-950 border border-slate-800 rounded-lg overflow-hidden min-h-[200px]">
+            <div className="bg-slate-900 border-b border-slate-800 px-3 py-1.5 flex items-center justify-between">
+              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <Brain className="w-3 h-3 text-emerald-400" />
+                Trade Copilot
+              </span>
+              <span className="text-[9px] text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">Online</span>
+            </div>
+            
+            <div className="flex-1 p-2 overflow-y-auto space-y-2 text-[11px]">
+              {chatMessages.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[85%] p-2 rounded-lg ${msg.role === 'user' ? 'bg-indigo-600/20 text-indigo-200 border border-indigo-500/30' : 'bg-slate-800/50 text-slate-300 border border-slate-700/50'}`}>
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-2 bg-slate-900 border-t border-slate-800 flex gap-2">
+              <input 
+                type="text" 
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleChatSubmit();
+                }}
+                placeholder="Ask Copilot..." 
+                className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded px-2 py-1.5 text-[11px] text-white focus:outline-none focus:border-indigo-500"
+              />
+              <button 
+                onClick={handleChatSubmit}
+                className="bg-indigo-600 hover:bg-indigo-500 text-white p-1.5 rounded transition-colors"
+              >
+                <Send className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
 

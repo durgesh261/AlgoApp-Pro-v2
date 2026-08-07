@@ -1,6 +1,6 @@
-# Known Operational Limitations — AlgoApp Pro v2.0.0-rc1
+# Known Operational Limitations — QuantEdge AI
 
-This document outlines known operational boundaries, design intentional constraints, and environment assumptions for **AlgoApp Pro v2.0.0-rc1**.
+This document outlines known operational boundaries, design intentional constraints, and environment assumptions for **QuantEdge AI**.
 
 ---
 

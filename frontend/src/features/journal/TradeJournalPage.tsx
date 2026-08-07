@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { TradeHistoryTable } from '../../components/tables/TradeHistoryTable';
 import { ActivityLogTable } from '../../components/tables/ActivityLogTable';
 import { BookOpen, Calendar, Tag } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { intelligenceApi } from '../../services/api';
 
 export const TradeJournalPage: React.FC = () => {
   return (
@@ -12,7 +14,21 @@ export const TradeJournalPage: React.FC = () => {
       transition={{ duration: 0.25 }}
       className="space-y-5 max-w-7xl mx-auto pb-6"
     >
-      <div className="flex items-center justify-between border-b border-[#1E293B] pb-3">
+      {/* 
+        Fetching analytics via react-query.
+        This provides real data instead of hardcoded numbers.
+      */}
+      {(() => {
+        const { data: metricsData } = useQuery({
+          queryKey: ['strategyMetrics', 'DEF-1H-PROF'],
+          queryFn: () => intelligenceApi.getStrategyMetrics('DEF-1H-PROF'),
+          refetchInterval: 10000,
+        });
+        const metrics = metricsData?.data;
+        
+        return (
+          <>
+            <div className="flex items-center justify-between border-b border-[#1E293B] pb-3">
         <div>
           <h1 className="text-xl font-bold text-[#F8FAFC] flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-[#3B82F6]" />
@@ -31,13 +47,15 @@ export const TradeJournalPage: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono">
         <div className="bg-[#161D2A] border border-[#1E293B] p-4 rounded-xl">
           <span className="text-[11px] text-[#94A3B8] block">Total Trades Journaled</span>
-          <div className="text-2xl font-bold text-[#F8FAFC] mt-1">75 Fills</div>
+          <div className="text-2xl font-bold text-[#F8FAFC] mt-1">{metrics?.totalTrades ?? 0} Fills</div>
           <span className="text-[10px] text-[#00C896]">100% Provenance Recorded</span>
         </div>
 
         <div className="bg-[#161D2A] border border-[#1E293B] p-4 rounded-xl">
           <span className="text-[11px] text-[#94A3B8] block">Average Hold Duration</span>
-          <div className="text-2xl font-bold text-[#3B82F6] mt-1">2h 45m</div>
+          <div className="text-2xl font-bold text-[#3B82F6] mt-1">
+            {metrics?.avgHoldTimeMinutes ? `${Math.floor(metrics.avgHoldTimeMinutes / 60)}h ${Math.round(metrics.avgHoldTimeMinutes % 60)}m` : '0h 0m'}
+          </div>
           <span className="text-[10px] text-[#94A3B8]">Intraday Scalp & Swing</span>
         </div>
 
@@ -53,6 +71,9 @@ export const TradeJournalPage: React.FC = () => {
 
       <TradeHistoryTable />
       <ActivityLogTable />
+          </>
+        );
+      })()}
     </motion.div>
   );
 };

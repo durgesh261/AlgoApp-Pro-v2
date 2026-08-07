@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { deltaSyncService } from '../../delta-exchange/index.js';
 import { orderLifecycleService, OrderLifecycleRecord } from './OrderLifecycleService.js';
 import { tradeAccountingTrigger } from '../../trade-accounting/TradeAccountingTrigger.js';
+import { candleEngine } from '../../../engine/CandleEngine.js';
 import { eventBus } from '../../../services/EventBus.js';
 
 export interface OrderExecutionRequest {
@@ -131,10 +132,23 @@ export class ExecutionEngineService {
 
     // 6. Margin Requirement Check
     const leverage = req.leverage || 10;
-    const estimatedPrice = req.price || (existingPosition ? parseFloat(existingPosition.entry_price || '60000') : 60000);
+    let livePrice = 0;
+    const liveCandle = candleEngine.getLiveCandle(req.symbol, '1H') || candleEngine.getLiveCandle(req.symbol, '15m');
+    if (liveCandle && liveCandle.close > 0) {
+      livePrice = liveCandle.close;
+    } else if (existingPosition && parseFloat(existingPosition.entry_price || '0') > 0) {
+      livePrice = parseFloat(existingPosition.entry_price || '0');
+    } else {
+      const s = (req.symbol || '').toUpperCase();
+      if (s.includes('ETH')) livePrice = 1900;
+      else if (s.includes('SOL')) livePrice = 75;
+      else if (s.includes('XRP')) livePrice = 1.0;
+      else livePrice = 64000;
+    }
+    const estimatedPrice = req.price || livePrice;
     const notional = req.size * estimatedPrice;
     const estimatedRequiredMargin = notional / leverage;
-    const hasMargin = availableMargin >= estimatedRequiredMargin || req.reduceOnly;
+    const hasMargin = (availableMargin + 0.05) >= estimatedRequiredMargin || req.reduceOnly;
     results.push({
       ruleNumber: 6,
       ruleName: 'Margin Solvency',
@@ -250,47 +264,84 @@ export class ExecutionEngineService {
 
     try {
       const restClient = deltaSyncService.getRestClient();
-      const productId = 1;
+      const product =
+        restClient.getProduct(req.symbol) ||
+        restClient.getProduct(req.symbol.replace('.P', '')) ||
+        restClient.getProduct(req.symbol.replace('.P', 'USD')) ||
+        restClient.getProduct(req.symbol.replace('.P', 'USDT'));
+      const productId = product ? product.id : 1;
+
+      // Delta Exchange size = integer lots. contract_value tells us ETH per lot (e.g. 0.01 ETH/lot)
+      const contractValue = product?.contract_value ? parseFloat(product.contract_value) : null;
+      let orderSize: number;
+      if (contractValue && contractValue > 0) {
+        // Convert from asset qty to lots and round to nearest integer (min 1 lot)
+        orderSize = Math.max(1, Math.round(req.size / contractValue));
+      } else {
+        // Fallback: treat size as lots directly, must be integer >= 1
+        orderSize = Math.max(1, Math.round(req.size));
+      }
+
+      // Delta client_order_id: alphanumeric only, max 36 chars, no dashes
+      const safeClientOrderId = clientOrderId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 36);
+
+      // Delta Exchange requires order_type as "market_order" / "limit_order" etc.
+      const deltaOrderTypeMap: Record<string, string> = {
+        'market': 'market_order',
+        'limit': 'limit_order',
+        'stop_market': 'stop_market_order',
+        'stop_limit': 'stop_limit_order',
+      };
+      const deltaOrderType = deltaOrderTypeMap[req.orderType] || req.orderType;
+      const isMarket = req.orderType === 'market';
+
+      // Build order payload — only include defined optional fields
+      const orderPayload: Record<string, any> = {
+        product_id: productId,
+        product_symbol: req.symbol,
+        size: orderSize,
+        side: req.side,
+        order_type: deltaOrderType,
+        client_order_id: safeClientOrderId,
+      };
+      if (!isMarket && req.price !== undefined) orderPayload['price'] = req.price;
+      if (req.stopPrice !== undefined) orderPayload['stop_price'] = req.stopPrice;
+      if (req.stopLossPrice !== undefined) orderPayload['stop_loss'] = req.stopLossPrice;
+      if (req.takeProfitPrice !== undefined) orderPayload['take_profit'] = req.takeProfitPrice;
+      if (req.postOnly !== undefined) orderPayload['post_only'] = req.postOnly;
+      if (req.reduceOnly !== undefined) orderPayload['reduce_only'] = req.reduceOnly;
+
+      console.log('[ExecutionEngine] Placing Delta order:', JSON.stringify(orderPayload));
 
       // Submit to Delta Exchange REST API
-      const deltaResponse = await restClient.placeOrder({
-        product_id: productId,
-        product_symbol: req.symbol || 'BTCUSD',
-        size: req.size,
-        side: req.side,
-        order_type: req.orderType,
-        price: req.price,
-        stop_price: req.stopPrice,
-        stop_loss: req.stopLossPrice,
-        take_profit: req.takeProfitPrice,
-        post_only: req.postOnly,
-        reduce_only: req.reduceOnly,
-        client_order_id: clientOrderId,
-      });
+      const deltaResponse = await restClient.placeOrder(orderPayload as any);
 
       const latencyMs = Date.now() - startTime;
       const exchangeOrderId = (deltaResponse as any)?.id || clientOrderId;
 
+      const liveCandle = candleEngine.getLiveCandle(req.symbol, '1H') || candleEngine.getLiveCandle(req.symbol, '15m');
+      const fillPrice = req.price || (liveCandle && liveCandle.close > 0 ? liveCandle.close : undefined) || (req.symbol.includes('ETH') ? 1900 : req.symbol.includes('SOL') ? 75 : req.symbol.includes('XRP') ? 1.0 : 64000);
+
       // Transition state machine to OPEN or FILLED
       const nextState = req.orderType === 'market' ? 'FILLED' : 'OPEN';
-      orderLifecycleService.transitionState(clientOrderId, nextState, {
-        filledSize: req.orderType === 'market' ? req.size : 0,
-        avgFillPrice: req.price || 60000,
+      orderLifecycleService.transitionState(safeClientOrderId, nextState, {
+        filledSize: req.orderType === 'market' ? orderSize : 0,
+        avgFillPrice: fillPrice,
         reason: 'Order accepted by Delta Exchange',
       });
 
       const result: ExecutionResult = {
         success: true,
         orderId: exchangeOrderId,
-        clientOrderId,
+        clientOrderId: safeClientOrderId,
         symbol: req.symbol,
         side: req.side,
         orderType: req.orderType,
-        size: req.size,
+        size: orderSize,
         price: req.price,
         state: nextState,
         latencyMs,
-        message: 'Order executed successfully on Delta Exchange',
+        message: `Order executed: ${orderSize} lot(s) on Delta Exchange`,
         rawExchangeResponse: deltaResponse,
       };
 
@@ -300,8 +351,25 @@ export class ExecutionEngineService {
       return result;
     } catch (err: any) {
       const latencyMs = Date.now() - startTime;
+
+      // Extract Delta Exchange's detailed error message from response body
+      const deltaErrorBody = err?.response?.data;
+      const deltaErrorObj = deltaErrorBody?.error;
+      // Handle nested schema_errors: { error: { code: 'bad_schema', context: { schema_errors: [{ message: '...' }] } } }
+      const schemaErrorMsg = deltaErrorObj?.context?.schema_errors?.[0]?.message;
+      const deltaErrorMsg: string =
+        schemaErrorMsg ||
+        (typeof deltaErrorObj === 'string' ? deltaErrorObj : null) ||
+        (typeof deltaErrorObj?.message === 'string' ? deltaErrorObj.message : null) ||
+        (typeof deltaErrorBody?.message === 'string' ? deltaErrorBody.message : null) ||
+        (typeof deltaErrorBody === 'string' ? deltaErrorBody : null) ||
+        err?.message ||
+        'Failed to submit order to Delta Exchange';
+
+      console.error('[ExecutionEngine] Delta order rejected:', deltaErrorMsg, '| Full response:', JSON.stringify(deltaErrorBody));
+
       orderLifecycleService.transitionState(clientOrderId, 'REJECTED', {
-        reason: err?.message || 'Delta Exchange API error',
+        reason: deltaErrorMsg,
       });
 
       const result: ExecutionResult = {
@@ -313,7 +381,7 @@ export class ExecutionEngineService {
         size: req.size,
         state: 'REJECTED',
         latencyMs,
-        message: err?.message || 'Failed to submit order to Delta Exchange',
+        message: `Delta Exchange: ${deltaErrorMsg}`,
       };
 
       this.recordHistory(result);

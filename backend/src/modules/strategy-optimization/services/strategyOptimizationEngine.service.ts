@@ -77,18 +77,6 @@ export class StrategyOptimizationEngineService {
   }
 
   public async getOptimizationHistory(): Promise<OptimizationRunResult[]> {
-    if (optimizationRunsStore.length === 0) {
-      // Seed default optimization runs if empty
-      await this.runParameterSweep({
-        symbol: 'BTCUSD.P',
-        timeframe: '1H',
-        strategyProfileId: 'DEF-1H-PROF',
-        patLenRange: [9, 14],
-        liquidityLenRange: [30],
-        mergeThresholdRange: [0.01],
-        minConfidenceRange: [75, 85],
-      });
-    }
     return optimizationRunsStore;
   }
 }

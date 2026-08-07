@@ -1,3 +1,6 @@
+import { AppEventBus } from '../modules/realtime-operations/services/appEventBus.service.js';
+import { AppEventType } from '@algoapp/shared';
+
 type EventHandler = (payload: unknown) => void;
 
 export class EventBus {
@@ -14,6 +17,7 @@ export class EventBus {
   }
 
   public emit(event: string, payload?: unknown): void {
+    // 1. Dispatch to local subscribers
     this.handlers.get(event)?.forEach((handler) => {
       try {
         handler(payload);
@@ -21,6 +25,13 @@ export class EventBus {
         console.error(`[EventBus] Error handling event "${event}":`, err);
       }
     });
+
+    // 2. Cross-bridge to AppEventBus
+    try {
+      AppEventBus.publish(event as AppEventType, payload);
+    } catch {
+      // ignore unmapped string events
+    }
   }
 
   public clear(event?: string): void {
@@ -33,3 +44,4 @@ export class EventBus {
 }
 
 export const eventBus = new EventBus();
+

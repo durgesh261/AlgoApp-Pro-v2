@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { SystemStatus, SystemHealthStatus, ApiResponse, getIsoUtcTimestamp } from '@algoapp/shared';
 import { config } from '../../config/index.js';
+import { prisma } from '../../db.js';
 
 const startTime = Date.now();
 
@@ -44,5 +45,45 @@ export class SystemController {
     };
 
     res.status(200).json(response);
+  }
+  public static async hardReset(req: Request, res: Response): Promise<void> {
+    const requestId = (req.headers[config.correlationHeader.toLowerCase()] as string) || 'unknown';
+
+    try {
+      const tableNames = await prisma.$queryRaw<Array<{name: string}>>`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name != '_prisma_migrations'`;
+      for (const {name} of tableNames) {
+        await prisma.$executeRawUnsafe(`DELETE FROM "${name}"`);
+      }
+      
+      const response: ApiResponse<{ message: string; timestamp: string }> = {
+        success: true,
+        data: {
+          message: 'All application data has been successfully wiped.',
+          timestamp: getIsoUtcTimestamp(),
+        },
+        meta: {
+          requestId,
+          timestamp: getIsoUtcTimestamp(),
+        },
+      };
+
+      res.status(200).json(response);
+    } catch (error: any) {
+      const errorResponse = {
+        success: false as const,
+        error: {
+          code: 'SYSTEM_ERROR',
+          message: 'Failed to reset database.',
+          requestId,
+          details: [{ message: error.message }],
+        },
+        meta: {
+          requestId,
+          timestamp: getIsoUtcTimestamp(),
+        },
+      };
+
+      res.status(500).json(errorResponse);
+    }
   }
 }

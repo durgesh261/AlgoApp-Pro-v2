@@ -1,27 +1,42 @@
-import { CandleDto } from '@algoapp/shared';
+import { CandleDto, PivotPointDto } from '@algoapp/shared';
 
-export interface PivotPoint {
-  index: number;
-  time: string;
-  price: number;
-  type: 'HIGH' | 'LOW';
-  length: number;
-}
+export type PivotPoint = PivotPointDto;
 
 export class PivotEngine {
-  public static findPivots(candles: CandleDto[], length: number = 9): PivotPoint[] {
-    const pivots: PivotPoint[] = [];
-    if (candles.length < length * 2 + 1) return pivots;
+  /**
+   * Deterministic reproduction of Pine Script ta.pivothigh()
+   * A pivot high at index i is confirmed when for all leftBars high[j] <= high[i]
+   * and for all rightBars high[j] < high[i].
+   * The pivot is confirmed at candle index (i + rightBars).
+   */
+  public static pivotHigh(
+    candles: CandleDto[],
+    leftBars: number = 9,
+    rightBars: number = leftBars
+  ): PivotPointDto[] {
+    const pivots: PivotPointDto[] = [];
+    if (candles.length < leftBars + rightBars + 1) return pivots;
 
-    for (let i = length; i < candles.length - length; i++) {
+    for (let i = leftBars; i <= candles.length - 1 - rightBars; i++) {
       const current = candles[i]!;
       let isHigh = true;
-      let isLow = true;
 
-      for (let j = i - length; j <= i + length; j++) {
-        if (j === i) continue;
-        if (candles[j]!.high > current.high) isHigh = false;
-        if (candles[j]!.low < current.low) isLow = false;
+      // Check left bars (inclusive of equal highs)
+      for (let j = i - leftBars; j < i; j++) {
+        if (candles[j]!.high > current.high) {
+          isHigh = false;
+          break;
+        }
+      }
+
+      if (!isHigh) continue;
+
+      // Check right bars (strict inequality to prevent duplicate adjacent pivot highs)
+      for (let j = i + 1; j <= i + rightBars; j++) {
+        if (candles[j]!.high >= current.high) {
+          isHigh = false;
+          break;
+        }
       }
 
       if (isHigh) {
@@ -30,8 +45,50 @@ export class PivotEngine {
           time: current.timestamp,
           price: current.high,
           type: 'HIGH',
-          length,
+          length: leftBars,
+          isSwing: leftBars >= 30,
+          confirmedAtIndex: i + rightBars,
         });
+      }
+    }
+
+    return pivots;
+  }
+
+  /**
+   * Deterministic reproduction of Pine Script ta.pivotlow()
+   * A pivot low at index i is confirmed when for all leftBars low[j] >= low[i]
+   * and for all rightBars low[j] > low[i].
+   * The pivot is confirmed at candle index (i + rightBars).
+   */
+  public static pivotLow(
+    candles: CandleDto[],
+    leftBars: number = 9,
+    rightBars: number = leftBars
+  ): PivotPointDto[] {
+    const pivots: PivotPointDto[] = [];
+    if (candles.length < leftBars + rightBars + 1) return pivots;
+
+    for (let i = leftBars; i <= candles.length - 1 - rightBars; i++) {
+      const current = candles[i]!;
+      let isLow = true;
+
+      // Check left bars
+      for (let j = i - leftBars; j < i; j++) {
+        if (candles[j]!.low < current.low) {
+          isLow = false;
+          break;
+        }
+      }
+
+      if (!isLow) continue;
+
+      // Check right bars (strict inequality)
+      for (let j = i + 1; j <= i + rightBars; j++) {
+        if (candles[j]!.low <= current.low) {
+          isLow = false;
+          break;
+        }
       }
 
       if (isLow) {
@@ -40,11 +97,27 @@ export class PivotEngine {
           time: current.timestamp,
           price: current.low,
           type: 'LOW',
-          length,
+          length: leftBars,
+          isSwing: leftBars >= 30,
+          confirmedAtIndex: i + rightBars,
         });
       }
     }
 
     return pivots;
+  }
+
+  /**
+   * Extracts both High and Low pivots sorted in chronological order
+   */
+  public static findPivots(
+    candles: CandleDto[],
+    leftBars: number = 9,
+    rightBars: number = leftBars
+  ): PivotPointDto[] {
+    const highs = this.pivotHigh(candles, leftBars, rightBars);
+    const lows = this.pivotLow(candles, leftBars, rightBars);
+
+    return [...highs, ...lows].sort((a, b) => a.index - b.index);
   }
 }

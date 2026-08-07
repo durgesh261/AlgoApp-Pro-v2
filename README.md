@@ -1,10 +1,10 @@
-# AlgoApp Pro v5.0.0 — Trading Intelligence & Adaptive Strategy Platform
+# QuantEdge AI – Professional Crypto Trading Terminal
 
-**AlgoApp Pro v5.0** is an institutional-grade desktop trading workstation built with TradingView Lightweight Charts, deterministic market structure analysis (PAT Lite & SMC), multi-mode execution (Paper, Delta Sandbox, Live Guards), a single-screen 4-pane workstation UI, and empirical quantitative trading intelligence.
+**QuantEdge AI** is an institutional-grade desktop trading workstation built with TradingView Lightweight Charts, deterministic market structure analysis (PAT Lite & SMC), multi-mode execution (Paper, Delta Sandbox, Live Guards), a single-screen 4-pane workstation UI, and empirical quantitative trading intelligence.
 
 ---
 
-## 🌟 10 Intelligence Modules in v5.0.0
+## 🌟 10 Intelligence Modules
 
 - **Module 1 — Trade Intelligence Engine**: Evaluates 7 quality dimensions (Entry, Exit, Timing, Zone, Risk-Reward, Confidence Accuracy, Execution Accuracy) to produce a composite Trade Intelligence Score (0–100).
 - **Module 2 — Strategy Performance Monitor**: Continuously monitors Strategy Profiles with Sharpe (2.67), Sortino (3.42), Calmar (4.15), Recovery Factor (8.9), Max Drawdown, and Avg RR over time.

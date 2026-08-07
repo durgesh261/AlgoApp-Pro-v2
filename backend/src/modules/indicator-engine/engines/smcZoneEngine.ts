@@ -1,8 +1,18 @@
-import { CandleDto, SupplyZone, DemandZone } from '@algoapp/shared';
-import { PivotPoint } from './pivotEngine.js';
+import {
+  CandleDto,
+  DemandZone,
+  MarketStructureEventDto,
+  OrderBlockDto,
+  SupplyZone,
+  TradingTimeframe,
+} from '@algoapp/shared';
+import { OrderBlockWidthEngine } from './orderBlockWidthEngine.js';
 
 export class SmcZoneEngine {
-  public static calculateAtr200(candles: CandleDto[]): number {
+  /**
+   * Calculates 200-period ATR for volatility normalization
+   */
+  public static calculateAtr200(candles: CandleDto[], period: number = 200): number {
     if (candles.length < 2) return 100.0;
     const trs: number[] = [];
     for (let i = 1; i < candles.length; i++) {
@@ -12,85 +22,207 @@ export class SmcZoneEngine {
       const tr = Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
       trs.push(tr);
     }
-    const recentTrs = trs.slice(-200);
+    const recentTrs = trs.slice(-period);
     const sum = recentTrs.reduce((acc, v) => acc + v, 0);
     return sum / Math.max(1, recentTrs.length);
   }
 
+  /**
+   * Extracts LuxAlgo Smart Money Concepts Order Blocks & Supply/Demand zones
+   * with 200-period ATR volatility filtering, mitigation and invalidation tracking.
+   */
   public static extractSmcZones(
     symbol: string,
     candles: CandleDto[],
-    pivots: PivotPoint[]
-  ): { supplyZones: SupplyZone[]; demandZones: DemandZone[] } {
+    events: MarketStructureEventDto[],
+    timeframe: TradingTimeframe = '1H'
+  ): {
+    supplyZones: SupplyZone[];
+    demandZones: DemandZone[];
+    orderBlocks: OrderBlockDto[];
+  } {
     const supplyZones: SupplyZone[] = [];
     const demandZones: DemandZone[] = [];
+    const allOrderBlocks: OrderBlockDto[] = [];
 
-    if (candles.length === 0 || pivots.length === 0) {
-      return { supplyZones, demandZones };
+    if (candles.length < 10) {
+      return { supplyZones, demandZones, orderBlocks: allOrderBlocks };
     }
 
-    const atr200 = this.calculateAtr200(candles);
+    const atr200 = this.calculateAtr200(candles, 200);
 
-    for (const p of pivots) {
-      const c = candles[p.index];
-      if (!c) continue;
+    for (const evt of events) {
+      const breakIdx = evt.confirmationCandleIndex;
+      if (breakIdx <= 0 || breakIdx >= candles.length) continue;
 
-      // Volatility filter: skip outlier bars >= 2 * ATR200
-      if (c.high - c.low >= 2 * atr200) continue;
+      const searchStart = Math.max(0, breakIdx - 5);
 
-      if (p.type === 'LOW') {
-        // Bullish SMC Order Block (Demand Zone)
-        const lowerPrice = Number(c.low.toFixed(2));
-        const upperPrice = Number((c.low + 0.4 * atr200).toFixed(2));
+      if (evt.direction === 'BULLISH') {
+        // Find last down-candle before the break
+        let baseCandleIdx = -1;
+        for (let k = breakIdx - 1; k >= searchStart; k--) {
+          if (candles[k]!.close <= candles[k]!.open) {
+            baseCandleIdx = k;
+            break;
+          }
+        }
+        if (baseCandleIdx === -1) baseCandleIdx = Math.max(0, breakIdx - 1);
 
-        demandZones.push({
-          id: `SMC-DEM-${symbol}-${p.index}`,
+        const baseCandle = candles[baseCandleIdx]!;
+        const candleRange = baseCandle.high - baseCandle.low;
+
+        // LuxAlgo Volatility filter: discard outsized anomaly bars
+        if (candleRange >= 2.0 * atr200 && atr200 > 0) continue;
+
+        const upperPrice = Number(baseCandle.high.toFixed(4));
+        const lowerPrice = Number(baseCandle.low.toFixed(4));
+        const width = Number((upperPrice - lowerPrice).toFixed(4));
+
+        // Check for subsequent mitigation / invalidation
+        let isMitigated = false;
+        let mitigatedAtIndex: number | undefined = undefined;
+        let isInvalidated = false;
+
+        for (let m = breakIdx; m < candles.length; m++) {
+          const testCandle = candles[m]!;
+          if (!isMitigated && testCandle.low <= upperPrice) {
+            isMitigated = true;
+            mitigatedAtIndex = m;
+          }
+          if (testCandle.close < lowerPrice) {
+            isInvalidated = true;
+            break;
+          }
+        }
+
+        const zoneId = `SMC-DEM-${symbol}-${evt.index}-${baseCandleIdx}`;
+
+        const obDto = OrderBlockWidthEngine.enrichOrderBlock(
+          `OB-${zoneId}`,
           symbol,
-          timeframe: '1H',
-          type: 'DEMAND',
+          timeframe,
+          'BULLISH',
           upperPrice,
           lowerPrice,
-          patStrength: 0.0,
-          smcStrength: 90.0,
-          mergedStrength: 90.0,
-          width: Number((upperPrice - lowerPrice).toFixed(2)),
-          freshness: 100.0,
-          touchCount: 0,
-          age: candles.length - 1 - p.index,
-          confidence: 90.0,
-          status: 'NEW',
-          source: 'SMC',
-          createdAt: p.time,
-          updatedAt: p.time,
-        });
+          baseCandleIdx,
+          breakIdx,
+          isMitigated,
+          isInvalidated,
+          isMitigated ? 1 : 0,
+          'SMC',
+          evt.time,
+          mitigatedAtIndex
+        );
+        allOrderBlocks.push(obDto);
+
+        if (!isInvalidated) {
+          demandZones.push({
+            id: zoneId,
+            symbol,
+            timeframe,
+            type: 'DEMAND',
+            upperPrice,
+            lowerPrice,
+            patStrength: 0.0,
+            smcStrength: 90.0,
+            mergedStrength: 90.0,
+            width,
+            freshness: isMitigated ? 40.0 : 100.0,
+            touchCount: isMitigated ? 1 : 0,
+            age: candles.length - 1 - breakIdx,
+            confidence: 90.0,
+            status: isMitigated ? 'TRADED' : 'NEW',
+            source: 'SMC',
+            createdAt: evt.time,
+            updatedAt: evt.time,
+          });
+        }
       } else {
-        // Bearish SMC Order Block (Supply Zone)
-        const upperPrice = Number(c.high.toFixed(2));
-        const lowerPrice = Number((c.high - 0.4 * atr200).toFixed(2));
+        // Find last up-candle before the break
+        let baseCandleIdx = -1;
+        for (let k = breakIdx - 1; k >= searchStart; k--) {
+          if (candles[k]!.close >= candles[k]!.open) {
+            baseCandleIdx = k;
+            break;
+          }
+        }
+        if (baseCandleIdx === -1) baseCandleIdx = Math.max(0, breakIdx - 1);
 
-        supplyZones.push({
-          id: `SMC-SUP-${symbol}-${p.index}`,
+        const baseCandle = candles[baseCandleIdx]!;
+        const candleRange = baseCandle.high - baseCandle.low;
+
+        // Volatility filter
+        if (candleRange >= 2.0 * atr200 && atr200 > 0) continue;
+
+        const upperPrice = Number(baseCandle.high.toFixed(4));
+        const lowerPrice = Number(baseCandle.low.toFixed(4));
+        const width = Number((upperPrice - lowerPrice).toFixed(4));
+
+        let isMitigated = false;
+        let mitigatedAtIndex: number | undefined = undefined;
+        let isInvalidated = false;
+
+        for (let m = breakIdx; m < candles.length; m++) {
+          const testCandle = candles[m]!;
+          if (!isMitigated && testCandle.high >= lowerPrice) {
+            isMitigated = true;
+            mitigatedAtIndex = m;
+          }
+          if (testCandle.close > upperPrice) {
+            isInvalidated = true;
+            break;
+          }
+        }
+
+        const zoneId = `SMC-SUP-${symbol}-${evt.index}-${baseCandleIdx}`;
+
+        const obDto = OrderBlockWidthEngine.enrichOrderBlock(
+          `OB-${zoneId}`,
           symbol,
-          timeframe: '1H',
-          type: 'SUPPLY',
+          timeframe,
+          'BEARISH',
           upperPrice,
           lowerPrice,
-          patStrength: 0.0,
-          smcStrength: 90.0,
-          mergedStrength: 90.0,
-          width: Number((upperPrice - lowerPrice).toFixed(2)),
-          freshness: 100.0,
-          touchCount: 0,
-          age: candles.length - 1 - p.index,
-          confidence: 90.0,
-          status: 'NEW',
-          source: 'SMC',
-          createdAt: p.time,
-          updatedAt: p.time,
-        });
+          baseCandleIdx,
+          breakIdx,
+          isMitigated,
+          isInvalidated,
+          isMitigated ? 1 : 0,
+          'SMC',
+          evt.time,
+          mitigatedAtIndex
+        );
+        allOrderBlocks.push(obDto);
+
+        if (!isInvalidated) {
+          supplyZones.push({
+            id: zoneId,
+            symbol,
+            timeframe,
+            type: 'SUPPLY',
+            upperPrice,
+            lowerPrice,
+            patStrength: 0.0,
+            smcStrength: 90.0,
+            mergedStrength: 90.0,
+            width,
+            freshness: isMitigated ? 40.0 : 100.0,
+            touchCount: isMitigated ? 1 : 0,
+            age: candles.length - 1 - breakIdx,
+            confidence: 90.0,
+            status: isMitigated ? 'TRADED' : 'NEW',
+            source: 'SMC',
+            createdAt: evt.time,
+            updatedAt: evt.time,
+          });
+        }
       }
     }
 
-    return { supplyZones, demandZones };
+    // Keep top 5 active supply and demand zones
+    const activeSupply = supplyZones.slice(-5);
+    const activeDemand = demandZones.slice(-5);
+
+    return { supplyZones: activeSupply, demandZones: activeDemand, orderBlocks: allOrderBlocks };
   }
 }

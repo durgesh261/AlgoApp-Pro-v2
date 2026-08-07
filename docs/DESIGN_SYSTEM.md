@@ -1,4 +1,4 @@
-# AlgoApp Pro v2 — Master Design System Specification
+# QuantEdge AI — Master Design System Specification
 
 ## Table of Contents
 
@@ -25,7 +25,7 @@
 
 ## 1. Design Philosophy
 
-The **AlgoApp Pro v2 Design System** is the single source of truth for the application's visual language, component architecture, and interaction patterns. 
+The **QuantEdge AI Design System** is the single source of truth for the application's visual language, component architecture, and interaction patterns. 
 
 Designed for high-frequency algorithmic research, controlled automated execution, risk governance, and live operational monitoring, the system synthesizes four iconic inspirations:
 

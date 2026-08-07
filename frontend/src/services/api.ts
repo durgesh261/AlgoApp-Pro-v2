@@ -1,6 +1,7 @@
 import axios from 'axios';
 import {
   ApiResponse,
+  IndicatorEngineOutput,
   SystemHealthStatus,
   SystemSettingsDto,
   PaperWalletDto,
@@ -58,7 +59,10 @@ import {
   CreateStrategyProfileInput,
   WalletStateDto,
   ChallengeStateDto,
+  ResetChallengeInput,
   TradeLedgerEntryDto,
+  TradeLedgerFilterDto,
+  TradeAccountingSummaryDto,
   NotificationDto,
   SubsystemHealthDto,
   ReconciliationReportDto,
@@ -106,7 +110,38 @@ export const systemApi = {
     return res.data;
   },
   getSettings: async (): Promise<ApiResponse<SystemSettingsDto>> => {
-    const res = await apiClient.get('/system/settings');
+    const res = await apiClient.get('/settings');
+    return res.data;
+  },
+  hardReset: async (): Promise<ApiResponse<{message: string}>> => {
+    const res = await apiClient.post('/system/hard-reset');
+    return res.data;
+  },
+};
+
+export const settingsApi = {
+  getSettings: async (): Promise<ApiResponse<SystemSettingsDto>> => {
+    const res = await apiClient.get('/settings');
+    return res.data;
+  },
+  saveDeltaCredentials: async (payload: {
+    apiKey: string;
+    apiSecret: string;
+    environment: 'PRODUCTION' | 'SANDBOX';
+  }): Promise<ApiResponse<{ success: boolean; message: string; settings: SystemSettingsDto }>> => {
+    const res = await apiClient.post('/settings/delta-credentials', payload);
+    return res.data;
+  },
+  testDeltaCredentials: async (payload: {
+    apiKey: string;
+    apiSecret: string;
+    environment: 'PRODUCTION' | 'SANDBOX';
+  }): Promise<ApiResponse<{ success: boolean; latencyMs: number; message: string; data?: any }>> => {
+    const res = await apiClient.post('/settings/delta-credentials/test', payload);
+    return res.data;
+  },
+  deleteDeltaCredentials: async (): Promise<ApiResponse<{ success: boolean; message: string }>> => {
+    const res = await apiClient.delete('/settings/delta-credentials');
     return res.data;
   },
 };
@@ -381,7 +416,7 @@ export const systemIntegrationApi = {
 
 export const deltaApi = {
   getHealth: async (): Promise<ApiResponse<DeltaHealthDto>> => {
-    const res = await apiClient.get('/delta/health');
+    const res = await apiClient.get('/execution/delta/health');
     return res.data;
   },
   getPortfolio: async (): Promise<ApiResponse<any>> => {
@@ -503,12 +538,24 @@ export const tradeAccountingApi = {
     const res = await apiClient.get('/trade-accounting/challenge');
     return res.data;
   },
-  resetChallenge: async (): Promise<ApiResponse<ChallengeStateDto>> => {
-    const res = await apiClient.post('/trade-accounting/challenge/reset');
+  resetChallenge: async (input?: ResetChallengeInput): Promise<ApiResponse<ChallengeStateDto>> => {
+    const res = await apiClient.post('/trade-accounting/challenge/reset', input || {});
     return res.data;
   },
-  getLedger: async (): Promise<ApiResponse<TradeLedgerEntryDto[]>> => {
-    const res = await apiClient.get('/trade-accounting/ledger');
+  getLedger: async (params?: Partial<TradeLedgerFilterDto>): Promise<ApiResponse<TradeLedgerEntryDto[]>> => {
+    const res = await apiClient.get('/trade-accounting/ledger', { params });
+    return res.data;
+  },
+  getSummary: async (params?: Partial<TradeLedgerFilterDto>): Promise<ApiResponse<TradeAccountingSummaryDto>> => {
+    const res = await apiClient.get('/trade-accounting/summary', { params });
+    return res.data;
+  },
+  syncTrade: async (tradeData: any): Promise<ApiResponse<TradeLedgerEntryDto>> => {
+    const res = await apiClient.post('/trade-accounting/sync-trade', tradeData);
+    return res.data;
+  },
+  reconcile: async (): Promise<ApiResponse<ReconciliationReportDto>> => {
+    const res = await apiClient.post('/trade-accounting/reconcile');
     return res.data;
   },
 };
@@ -521,6 +568,14 @@ export const realtimeOperationsApi = {
   },
   markNotificationRead: async (id: string): Promise<ApiResponse<{ success: boolean }>> => {
     const res = await apiClient.post(`/realtime-operations/notifications/${id}/read`);
+    return res.data;
+  },
+  markAllRead: async (): Promise<ApiResponse<{ success: boolean }>> => {
+    const res = await apiClient.post('/realtime-operations/notifications/read-all');
+    return res.data;
+  },
+  clearAll: async (): Promise<ApiResponse<{ success: boolean }>> => {
+    const res = await apiClient.post('/realtime-operations/notifications/clear');
     return res.data;
   },
   getAuditTimeline: async (tradeId: string): Promise<ApiResponse<TradeAuditTimelineDto>> => {
@@ -617,8 +672,8 @@ export const intelligenceApi = {
     const res = await apiClient.get('/analysis/intelligence-score');
     return res.data;
   },
-  getStrategyMetrics: async () => {
-    const res = await apiClient.get('/analysis/strategy-metrics');
+  getStrategyMetrics: async (profileId?: string) => {
+    const res = await apiClient.get('/analytics/strategy-metrics', { params: { profileId } });
     return res.data;
   },
   getMarketRegime: async (symbol?: string, timeframe?: string) => {
@@ -630,7 +685,7 @@ export const intelligenceApi = {
     return res.data;
   },
   getTraderAnalytics: async () => {
-    const res = await apiClient.get('/analysis/trader-analytics');
+    const res = await apiClient.get('/analytics/trader-analytics');
     return res.data;
   },
   getRecommendations: async () => {
@@ -677,6 +732,72 @@ export const portfolioApi = {
     return res.data;
   },
 };
+
+export const scannerApi = {
+  getStatus: async () => {
+    const res = await apiClient.get('/live-trading/scanner/status');
+    return res.data;
+  },
+  start: async () => {
+    const res = await apiClient.post('/live-trading/scanner/start');
+    return res.data;
+  },
+  pause: async () => {
+    const res = await apiClient.post('/live-trading/scanner/pause');
+    return res.data;
+  },
+  resume: async () => {
+    const res = await apiClient.post('/live-trading/scanner/resume');
+    return res.data;
+  },
+  stop: async () => {
+    const res = await apiClient.post('/live-trading/scanner/stop');
+    return res.data;
+  },
+  pausePair: async (symbol: string) => {
+    const res = await apiClient.post('/live-trading/scanner/pair/pause', { symbol });
+    return res.data;
+  },
+  resumePair: async (symbol: string) => {
+    const res = await apiClient.post('/live-trading/scanner/pair/resume', { symbol });
+    return res.data;
+  },
+  stopPair: async (symbol: string) => {
+    const res = await apiClient.post('/live-trading/scanner/pair/stop', { symbol });
+    return res.data;
+  },
+  setPairStatus: async (symbol: string, status: 'RUNNING' | 'PAUSED' | 'STOPPED') => {
+    const res = await apiClient.post('/live-trading/scanner/pair/set-status', { symbol, status });
+    return res.data;
+  },
+  calculateRisk: async (input: { accountBalance: number; entryPrice: number; stopLossPrice: number; direction: 'BUY' | 'SELL' }) => {
+    const res = await apiClient.post('/live-trading/calculate-risk', input);
+    return res.data;
+  },
+};
+
+export const newsApi = {
+  getNews: async (params?: { category?: string | undefined; importance?: string | undefined; symbol?: string | undefined; limit?: number | undefined; forceRefresh?: boolean }) => {
+    const res = await apiClient.get('/news', { params });
+    return res.data;
+  },
+  getCalendar: async (forceRefresh = false) => {
+    const res = await apiClient.get('/news/calendar', { params: { forceRefresh } });
+    return res.data;
+  },
+};
+
+export const indicatorApi = {
+  evaluate: async (
+    symbol: string = 'BTCUSD.P',
+    timeframe: '15M' | '1H' = '1H'
+  ): Promise<ApiResponse<IndicatorEngineOutput>> => {
+    const res = await apiClient.get(`/indicator/evaluate?symbol=${symbol}&timeframe=${timeframe}`);
+    return res.data;
+  },
+};
+
+
 
 
 

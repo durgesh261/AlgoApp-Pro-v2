@@ -4,10 +4,12 @@ import { useQuery } from '@tanstack/react-query';
 import { tradeAccountingApi, paperTradingApi } from '../../services/api';
 import { History, RefreshCw } from 'lucide-react';
 
+import { TradeLedgerEntryDto } from '@algoapp/shared';
+
 export const TradeHistoryPage: React.FC = () => {
   const { data: ledgerData, isLoading, refetch } = useQuery({
     queryKey: ['tradeLedger'],
-    queryFn: tradeAccountingApi.getLedger,
+    queryFn: () => tradeAccountingApi.getLedger(),
   });
 
   const { data: closedPositionsData } = useQuery({
@@ -15,7 +17,7 @@ export const TradeHistoryPage: React.FC = () => {
     queryFn: paperTradingApi.getClosedPositions,
   });
 
-  const ledger = ledgerData?.data || [];
+  const ledger: TradeLedgerEntryDto[] = ledgerData?.data || [];
   const closedPositions = closedPositionsData?.data || [];
 
   return (

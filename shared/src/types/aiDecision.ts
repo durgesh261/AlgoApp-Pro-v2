@@ -31,6 +31,38 @@ export interface ReplayMetadataDto {
   validatorSnapshot: Record<string, boolean>;
 }
 
+export interface AiScoringFactor {
+  name: string;
+  maxScore: number;
+  score: number;
+  passed: boolean;
+  explanation: string;
+}
+
+export interface AiScoringBreakdownDto {
+  trendScore: AiScoringFactor; // 15 pts max
+  obFreshnessScore: AiScoringFactor; // 15 pts max
+  firstTouchScore: AiScoringFactor; // 15 pts max
+  marketStructureScore: AiScoringFactor; // 15 pts max
+  liquiditySweepScore: AiScoringFactor; // 10 pts max
+  premDiscScore: AiScoringFactor; // 10 pts max
+  sessionScore: AiScoringFactor; // 5 pts max
+  riskRewardScore: AiScoringFactor; // 10 pts max
+  newsScore: AiScoringFactor; // 5 pts max
+  totalScore: number; // 0 - 100
+  threshold: number; // 85
+  isApproved: boolean;
+}
+
+export interface AIValidationResultDto {
+  approved: boolean;
+  confidenceScore: number;
+  breakdown: AiScoringBreakdownDto;
+  reasonCodes: DecisionReasonCode[];
+  rationale: string;
+  evaluatedAt: string;
+}
+
 export interface DecisionExplanationDto {
   id: string;
   decisionId: string;
@@ -47,5 +79,7 @@ export interface DecisionExplanationDto {
   decisionTree: DecisionTreeNode;
   journalEntry: JournalEntryDto;
   replayMetadata: ReplayMetadataDto;
+  aiBreakdown?: AiScoringBreakdownDto | undefined;
   timestamp: string;
 }
+

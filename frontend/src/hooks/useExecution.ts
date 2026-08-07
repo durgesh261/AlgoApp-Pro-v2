@@ -20,25 +20,47 @@ export const useExecution = () => {
     refetchInterval: 5000,
   });
 
+  const invalidateAllTradingState = () => {
+    void queryClient.invalidateQueries({ queryKey: ['execution'] });
+    void queryClient.invalidateQueries({ queryKey: ['portfolio'] });
+    void queryClient.invalidateQueries({ queryKey: ['delta'] });
+    void queryClient.invalidateQueries({ queryKey: ['tradeLedger'] });
+    void queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    void queryClient.invalidateQueries({ queryKey: ['paperPositions'] });
+    void queryClient.invalidateQueries({ queryKey: ['paperOrders'] });
+    void queryClient.invalidateQueries({ queryKey: ['paperWallet'] });
+    void queryClient.invalidateQueries({ queryKey: ['paperJournal'] });
+    void queryClient.invalidateQueries({ queryKey: ['closedPositions'] });
+    void queryClient.invalidateQueries({ queryKey: ['strategyMetrics'] });
+  };
+
   // Place Order Mutation
   const placeOrderMutation = useMutation({
     mutationFn: (order: OrderExecutionDto) => executionApi.placeOrder(order),
     onSuccess: (data: any) => {
-      if (data?.data?.success) {
+      const d = data?.data;
+      if (d?.success) {
         addToast(
-          'Order Executed',
-          `${data.data.side?.toUpperCase()} ${data.data.size} ${data.data.symbol} (${data.data.orderType?.toUpperCase()}) — ${data.data.latencyMs}ms`,
+          '✅ Order Executed',
+          `${d.side?.toUpperCase()} ${d.size} lot(s) of ${d.symbol} (${d.orderType?.toUpperCase()}) — ${d.latencyMs}ms`,
           'success'
         );
       } else {
-        addToast('Execution Rejected', data?.data?.message || 'Exchange rejected order', 'danger');
+        // Surface the actual Delta Exchange rejection reason
+        const reason = d?.message || data?.data?.message || 'Exchange rejected order';
+        addToast('❌ Order Rejected', reason, 'danger');
       }
-      void queryClient.invalidateQueries({ queryKey: ['execution'] });
-      void queryClient.invalidateQueries({ queryKey: ['portfolio'] });
-      void queryClient.invalidateQueries({ queryKey: ['delta'] });
+      invalidateAllTradingState();
     },
     onError: (err: any) => {
-      addToast('Execution Error', err?.response?.data?.error || err?.message || 'Failed to place order', 'danger');
+      const deltaMsg =
+        err?.response?.data?.data?.message ||
+        err?.response?.data?.error?.message ||
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        'Failed to place order';
+      addToast('Execution Error', deltaMsg, 'danger');
     },
   });
 
@@ -52,8 +74,7 @@ export const useExecution = () => {
     mutationFn: (orderId: string | number) => executionApi.cancelOrder(orderId),
     onSuccess: (_, orderId) => {
       addToast('Order Cancelled', `Order #${orderId} was cancelled successfully.`, 'info');
-      void queryClient.invalidateQueries({ queryKey: ['execution'] });
-      void queryClient.invalidateQueries({ queryKey: ['portfolio'] });
+      invalidateAllTradingState();
     },
     onError: (err: any) => {
       addToast('Cancel Failed', err?.message || 'Failed to cancel order', 'danger');
@@ -65,8 +86,7 @@ export const useExecution = () => {
     mutationFn: () => executionApi.cancelAllOrders(),
     onSuccess: (data: any) => {
       addToast('All Orders Cancelled', `Cancelled ${data?.data?.cancelledCount || 0} active orders.`, 'info');
-      void queryClient.invalidateQueries({ queryKey: ['execution'] });
-      void queryClient.invalidateQueries({ queryKey: ['portfolio'] });
+      invalidateAllTradingState();
     },
     onError: (err: any) => {
       addToast('Cancel All Failed', err?.message || 'Failed to cancel orders', 'danger');
@@ -78,9 +98,7 @@ export const useExecution = () => {
     mutationFn: (symbol: string) => executionApi.closePosition(symbol),
     onSuccess: (_, symbol) => {
       addToast('Position Closed', `Market reduce-only close submitted for ${symbol}. Trade accounting triggered.`, 'success');
-      void queryClient.invalidateQueries({ queryKey: ['execution'] });
-      void queryClient.invalidateQueries({ queryKey: ['portfolio'] });
-      void queryClient.invalidateQueries({ queryKey: ['tradeLedger'] });
+      invalidateAllTradingState();
     },
     onError: (err: any) => {
       addToast('Close Position Failed', err?.response?.data?.error || err?.message || 'Failed to close position', 'danger');

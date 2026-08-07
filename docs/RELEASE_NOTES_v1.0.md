@@ -1,4 +1,4 @@
-# Release Notes — AlgoApp Pro v2.0.0-rc1
+# Release Notes — QuantEdge AI
 
 **Release Date:** August 3, 2026  
 **Version:** `v1.0.0-rc1` (Release Candidate 1)  
@@ -8,7 +8,7 @@
 
 ## 🚀 Version Overview
 
-AlgoApp Pro v2.0.0-rc1 is a major architectural redesign built from the ground up for high-frequency quantitative market data analysis, deterministic rule evaluation, algorithmic signal generation, AI-powered decision explainability, and multi-adapter order execution.
+QuantEdge AI is a major architectural redesign built from the ground up for high-frequency quantitative market data analysis, deterministic rule evaluation, algorithmic signal generation, AI-powered decision explainability, and multi-adapter order execution.
 
 ### Key Highlights
 

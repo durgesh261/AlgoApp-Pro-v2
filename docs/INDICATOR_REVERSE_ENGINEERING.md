@@ -1,6 +1,6 @@
 # Indicator Reverse Engineering & Technical Analysis Decomposition
 
-**AlgoApp Pro v2 — Version 2.0.0**  
+**QuantEdge AI — Version 2.0.0**  
 **Document Revision:** 1.0.0  
 **Scope:** Reimplementation Mapping for `PA Toolkit Lite [UAlgo]` and `Smart Money Concepts [LuxAlgo]`
 
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-To achieve zero-latency, server-side market structure evaluation, AlgoApp Pro v2 reverse engineers the Pine Script logic from **Price Action Toolkit Lite (`[UAlgo]`)** and **Smart Money Concepts (`[LuxAlgo]`)** into a pure TypeScript engine. 
+To achieve zero-latency, server-side market structure evaluation, QuantEdge AI reverse engineers the Pine Script logic from **Price Action Toolkit Lite (`[UAlgo]`)** and **Smart Money Concepts (`[LuxAlgo]`)** into a pure TypeScript engine. 
 
 Visual rendering components (lines, boxes, labels, watermarks) are stripped out, while numerical pivot extraction, liquidity sweep algorithms, order block identification, and zone merging are unified into `zoneDetector.service.ts` and `marketDataEngine.service.ts`.
 
@@ -68,7 +68,7 @@ The following Pine Script visualization features are **completely discarded** in
 
 ## 4. Unified Custom Indicator Engine Merge Architecture
 
-Rather than executing two isolated script runtimes, AlgoApp Pro v2 merges both algorithms into a single **Deterministic Market Structure Pipeline**:
+Rather than executing two isolated script runtimes, QuantEdge AI merges both algorithms into a single **Deterministic Market Structure Pipeline**:
 
 ```text
                                1H Candle Tick

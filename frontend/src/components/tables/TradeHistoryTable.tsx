@@ -7,7 +7,7 @@ import { TradeLedgerEntryDto, PaperOrderDto } from '@algoapp/shared';
 export const TradeHistoryTable: React.FC = () => {
   const { data: ledgerData, isLoading: isLoadingLedger } = useQuery({
     queryKey: ['tradeLedger'],
-    queryFn: tradeAccountingApi.getLedger,
+    queryFn: () => tradeAccountingApi.getLedger(),
     refetchInterval: 5000,
   });
 

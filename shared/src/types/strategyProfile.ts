@@ -9,7 +9,8 @@ export interface PatConfig {
 }
 
 export interface SmcConfig {
-  swingLen: number;
+  swingLen: number;        // Pine Script leg(swingLen) — default 50
+  internalLen?: number;    // Pine Script leg(internalLen) — default 5 (v5.1: config only, not UI)
   internalShow: boolean;
   swingShow: boolean;
   atrFilterThreshold: number;

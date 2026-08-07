@@ -17,23 +17,11 @@ export interface ConfidenceBonusesDto {
 
 export interface RiskRulesDto {
   minConfidence: number;
-  maxZoneWidthBtc: number;
-  maxZoneWidthEth: number;
-  maxZoneWidthAlt: number;
-  maxTouchCount: number;
-  minRewardToRisk: number;
-  maxDailyLoss: number;
-  maxDrawdownPercent: number;
   maxSimultaneousTrades: number;
+  riskPercent: number;
+  maxLeverageCap: number;
 }
 
-export interface ChallengeRulesDto {
-  startingBalance: number;
-  targetProfit: number;
-  dailyLossLimit: number;
-  maxDrawdownLimit: number;
-  minTradingDays: number;
-}
 
 export interface TradingRuleConfigDto {
   id: string;
@@ -43,7 +31,6 @@ export interface TradingRuleConfigDto {
   supportedTimeframe: string;
   confidenceBonuses: ConfidenceBonusesDto;
   riskRules: RiskRulesDto;
-  challengeRules: ChallengeRulesDto;
   updatedAt: string;
 }
 

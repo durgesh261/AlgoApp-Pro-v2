@@ -6,6 +6,7 @@ import { MarketWatchPanel } from './MarketWatchPanel';
 import { StatusBar } from './StatusBar';
 import { CommandPalette } from './CommandPalette';
 import { ToastContainer } from './ToastContainer';
+import { GlobalNewsNotifier } from './GlobalNewsNotifier';
 
 interface DesktopTerminalLayoutProps {
   children: React.ReactNode;
@@ -14,6 +15,7 @@ interface DesktopTerminalLayoutProps {
 export const DesktopTerminalLayout: React.FC<DesktopTerminalLayoutProps> = ({ children }) => {
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#0B0E14] text-[#F8FAFC]">
+      <GlobalNewsNotifier />
       <TopMarketTicker />
       <Header />
       

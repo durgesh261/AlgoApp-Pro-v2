@@ -14,13 +14,20 @@ export function useOrders() {
     staleTime: 2000,
   });
 
+  const invalidateAllTradingState = () => {
+    void queryClient.invalidateQueries({ queryKey: ['delta'] });
+    void queryClient.invalidateQueries({ queryKey: ['execution'] });
+    void queryClient.invalidateQueries({ queryKey: ['portfolio'] });
+    void queryClient.invalidateQueries({ queryKey: ['tradeLedger'] });
+    void queryClient.invalidateQueries({ queryKey: ['notifications'] });
+  };
+
   const cancelMutation = useMutation({
     mutationFn: async (orderId: number | string) => {
       return await deltaApi.cancelOrder(orderId);
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['delta', 'orders'] });
-      void queryClient.invalidateQueries({ queryKey: ['delta', 'portfolio'] });
+      invalidateAllTradingState();
     },
   });
 
@@ -29,9 +36,7 @@ export function useOrders() {
       return await deltaApi.placeOrder(payload);
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['delta', 'orders'] });
-      void queryClient.invalidateQueries({ queryKey: ['delta', 'positions'] });
-      void queryClient.invalidateQueries({ queryKey: ['delta', 'portfolio'] });
+      invalidateAllTradingState();
     },
   });
 

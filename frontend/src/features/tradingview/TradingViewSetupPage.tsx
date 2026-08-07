@@ -123,7 +123,7 @@ export const TradingViewSetupPage: React.FC = () => {
             TradingView Webhook Integration & Testing Console
           </h1>
           <p className="text-xs text-[#94A3B8] mt-0.5">
-            Ingest real 1H candles from TradingView alerts into AlgoApp Pro v2 market data pipeline.
+            Ingest real 1H candles from TradingView alerts into QuantEdge AI market data pipeline.
           </p>
         </div>
 
@@ -145,7 +145,7 @@ export const TradingViewSetupPage: React.FC = () => {
         <div className="bg-[#161D2A] border border-[#1E293B] p-3 rounded-xl">
           <span className="text-[10px] text-[#94A3B8] uppercase block">Avg Processing Latency</span>
           <div className="text-lg font-bold text-[#3B82F6] mt-0.5 font-mono-tabular">
-            {health?.averageLatencyMs ?? 4.5}ms
+            {health?.averageLatencyMs ?? 0}ms
           </div>
         </div>
 
@@ -249,7 +249,7 @@ export const TradingViewSetupPage: React.FC = () => {
             <div className="flex items-center justify-between text-xs">
               <span className="text-[#94A3B8]">Adapter Latency:</span>
               <span className="font-bold text-[#3B82F6] font-mono-tabular">
-                {health?.averageLatencyMs ?? 4.5}ms
+                {health?.averageLatencyMs ?? 0}ms
               </span>
             </div>
           </div>

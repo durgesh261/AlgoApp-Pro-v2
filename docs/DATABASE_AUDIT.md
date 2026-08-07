@@ -1,4 +1,4 @@
-# AlgoApp Pro v4.1 — Complete Database & REST API Audit Report (`docs/DATABASE_AUDIT.md`)
+# QuantEdge AI — Complete Database & REST API Audit Report (`docs/DATABASE_AUDIT.md`)
 
 **Date**: August 3, 2026  
 **Audited Target**: Express REST API & Prisma PostgreSQL Database  

@@ -3,7 +3,7 @@ import { systemRouter } from '../modules/system/system.routes.js';
 import { dashboardRouter } from '../modules/dashboard/dashboard.routes.js';
 import { paperTradingRouter } from '../modules/paper-trading/paper-trading.routes.js';
 import { liveTradingRouter } from '../modules/live-trading/live-trading.routes.js';
-import { analysisRouter } from '../modules/analysis/analysis.routes.js';
+
 import { journalRouter } from '../modules/journal/journal.routes.js';
 import { analyticsRouter } from '../modules/analytics/analytics.routes.js';
 import { challengeRouter } from '../modules/challenge/challenge.routes.js';
@@ -14,7 +14,8 @@ import { aiDecisionRouter } from '../modules/ai-decision/ai-decision.routes.js';
 import { rulesRouter } from '../modules/rules/rules.routes.js';
 import { marketDataRouter } from '../modules/market-data/market-data.routes.js';
 import { replayBacktestRouter } from '../modules/replay-backtest/replay-backtest.routes.js';
-import { executionRouter } from '../modules/execution-engine/index.js';
+import { executionRouter as executionEngineRouter } from '../modules/execution-engine/index.js';
+import { executionRouter as executionAdapterRouter } from '../modules/execution/execution.routes.js';
 import { tradingViewRouter } from '../modules/tradingview-adapter/tradingview.routes.js';
 import { systemIntegrationRouter } from '../modules/system-integration/systemIntegration.routes.js';
 import { productionRouter } from '../modules/production/production.routes.js';
@@ -27,6 +28,7 @@ import { strategyOptimizationRouter } from '../modules/strategy-optimization/str
 import { operationsCenterRouter } from '../modules/operations-center/operationsCenter.routes.js';
 import { tradeReviewRouter } from '../modules/trade-review/tradeReview.routes.js';
 import { shadowTradingRouter } from '../modules/shadow-trading/shadowTrading.routes.js';
+import { newsRouter } from '../modules/news/news.routes.js';
 import { deltaExchangeRouter } from '../modules/delta-exchange/index.js';
 import { portfolioRouter } from '../modules/portfolio/index.js';
 import { enterpriseApiRouter } from './api.js';
@@ -35,12 +37,13 @@ export const apiRouter = Router();
 
 apiRouter.use('/portfolio', portfolioRouter);
 apiRouter.use('/delta', deltaExchangeRouter);
+apiRouter.use('/news', newsRouter);
 apiRouter.use('/core', enterpriseApiRouter);
 apiRouter.use('/system', systemRouter);
 apiRouter.use('/dashboard', dashboardRouter);
 apiRouter.use('/paper-trading', paperTradingRouter);
 apiRouter.use('/live-trading', liveTradingRouter);
-apiRouter.use('/analysis', analysisRouter);
+
 apiRouter.use('/journal', journalRouter);
 apiRouter.use('/analytics', analyticsRouter);
 apiRouter.use('/challenge', challengeRouter);
@@ -51,7 +54,12 @@ apiRouter.use('/ai-decision', aiDecisionRouter);
 apiRouter.use('/rules', rulesRouter);
 apiRouter.use('/market-data', marketDataRouter);
 apiRouter.use('/replay', replayBacktestRouter);
-apiRouter.use('/execution', executionRouter);
+const combinedExecutionRouter = Router();
+console.log('Adapter routes:', executionAdapterRouter.stack.map(l => l.route?.path));
+combinedExecutionRouter.use(executionEngineRouter);
+combinedExecutionRouter.use(executionAdapterRouter);
+
+apiRouter.use('/execution', combinedExecutionRouter);
 apiRouter.use('/tradingview', tradingViewRouter);
 apiRouter.use('/system-integration', systemIntegrationRouter);
 apiRouter.use('/production', productionRouter);

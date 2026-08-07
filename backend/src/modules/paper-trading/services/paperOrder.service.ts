@@ -12,34 +12,7 @@ import { PaperRiskService } from './paperRisk.service.js';
 import { PaperPositionService } from './paperPosition.service.js';
 import { PaperJournalService } from './paperJournal.service.js';
 
-let openOrders: PaperOrderDto[] = [
-  {
-    id: 'ORD-7714',
-    symbol: 'BTCUSD.P',
-    side: PaperOrderSide.BUY,
-    orderType: PaperOrderType.LIMIT,
-    price: 63800.0,
-    quantity: 0.25,
-    filledQuantity: 0.0,
-    status: PaperOrderStatus.PENDING,
-    stopLoss: 63000.0,
-    takeProfit: 65500.0,
-    createdAt: '2026-08-02T20:15:00Z',
-    updatedAt: '2026-08-02T20:15:00Z',
-  },
-  {
-    id: 'ORD-7715',
-    symbol: 'ETHUSD.P',
-    side: PaperOrderSide.SELL,
-    orderType: PaperOrderType.STOP_MARKET,
-    stopPrice: 3350.0,
-    quantity: 2.0,
-    filledQuantity: 0.0,
-    status: PaperOrderStatus.PENDING,
-    createdAt: '2026-08-02T20:20:00Z',
-    updatedAt: '2026-08-02T20:20:00Z',
-  },
-];
+let openOrders: PaperOrderDto[] = [];
 
 export class PaperOrderService {
   public static async getOrders(): Promise<PaperOrderDto[]> {

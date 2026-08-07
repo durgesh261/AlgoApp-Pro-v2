@@ -1,8 +1,8 @@
 {
-  "name": "algoapp-pro-v2-monorepo",
+  "name": "quantedge-ai",
   "version": "2.0.0",
   "private": true,
-  "description": "Production-grade single-user algorithmic trading platform foundation",
+  "description": "QuantEdge AI - Professional Single-User Institutional Trading Workstation",
   "workspaces": [
     "shared",
     "backend",

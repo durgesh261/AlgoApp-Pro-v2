@@ -21,7 +21,7 @@ Use this prompt only after the relevant requirements, architecture, security, an
 
 ## Implementation brief
 
-Act as a senior engineer implementing one approved backlog item for AlgoApp Pro v2. First identify affected requirements, contracts, security controls, risk policy, and test cases. Preserve tenant isolation, auditability, idempotency, decimal-safe finance, explicit order state, and fail-closed execution. Keep vendor integrations behind adapters. Make the smallest coherent change, update documentation and tests, and report assumptions, validation evidence, operational impact, and rollback plan. Do not expose secrets, bypass risk controls, fabricate exchange outcomes, or introduce live execution without an approved gate.
+Act as a senior engineer implementing one approved backlog item for QuantEdge AI. First identify affected requirements, contracts, security controls, risk policy, and test cases. Preserve tenant isolation, auditability, idempotency, decimal-safe finance, explicit order state, and fail-closed execution. Keep vendor integrations behind adapters. Make the smallest coherent change, update documentation and tests, and report assumptions, validation evidence, operational impact, and rollback plan. Do not expose secrets, bypass risk controls, fabricate exchange outcomes, or introduce live execution without an approved gate.
 
 ## Delivery constraints
 

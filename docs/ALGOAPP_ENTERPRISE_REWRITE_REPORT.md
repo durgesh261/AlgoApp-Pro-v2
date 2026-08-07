@@ -1,8 +1,8 @@
-# AlgoApp Pro v2 — Enterprise Architecture & Zero-Mock Rewrite Report
+# QuantEdge AI — Enterprise Architecture & Zero-Mock Rewrite Report
 
 ## 1. Executive Summary
 
-This report documents the architectural audit and foundational rewrite of **AlgoApp Pro v2** into an enterprise-grade, real-time algorithmic trading platform connected directly to **Delta Exchange India**.
+This report documents the architectural audit and foundational rewrite of **QuantEdge AI** into an enterprise-grade, real-time algorithmic trading platform connected directly to **Delta Exchange India**.
 
 ### Core Tenets
 1. **Zero Fake Data Policy**: Complete elimination of simulated random number generation (`Math.random()`), mock candle feeds, and stub order state.

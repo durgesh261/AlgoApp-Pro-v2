@@ -31,6 +31,9 @@ export class NotificationCenterService {
     };
 
     notificationsStore.unshift(notif);
+    if (notificationsStore.length > 200) {
+      notificationsStore = notificationsStore.slice(0, 200);
+    }
     AppEventBus.publish('NOTIFICATION_GENERATED', notif);
     return notif;
   }
@@ -48,4 +51,17 @@ export class NotificationCenterService {
     }
     return false;
   }
+
+  public async markAllAsRead(): Promise<boolean> {
+    notificationsStore.forEach((n) => {
+      n.read = true;
+    });
+    return true;
+  }
+
+  public async clearAll(): Promise<boolean> {
+    notificationsStore = [];
+    return true;
+  }
 }
+

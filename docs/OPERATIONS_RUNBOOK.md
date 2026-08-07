@@ -1,4 +1,4 @@
-# AlgoApp Pro v2 — Production Operations Runbook
+# QuantEdge AI — Production Operations Runbook
 
 ## 1. Subsystem Monitoring & NOC Operations
 - Access NOC Operations Center at `http://localhost:3000/operations`.

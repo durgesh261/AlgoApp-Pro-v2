@@ -1,4 +1,4 @@
-# Project Charter — AlgoApp Pro v2
+# Project Charter — QuantEdge AI
 
 ## Table of Contents
 
@@ -11,7 +11,7 @@
 
 ## Purpose
 
-This charter establishes the engineering, product, and risk intent for AlgoApp Pro v2: a reliable trading platform that treats capital protection, auditability, and user trust as first-class requirements.
+This charter establishes the engineering, product, and risk intent for QuantEdge AI: a reliable trading platform that treats capital protection, auditability, and user trust as first-class requirements.
 
 ## Scope
 

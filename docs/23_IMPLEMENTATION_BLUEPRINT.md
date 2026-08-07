@@ -20,7 +20,7 @@
 
 ## Purpose
 
-This is the implementation baseline for AlgoApp Pro v2. It resolves the cross-cutting decisions that engineers otherwise would have to infer from product documents. A feature specification may add detail but may not contradict this document without an approved architecture decision record (ADR).
+This is the implementation baseline for QuantEdge AI. It resolves the cross-cutting decisions that engineers otherwise would have to infer from product documents. A feature specification may add detail but may not contradict this document without an approved architecture decision record (ADR).
 
 ## Scope
 

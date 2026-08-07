@@ -1,11 +1,12 @@
 import { WalletStateDto } from '@algoapp/shared';
+import { prisma } from '../../../db.js';
 
-let walletState: WalletStateDto = {
+let memoryWalletState: WalletStateDto = {
   id: 'default-wallet-state',
-  currentBalance: 0.0,
-  availableBalance: 0.0,
+  currentBalance: 10.0,
+  availableBalance: 10.0,
   usedMargin: 0.0,
-  equity: 0.0,
+  equity: 10.0,
   realizedPnL: 0.0,
   unrealizedPnL: 0.0,
   grossPnL: 0.0,
@@ -13,49 +14,139 @@ let walletState: WalletStateDto = {
   dailyProfit: 0.0,
   weeklyProfit: 0.0,
   monthlyProfit: 0.0,
-  peakEquity: 0.0,
+  peakEquity: 10.0,
   maxDrawdownPercent: 0.0,
   updatedAt: new Date().toISOString(),
 };
 
 export class WalletEngineService {
+  /**
+   * Retrieves the current synchronized wallet state.
+   */
   public async getWalletState(): Promise<WalletStateDto> {
-    return walletState;
+    try {
+      if (prisma.walletState?.findUnique) {
+        const dbState = await prisma.walletState.findUnique({
+          where: { id: 'default-wallet-state' },
+        });
+        if (dbState) {
+          memoryWalletState = {
+            id: dbState.id,
+            currentBalance: dbState.currentBalance,
+            availableBalance: dbState.availableBalance,
+            usedMargin: dbState.usedMargin,
+            equity: dbState.equity,
+            realizedPnL: dbState.realizedPnL,
+            unrealizedPnL: dbState.unrealizedPnL,
+            grossPnL: dbState.grossPnL,
+            netPnL: dbState.netPnL,
+            dailyProfit: dbState.dailyProfit,
+            weeklyProfit: dbState.weeklyProfit,
+            monthlyProfit: dbState.monthlyProfit,
+            peakEquity: dbState.peakEquity,
+            maxDrawdownPercent: dbState.maxDrawdownPercent,
+            updatedAt: dbState.updatedAt.toISOString(),
+          };
+        }
+      }
+    } catch {
+      // Fallback to memory
+    }
+
+    return memoryWalletState;
   }
 
-  public async applyTradeResult(netPnL: number, grossPnL: number, marginUsed: number): Promise<WalletStateDto> {
-    const currentBalance = walletState.currentBalance + netPnL;
-    const availableBalance = currentBalance - Math.max(0, walletState.usedMargin - marginUsed);
-    const equity = currentBalance;
-    const realizedPnL = walletState.realizedPnL + netPnL;
-    const totalGrossPnL = walletState.grossPnL + grossPnL;
-    const totalNetPnL = walletState.netPnL + netPnL;
-    const peakEquity = Math.max(walletState.peakEquity, equity);
-    
-    const drawdownAmount = peakEquity - equity;
-    const maxDrawdownPercent = peakEquity > 0 ? Math.max(walletState.maxDrawdownPercent, Number(((drawdownAmount / peakEquity) * 100).toFixed(2))) : 0;
+  /**
+   * Applies the exact financial result of a completed trade to wallet state.
+   */
+  public async applyTradeResult(
+    netPnL: number,
+    grossPnL: number,
+    marginReleased: number = 0
+  ): Promise<WalletStateDto> {
+    const current = await this.getWalletState();
 
-    walletState = {
-      ...walletState,
-      currentBalance: Number(currentBalance.toFixed(2)),
-      availableBalance: Number(availableBalance.toFixed(2)),
-      equity: Number(equity.toFixed(2)),
-      realizedPnL: Number(realizedPnL.toFixed(2)),
-      grossPnL: Number(totalGrossPnL.toFixed(2)),
-      netPnL: Number(totalNetPnL.toFixed(2)),
-      dailyProfit: Number((walletState.dailyProfit + netPnL).toFixed(2)),
-      weeklyProfit: Number((walletState.weeklyProfit + netPnL).toFixed(2)),
-      monthlyProfit: Number((walletState.monthlyProfit + netPnL).toFixed(2)),
-      peakEquity: Number(peakEquity.toFixed(2)),
+    const currentBalance = Number((current.currentBalance + netPnL).toFixed(4));
+    const usedMargin = Math.max(0, Number((current.usedMargin - marginReleased).toFixed(4)));
+    const availableBalance = Math.max(0, Number((currentBalance - usedMargin).toFixed(4)));
+    const equity = currentBalance;
+    const realizedPnL = Number((current.realizedPnL + netPnL).toFixed(4));
+    const totalGrossPnL = Number((current.grossPnL + grossPnL).toFixed(4));
+    const totalNetPnL = Number((current.netPnL + netPnL).toFixed(4));
+    const peakEquity = Math.max(current.peakEquity, equity);
+
+    const drawdownAmount = peakEquity - equity;
+    const maxDrawdownPercent =
+      peakEquity > 0
+        ? Math.max(current.maxDrawdownPercent, Number(((drawdownAmount / peakEquity) * 100).toFixed(2)))
+        : 0;
+
+    memoryWalletState = {
+      ...current,
+      currentBalance,
+      availableBalance,
+      usedMargin,
+      equity,
+      realizedPnL,
+      grossPnL: totalGrossPnL,
+      netPnL: totalNetPnL,
+      dailyProfit: Number((current.dailyProfit + netPnL).toFixed(4)),
+      weeklyProfit: Number((current.weeklyProfit + netPnL).toFixed(4)),
+      monthlyProfit: Number((current.monthlyProfit + netPnL).toFixed(4)),
+      peakEquity,
       maxDrawdownPercent,
       updatedAt: new Date().toISOString(),
     };
 
-    return walletState;
+    // Persist to Prisma
+    try {
+      if (prisma.walletState?.upsert) {
+        await prisma.walletState.upsert({
+          where: { id: 'default-wallet-state' },
+          create: {
+            id: 'default-wallet-state',
+            currentBalance,
+            availableBalance,
+            usedMargin,
+            equity,
+            realizedPnL,
+            unrealizedPnL: 0,
+            grossPnL: totalGrossPnL,
+            netPnL: totalNetPnL,
+            dailyProfit: memoryWalletState.dailyProfit,
+            weeklyProfit: memoryWalletState.weeklyProfit,
+            monthlyProfit: memoryWalletState.monthlyProfit,
+            peakEquity,
+            maxDrawdownPercent,
+          },
+          update: {
+            currentBalance,
+            availableBalance,
+            usedMargin,
+            equity,
+            realizedPnL,
+            grossPnL: totalGrossPnL,
+            netPnL: totalNetPnL,
+            dailyProfit: memoryWalletState.dailyProfit,
+            weeklyProfit: memoryWalletState.weeklyProfit,
+            monthlyProfit: memoryWalletState.monthlyProfit,
+            peakEquity,
+            maxDrawdownPercent,
+          },
+        });
+      }
+    } catch {
+      // Memory fallback active
+    }
+
+    return memoryWalletState;
   }
 
+  /**
+   * Resets wallet to specified baseline balance.
+   */
   public async resetWallet(initialBalance: number = 10.0): Promise<WalletStateDto> {
-    walletState = {
+    memoryWalletState = {
       id: 'default-wallet-state',
       currentBalance: initialBalance,
       availableBalance: initialBalance,
@@ -72,6 +163,48 @@ export class WalletEngineService {
       maxDrawdownPercent: 0.0,
       updatedAt: new Date().toISOString(),
     };
-    return walletState;
+
+    try {
+      if (prisma.walletState?.upsert) {
+        await prisma.walletState.upsert({
+          where: { id: 'default-wallet-state' },
+          create: {
+            id: 'default-wallet-state',
+            currentBalance: initialBalance,
+            availableBalance: initialBalance,
+            usedMargin: 0.0,
+            equity: initialBalance,
+            realizedPnL: 0.0,
+            unrealizedPnL: 0.0,
+            grossPnL: 0.0,
+            netPnL: 0.0,
+            dailyProfit: 0.0,
+            weeklyProfit: 0.0,
+            monthlyProfit: 0.0,
+            peakEquity: initialBalance,
+            maxDrawdownPercent: 0.0,
+          },
+          update: {
+            currentBalance: initialBalance,
+            availableBalance: initialBalance,
+            usedMargin: 0.0,
+            equity: initialBalance,
+            realizedPnL: 0.0,
+            unrealizedPnL: 0.0,
+            grossPnL: 0.0,
+            netPnL: 0.0,
+            dailyProfit: 0.0,
+            weeklyProfit: 0.0,
+            monthlyProfit: 0.0,
+            peakEquity: initialBalance,
+            maxDrawdownPercent: 0.0,
+          },
+        });
+      }
+    } catch {
+      // Memory fallback active
+    }
+
+    return memoryWalletState;
   }
 }

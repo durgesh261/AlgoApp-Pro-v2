@@ -1,4 +1,4 @@
-# AlgoApp Pro v3.2 — Quantitative Research Platform Report
+# QuantEdge AI — Quantitative Research Platform Report
 
 **Research Lead / Audit Lead**: Principal Software Architect, Senior Full Stack Engineer, QA Lead, Database Architect, DevOps Engineer, and Trading Systems Auditor  
 **Report Date**: August 3, 2026  
@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary & Methodology
 
-This report documents the **empirical quantitative research analytics** computed by **AlgoApp Pro v3.2**. Every metric in this document is derived **exclusively from recorded historical trades and persistent database entities** stored in Prisma ORM (`trade_ledger`, `shadow_decision_records`, `trade_reviews`, `reconciliation_logs`).
+This report documents the **empirical quantitative research analytics** computed by **QuantEdge AI**. Every metric in this document is derived **exclusively from recorded historical trades and persistent database entities** stored in Prisma ORM (`trade_ledger`, `shadow_decision_records`, `trade_reviews`, `reconciliation_logs`).
 
 No performance metrics or statistics have been estimated, simulated, or artificially generated. Where sample size is limited, the report explicitly states: *"Insufficient data to calculate."*
 
@@ -112,7 +112,7 @@ The Research Center workspace at `/analysis` provides:
 - **Most Profitable Pair**: `BTCUSD.P` (+$4,850.00 Net PnL)
 - **Least Profitable Pair**: `XRPUSD.P` (+$470.00 Net PnL)
 - **Most Profitable Timeframe**: `1H` (+$6,950.00 Net PnL)
-- **Most Profitable Strategy Profile**: `Default 1H Profile (v1.0.0)`
+- **Most Profitable Strategy Profile**: `Default 1H Profile`
 
 ---
 
@@ -132,4 +132,4 @@ The Research Center workspace at `/analysis` provides:
 
 ### FINAL VERDICT
 
-> **VERDICT**: `PASS` — `AlgoApp Pro v3.2 Quantitative Research Platform HAS PASSED ALL EMPIRICAL DATA AUDITS AND IS APPROVED FOR PRODUCTION OPERATION.`
+> **VERDICT**: `PASS` — `QuantEdge AI Quantitative Research Platform HAS PASSED ALL EMPIRICAL DATA AUDITS AND IS APPROVED FOR PRODUCTION OPERATION.`

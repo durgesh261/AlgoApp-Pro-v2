@@ -1,4 +1,4 @@
-# AlgoApp Pro v4.2 — Full Repository Audit
+# QuantEdge AI — Full Repository Audit
 
 **Audit Lead**: Lead Systems Architect & Code Quality Auditor  
 **Audit Date**: August 3, 2026  

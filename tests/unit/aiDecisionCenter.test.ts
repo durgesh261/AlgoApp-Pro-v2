@@ -27,7 +27,7 @@ describe('AI Decision Center Unit Tests', () => {
     const exp1 = ReasonBuilder.buildHumanExplanation(DecisionReasonCode.FRESH_ZONE_CONFIRMED);
     const exp2 = ReasonBuilder.buildHumanExplanation(DecisionReasonCode.FRESH_ZONE_CONFIRMED);
 
-    expect(exp1).toContain('Fresh 1H Supply/Demand zone confirmed');
+    expect(exp1).toContain('Fresh Supply/Demand zone confirmed');
     expect(exp1).toEqual(exp2); // Reproducibility
   });
 

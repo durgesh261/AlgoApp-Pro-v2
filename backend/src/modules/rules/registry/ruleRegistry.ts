@@ -34,10 +34,31 @@ export class RuleRegistry {
       {
         ruleId: 'EXECUTE_CONFIDENCE_THRESHOLD',
         name: 'Minimum Execution Confidence Threshold',
-        description: 'Requires at least 80.0% confidence score for EXECUTE state emission.',
+        description: 'Requires at least 85.0% confidence score for EXECUTE state emission.',
         purpose: 'Ensures only high-conviction trade setups pass the decision pipeline.',
-        currentValue: '80.0%',
+        currentValue: '85.0%',
       },
+      {
+        ruleId: 'MAX_OPEN_TRADES',
+        name: 'Single Trade Lock',
+        description: 'Limits the system to a maximum of 1 open position at any time.',
+        purpose: 'Prevents over-exposure and ensures strict account risk controls.',
+        currentValue: '1 Trade',
+      },
+      {
+        ruleId: 'RISK_PER_TRADE',
+        name: 'Strict 35% Account Risk',
+        description: 'Leverage is dynamically adjusted such that hitting Stop Loss equates to a 35% loss of account balance.',
+        purpose: 'Standardizes institutional sizing.',
+        currentValue: '35%',
+      },
+      {
+        ruleId: 'TARGET_PER_TRADE',
+        name: 'Strict 60% Account Target',
+        description: 'Take Profit is mathematically set so that closing the trade yields exactly a 60% growth of the account balance.',
+        purpose: 'Maintains fixed asymmetric risk/reward parameters.',
+        currentValue: '60%',
+      }
     ];
   }
 }

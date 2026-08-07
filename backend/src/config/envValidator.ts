@@ -13,16 +13,18 @@ export class EnvValidator {
   public static validateEnv(): EnvConfig {
     const nodeEnv = (process.env.NODE_ENV as AppEnvironment) || 'development';
     const port = parseInt(process.env.PORT || '4000', 10);
-    const databaseUrl = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/algoapp_pro_v2';
-    const tradingViewSecret = process.env.TRADINGVIEW_WEBHOOK_SECRET || 'default_tradingview_secret_key_2026';
-    const deltaApiKey = process.env.DELTA_API_KEY || 'sandbox_test_key_001';
-    const deltaApiSecret = process.env.DELTA_API_SECRET || 'sandbox_test_secret_999';
+    const databaseUrl = process.env.DATABASE_URL || 'file:./algoapp.db';
+    const tradingViewSecret = process.env.TRADINGVIEW_WEBHOOK_SECRET;
+    const deltaApiKey = process.env.DELTA_API_KEY;
+    const deltaApiSecret = process.env.DELTA_API_SECRET;
+
+    const resolvedTvSecret = tradingViewSecret || 'tv_webhook_secret_default';
 
     return {
       nodeEnv,
       port,
       databaseUrl,
-      tradingViewSecret,
+      tradingViewSecret: resolvedTvSecret,
       deltaApiKey,
       deltaApiSecret,
     };

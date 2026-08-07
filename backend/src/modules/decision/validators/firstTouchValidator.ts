@@ -7,11 +7,11 @@ export class FirstTouchValidator {
       return { passed: false, score: 0, reasonCode: DecisionReasonCode.REPEATED_TOUCH_EXHAUSTED };
     }
 
-    if (zone.touchCount > 2) {
+    if (zone.touchCount > 1) {
       return { passed: false, score: 30, reasonCode: DecisionReasonCode.REPEATED_TOUCH_EXHAUSTED };
     }
 
-    const score = zone.touchCount === 0 ? 100 : zone.touchCount === 1 ? 85 : 65;
+    const score = zone.touchCount === 0 ? 100 : 85;
     return { passed: true, score, reasonCode: DecisionReasonCode.FIRST_TOUCH_VALIDATED };
   }
 }
