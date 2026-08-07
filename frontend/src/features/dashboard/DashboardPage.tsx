@@ -123,11 +123,11 @@ export const DashboardPage: React.FC = () => {
           <LayoutDashboard className="w-6 h-6 text-indigo-400" />
           <div>
             <h1 className="text-lg font-bold text-white font-mono">
-              QuantEdge AI Workstation â€” {activeSymbol} ({activeTimeframe})
+              QuantEdge AI Workstation - {activeSymbol} ({activeTimeframe})
             </h1>
             <div className="flex items-center space-x-2 text-xs text-slate-400 mt-0.5">
               <span>Profile: <strong className="text-white">Default 1H Profile</strong></span>
-              <span>â€¢</span>
+              <span>•</span>
               <StatusBadge status={connection?.status || 'DISCONNECTED'} label={`DELTA: ${connection?.status || 'OFFLINE'}`} />
             </div>
           </div>
