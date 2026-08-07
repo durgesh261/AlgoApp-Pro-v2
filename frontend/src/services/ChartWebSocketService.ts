@@ -19,8 +19,8 @@ class ChartWebSocketService {
     ticker: [],
     candle: [],
   };
-  private reconnectTimer: NodeJS.Timeout | null = null;
-  private pingTimer: NodeJS.Timeout | null = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private pingTimer: ReturnType<typeof setInterval> | null = null;
 
   public connect(symbol: string) {
     if (this.ws && (this.state === 'CONNECTED' || this.state === 'CONNECTING')) {

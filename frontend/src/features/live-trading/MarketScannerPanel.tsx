@@ -185,7 +185,7 @@ export const MarketScannerPanel: React.FC = () => {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-[#0E121A] border border-[#1E293B] rounded-lg p-2.5">
           <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Ticks Processed</span>
-          <span className="text-sm font-bold text-white font-mono mt-0.5 block">{scanner.evaluatedTicksCount.toLocaleString()}</span>
+          <span className="text-sm font-bold text-white font-mono mt-0.5 block">{(scanner.evaluatedTicksCount || 0).toLocaleString()}</span>
         </div>
         <div className="bg-[#0E121A] border border-[#1E293B] rounded-lg p-2.5">
           <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Signals Triggered</span>
