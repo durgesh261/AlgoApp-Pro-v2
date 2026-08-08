@@ -10,7 +10,7 @@ export const StatusBar: React.FC = () => {
   const { activeTimeframe } = useTerminalStore();
   const [istTime, setIstTime] = useState(nowIST());
 
-  const { isBackendReachable, isDeltaReachable, status } = useConnectionManager();
+  const { isBackendReachable } = useConnectionManager();
 
   const { data: deltaHealth } = useQuery({
     queryKey: ['deltaHealth'],
@@ -25,14 +25,6 @@ export const StatusBar: React.FC = () => {
     const timer = setInterval(() => setIstTime(nowIST()), 1000);
     return () => clearInterval(timer);
   }, []);
-
-  const dot = (ok: boolean) => (
-    <div
-      className={`w-1.5 h-1.5 rounded-full ${
-        ok ? 'bg-[#00C896]' : 'bg-[#F6465D] animate-pulse'
-      }`}
-    />
-  );
 
   return (
     <footer className="h-6 bg-[#0B0E14] border-t border-[#1E293B] flex items-center justify-between px-3 text-[10px] font-mono text-[#94A3B8] select-none z-20 overflow-x-auto whitespace-nowrap no-scrollbar">

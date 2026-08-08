@@ -20,7 +20,7 @@ export const Header: React.FC = () => {
   } = useTerminalStore();
   
   const { isConnected } = useDeltaStore();
-  const { isBackendReachable, isDeltaReachable } = useConnectionManager();
+  const { isBackendReachable } = useConnectionManager();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const searchRef = useRef<HTMLDivElement>(null);

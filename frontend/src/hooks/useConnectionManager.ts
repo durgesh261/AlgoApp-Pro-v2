@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { apiClient } from '../services/api';
+import { apiClient as api } from '../services/api';
 
 export type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'degraded';
 
@@ -12,8 +12,8 @@ interface ConnectionState {
   isDeltaReachable: boolean;
 }
 
-const HEALTH_INTERVAL_MS = 30000; // 30s when connected
-const RETRY_BASE_MS = 2000;
+const HEALTH_INTERVAL_MS = 30000;
+const RETRY_BASE_MS = 3000;
 const RETRY_MAX_MS = 30000;
 
 export function useConnectionManager() {
@@ -26,32 +26,26 @@ export function useConnectionManager() {
     isDeltaReachable: false,
   });
 
-  // All mutable state lives in refs to avoid effect re-runs
-  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const healthIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Mutable refs for timer control
+  const timersRef = useRef<{
+    retry: ReturnType<typeof setTimeout> | null;
+    countdown: ReturnType<typeof setInterval> | null;
+    health: ReturnType<typeof setInterval> | null;
+  }>({ retry: null, countdown: null, health: null });
+
   const isMountedRef = useRef(true);
 
-  // ─── Cleanup all timers ─────────────────────────────
-  const clearAllTimers = useCallback(() => {
-    if (retryTimerRef.current) {
-      clearTimeout(retryTimerRef.current);
-      retryTimerRef.current = null;
-    }
-    if (countdownTimerRef.current) {
-      clearInterval(countdownTimerRef.current);
-      countdownTimerRef.current = null;
-    }
-    if (healthIntervalRef.current) {
-      clearInterval(healthIntervalRef.current);
-      healthIntervalRef.current = null;
-    }
+  const clearTimers = useCallback(() => {
+    if (timersRef.current.retry) clearTimeout(timersRef.current.retry);
+    if (timersRef.current.countdown) clearInterval(timersRef.current.countdown);
+    if (timersRef.current.health) clearInterval(timersRef.current.health);
+    timersRef.current = { retry: null, countdown: null, health: null };
   }, []);
 
-  // ─── Health check (stable ref, never recreated) ─────
-  const checkHealthRef = useRef(async (): Promise<boolean> => {
+  // ─── Health check ───────────────────────────────────
+  const checkHealth = useCallback(async (): Promise<boolean> => {
     try {
-      const res = await apiClient.get('/health', { timeout: 8000 });
+      const res = await api.get('/health', { timeout: 8000 });
       const data = res.data;
 
       const backendOk = data.status === 'ok';
@@ -86,102 +80,85 @@ export function useConnectionManager() {
 
       if (!isMountedRef.current) return false;
 
-      setState({
+      setState(prev => ({
+        ...prev,
         status: 'disconnected',
         lastError: msg,
         nextRetryIn: 0,
+        retryCount: prev.retryCount,
         isBackendReachable: false,
         isDeltaReachable: false,
-      });
+      }));
       return false;
     }
-  });
+  }, []);
 
-  // ─── Schedule retry with countdown ──────────────────
-  const scheduleRetryRef = useRef((currentRetryCount: number) => {
-    clearAllTimers();
+  // ─── Schedule retry ─────────────────────────────────
+  const scheduleRetry = useCallback((attempt: number) => {
+    clearTimers();
 
-    const delay = Math.min(
-      RETRY_BASE_MS * Math.pow(1.5, currentRetryCount),
-      RETRY_MAX_MS
-    );
-
+    const delay = Math.min(RETRY_BASE_MS * Math.pow(1.5, attempt), RETRY_MAX_MS);
     let remaining = Math.ceil(delay / 1000);
 
-    // Update countdown every second
     setState(s => ({ ...s, nextRetryIn: remaining }));
 
-    countdownTimerRef.current = setInterval(() => {
+    timersRef.current.countdown = setInterval(() => {
       remaining -= 1;
       if (remaining <= 0) {
-        clearInterval(countdownTimerRef.current!);
-        countdownTimerRef.current = null;
+        if (timersRef.current.countdown) clearInterval(timersRef.current.countdown);
+        timersRef.current.countdown = null;
       } else if (isMountedRef.current) {
         setState(s => ({ ...s, nextRetryIn: remaining }));
       }
     }, 1000);
 
-    // Execute retry after delay
-    retryTimerRef.current = setTimeout(async () => {
-      retryTimerRef.current = null;
-      const isHealthy = await checkHealthRef.current();
+    timersRef.current.retry = setTimeout(async () => {
+      timersRef.current.retry = null;
+      const isHealthy = await checkHealth();
 
       if (!isMountedRef.current) return;
 
       if (!isHealthy) {
-        setState(s => {
-          const nextCount = s.retryCount + 1;
-          scheduleRetryRef.current(nextCount);
-          return { ...s, retryCount: nextCount };
-        });
+        setState(s => ({ ...s, retryCount: attempt + 1 }));
+        scheduleRetry(attempt + 1);
       }
     }, delay);
-  });
+  }, [checkHealth, clearTimers]);
 
-  // ─── Force reconnect (manual) ───────────────────────
+  // ─── Force reconnect ────────────────────────────────
   const forceReconnect = useCallback(() => {
-    clearAllTimers();
+    clearTimers();
     setState(s => ({ ...s, status: 'connecting', nextRetryIn: 0, retryCount: 0 }));
-    checkHealthRef.current().then(isHealthy => {
+    checkHealth().then(isHealthy => {
       if (!isHealthy && isMountedRef.current) {
-        scheduleRetryRef.current(0);
+        scheduleRetry(0);
       }
     });
-  }, [clearAllTimers]);
+  }, [checkHealth, scheduleRetry, clearTimers]);
 
-  // ─── Main effect: runs ONCE on mount ────────────────
+  // ─── Mount effect: runs ONCE ────────────────────────
   useEffect(() => {
     isMountedRef.current = true;
 
-    // Immediate first check
-    checkHealthRef.current().then(isHealthy => {
+    checkHealth().then(isHealthy => {
       if (!isHealthy && isMountedRef.current) {
-        setState(s => {
-          scheduleRetryRef.current(s.retryCount);
-          return s;
-        });
+        scheduleRetry(0);
       }
     });
 
-    // Periodic health check (only when connected)
-    healthIntervalRef.current = setInterval(() => {
-      if (!isMountedRef.current) return;
-      checkHealthRef.current().then(isHealthy => {
+    timersRef.current.health = setInterval(() => {
+      checkHealth().then(isHealthy => {
         if (!isHealthy && isMountedRef.current) {
-          setState(s => {
-            scheduleRetryRef.current(s.retryCount);
-            return s;
-          });
+          scheduleRetry(0);
         }
       });
     }, HEALTH_INTERVAL_MS);
 
     return () => {
       isMountedRef.current = false;
-      clearAllTimers();
+      clearTimers();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // <-- EMPTY dependency array = never re-runs
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     ...state,

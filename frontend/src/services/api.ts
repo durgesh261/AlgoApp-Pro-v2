@@ -100,6 +100,17 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+// Debug interceptor
+apiClient.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.code === 'ERR_NETWORK') {
+      console.error('[API] Backend unreachable. Is it running on', API_BASE_URL, '?');
+    }
+    return Promise.reject(err);
+  }
+);
+
 export const systemApi = {
   getLiveness: async (): Promise<ApiResponse<{ status: string }>> => {
     const res = await apiClient.get('/system/liveness');
