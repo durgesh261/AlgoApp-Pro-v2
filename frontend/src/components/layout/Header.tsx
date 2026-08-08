@@ -216,7 +216,7 @@ export const Header: React.FC = () => {
       {/* Right Telemetry & Actions */}
       <div className="flex items-center space-x-2.5">
         {/* Developer Mode Switch — HIDDEN IN PRODUCTION */}
-        {import.meta.env.DEV && (
+        {(import.meta as any).env?.DEV && (
           <button
             onClick={toggleDeveloperMode}
             className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold border transition-colors ${

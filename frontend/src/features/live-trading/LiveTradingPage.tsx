@@ -388,7 +388,7 @@ export const LiveTradingPage: React.FC = () => {
         </div>
 
         <div className="flex-1 bg-[#161D2A] border border-[#1E293B] rounded-xl overflow-hidden shadow-sm flex flex-col min-w-[320px] w-full my-2 lg:my-0">
-          <InteractiveTradingChart initialSymbol={activeSymbol} initialTimeframe={activeTimeframe} />
+          <InteractiveTradingChart initialSymbol={activeSymbol} initialTimeframe={activeTimeframe as '1H'} />
         </div>
 
         <div

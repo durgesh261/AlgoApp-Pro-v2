@@ -173,7 +173,7 @@ export const DashboardPage: React.FC = () => {
       <div className="grid grid-cols-12 gap-4 h-[calc(100vh-210px)] min-h-[680px]">
         {/* CENTER PANE: TRADINGVIEW CHART WORKSPACE (Cols 9) */}
         <div className="col-span-12 lg:col-span-9 bg-slate-900/90 border border-slate-800 rounded-xl overflow-hidden shadow-sm flex flex-col">
-          <InteractiveTradingChart initialSymbol={activeSymbol} initialTimeframe={activeTimeframe} />
+          <InteractiveTradingChart initialSymbol={activeSymbol} initialTimeframe={activeTimeframe as '1H'} />
         </div>
 
         {/* RIGHT PANE: DECISION PANEL & RISK SIZING (Cols 3) */}
