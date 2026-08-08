@@ -5,151 +5,183 @@ export type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'de
 
 interface ConnectionState {
   status: ConnectionStatus;
-  lastConnected: Date | null;
   lastError: string | null;
-  retryCount: number;
   nextRetryIn: number;
+  retryCount: number;
   isBackendReachable: boolean;
   isDeltaReachable: boolean;
 }
 
-const MAX_DELAY_MS = 30000;
-const BASE_DELAY_MS = 2000;
+const HEALTH_INTERVAL_MS = 30000; // 30s when connected
+const RETRY_BASE_MS = 2000;
+const RETRY_MAX_MS = 30000;
 
 export function useConnectionManager() {
   const [state, setState] = useState<ConnectionState>({
     status: 'connecting',
-    lastConnected: null,
     lastError: null,
-    retryCount: 0,
     nextRetryIn: 0,
+    retryCount: 0,
     isBackendReachable: false,
     isDeltaReachable: false,
   });
 
+  // All mutable state lives in refs to avoid effect re-runs
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const isMounted = useRef(true);
+  const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const healthIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isMountedRef = useRef(true);
 
-  const clearTimers = useCallback(() => {
-    if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
-    if (countdownRef.current) clearInterval(countdownRef.current);
+  // ─── Cleanup all timers ─────────────────────────────
+  const clearAllTimers = useCallback(() => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+    if (healthIntervalRef.current) {
+      clearInterval(healthIntervalRef.current);
+      healthIntervalRef.current = null;
+    }
   }, []);
 
-  const checkHealth = useCallback(async (): Promise<boolean> => {
-    if (!isMounted.current) return false;
-
+  // ─── Health check (stable ref, never recreated) ─────
+  const checkHealthRef = useRef(async (): Promise<boolean> => {
     try {
       const res = await apiClient.get('/health', { timeout: 8000 });
       const data = res.data;
 
-      if (data.status === 'ok' || data.status === 'degraded') {
+      const backendOk = data.status === 'ok';
+      const deltaOk = data.services?.deltaExchange === 'connected';
+
+      if (!isMountedRef.current) return false;
+
+      if (backendOk) {
+        setState({
+          status: 'connected',
+          lastError: null,
+          nextRetryIn: 0,
+          retryCount: 0,
+          isBackendReachable: true,
+          isDeltaReachable: deltaOk,
+        });
+        return true;
+      } else {
         setState(prev => ({
           ...prev,
-          status: data.status === 'ok' ? 'connected' : 'degraded',
-          lastConnected: new Date(),
-          lastError: data.status === 'ok' ? null : 'Some backend services are degraded',
-          retryCount: 0,
-          nextRetryIn: 0,
+          status: 'degraded',
+          lastError: 'Some backend services are degraded',
           isBackendReachable: true,
-          isDeltaReachable: data.services?.deltaExchange === 'connected',
+          isDeltaReachable: deltaOk,
         }));
-        return data.status === 'ok';
+        return false;
       }
-
-      setState(prev => ({
-        ...prev,
-        status: 'degraded',
-        lastError: 'Backend is running but some services are down',
-        isBackendReachable: true,
-        isDeltaReachable: data.services?.deltaExchange === 'connected',
-      }));
-      return false;
     } catch (err: any) {
-      if (!isMounted.current) return false;
+      const msg = err.code === 'ECONNABORTED'
+        ? 'Backend connection timed out'
+        : err.message || 'Could not reach the backend API';
 
-      const errorMsg =
-        err.code === 'ECONNABORTED'
-          ? 'Backend connection timed out'
-          : err.code === 'ERR_NETWORK'
-          ? 'Could not reach the backend API. Is it running?'
-          : err.message || 'Unknown connection error';
+      if (!isMountedRef.current) return false;
 
-      setState(prev => ({
-        ...prev,
+      setState({
         status: 'disconnected',
-        lastError: errorMsg,
+        lastError: msg,
+        nextRetryIn: 0,
         isBackendReachable: false,
         isDeltaReachable: false,
-      }));
+      });
       return false;
     }
-  }, []);
+  });
 
-  const scheduleRetry = useCallback(
-    (currentRetryCount: number) => {
-      clearTimers();
+  // ─── Schedule retry with countdown ──────────────────
+  const scheduleRetryRef = useRef((currentRetryCount: number) => {
+    clearAllTimers();
 
-      const delay = Math.min(BASE_DELAY_MS * Math.pow(1.5, currentRetryCount), MAX_DELAY_MS);
-      let remaining = Math.ceil(delay / 1000);
+    const delay = Math.min(
+      RETRY_BASE_MS * Math.pow(1.5, currentRetryCount),
+      RETRY_MAX_MS
+    );
 
-      setState(prev => ({ ...prev, nextRetryIn: remaining, status: 'connecting' }));
+    let remaining = Math.ceil(delay / 1000);
 
-      countdownRef.current = setInterval(() => {
-        remaining -= 1;
-        if (remaining <= 0) {
-          clearInterval(countdownRef.current!);
-        } else {
-          if (isMounted.current) {
-            setState(s => ({ ...s, nextRetryIn: remaining }));
-          }
-        }
-      }, 1000);
+    // Update countdown every second
+    setState(s => ({ ...s, nextRetryIn: remaining }));
 
-      retryTimerRef.current = setTimeout(() => {
-        checkHealth().then(isHealthy => {
-          if (!isHealthy && isMounted.current) {
-            setState(s => {
-              scheduleRetry(s.retryCount + 1);
-              return { ...s, retryCount: s.retryCount + 1 };
-            });
-          }
-        });
-      }, delay);
-    },
-    [checkHealth, clearTimers]
-  );
+    countdownTimerRef.current = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(countdownTimerRef.current!);
+        countdownTimerRef.current = null;
+      } else if (isMountedRef.current) {
+        setState(s => ({ ...s, nextRetryIn: remaining }));
+      }
+    }, 1000);
 
-  useEffect(() => {
-    isMounted.current = true;
+    // Execute retry after delay
+    retryTimerRef.current = setTimeout(async () => {
+      retryTimerRef.current = null;
+      const isHealthy = await checkHealthRef.current();
 
-    // Immediate first check
-    checkHealth().then(isHealthy => {
-      if (!isHealthy && isMounted.current) scheduleRetry(0);
-    });
+      if (!isMountedRef.current) return;
 
-    // Periodic health check while connected (every 30s)
-    const interval = setInterval(() => {
-      if (isMounted.current) {
-        checkHealth().then(isHealthy => {
-          if (!isHealthy && isMounted.current) scheduleRetry(0);
+      if (!isHealthy) {
+        setState(s => {
+          const nextCount = s.retryCount + 1;
+          scheduleRetryRef.current(nextCount);
+          return { ...s, retryCount: nextCount };
         });
       }
-    }, 30000);
+    }, delay);
+  });
+
+  // ─── Force reconnect (manual) ───────────────────────
+  const forceReconnect = useCallback(() => {
+    clearAllTimers();
+    setState(s => ({ ...s, status: 'connecting', nextRetryIn: 0, retryCount: 0 }));
+    checkHealthRef.current().then(isHealthy => {
+      if (!isHealthy && isMountedRef.current) {
+        scheduleRetryRef.current(0);
+      }
+    });
+  }, [clearAllTimers]);
+
+  // ─── Main effect: runs ONCE on mount ────────────────
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    // Immediate first check
+    checkHealthRef.current().then(isHealthy => {
+      if (!isHealthy && isMountedRef.current) {
+        setState(s => {
+          scheduleRetryRef.current(s.retryCount);
+          return s;
+        });
+      }
+    });
+
+    // Periodic health check (only when connected)
+    healthIntervalRef.current = setInterval(() => {
+      if (!isMountedRef.current) return;
+      checkHealthRef.current().then(isHealthy => {
+        if (!isHealthy && isMountedRef.current) {
+          setState(s => {
+            scheduleRetryRef.current(s.retryCount);
+            return s;
+          });
+        }
+      });
+    }, HEALTH_INTERVAL_MS);
 
     return () => {
-      isMounted.current = false;
-      clearTimers();
-      clearInterval(interval);
+      isMountedRef.current = false;
+      clearAllTimers();
     };
-  }, [checkHealth, scheduleRetry, clearTimers]);
-
-  const forceReconnect = useCallback(async () => {
-    clearTimers();
-    setState(prev => ({ ...prev, status: 'connecting', retryCount: 0, nextRetryIn: 0 }));
-    const isHealthy = await checkHealth();
-    if (!isHealthy && isMounted.current) scheduleRetry(0);
-  }, [checkHealth, scheduleRetry, clearTimers]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // <-- EMPTY dependency array = never re-runs
 
   return {
     ...state,
