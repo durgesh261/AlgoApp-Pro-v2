@@ -147,6 +147,16 @@ export class DeltaSyncService {
     return this.health;
   }
 
+  public isConnected(): boolean {
+    return this.health.wsStatus === 'CONNECTED';
+  }
+
+  public getConnectionStatus(): 'CONNECTED' | 'DISCONNECTED' | 'CONNECTING' {
+    if (this.health.wsStatus === 'CONNECTED') return 'CONNECTED';
+    if (this.health.wsStatus === 'RECONNECTING') return 'CONNECTING';
+    return 'DISCONNECTED';
+  }
+
   public getRestClient(): DeltaRestClient {
     return this.rest;
   }

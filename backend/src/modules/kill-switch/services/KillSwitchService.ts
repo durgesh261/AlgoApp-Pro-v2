@@ -1,6 +1,6 @@
 import { eventBus } from '../../../services/EventBus.js';
 import { executionEngineService } from '../../execution-engine/services/ExecutionEngineService.js';
-import { marketScanner } from '../../live-trading/services/MarketScannerService.js';
+import { MarketScannerService } from '../../live-trading/services/MarketScannerService.js';
 import { deltaSyncService } from '../../delta-exchange/index.js';
 import { logger } from '../../../logger/index.js';
 
@@ -27,7 +27,7 @@ export class KillSwitchService {
     logger.error('🚨 KILL SWITCH ACTIVATED — All trading halted');
 
     // 1. Stop scanner
-    marketScanner.stopScanner();
+    MarketScannerService.setState('STOPPED');
 
     // 2. Activate execution engine kill switch
     executionEngineService.setKillSwitch(true);

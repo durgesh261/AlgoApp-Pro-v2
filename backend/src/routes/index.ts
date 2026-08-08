@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import manualExecutionRoutes from './execution.routes.js';
 import { systemRouter } from '../modules/system/system.routes.js';
 import { dashboardRouter } from '../modules/dashboard/dashboard.routes.js';
 import { paperTradingRouter } from '../modules/paper-trading/paper-trading.routes.js';
@@ -35,6 +36,8 @@ import { enterpriseApiRouter } from './api.js';
 
 export const apiRouter = Router();
 
+import scannerRoutes from './scanner.routes.js';
+
 apiRouter.use('/portfolio', portfolioRouter);
 apiRouter.use('/delta', deltaExchangeRouter);
 apiRouter.use('/news', newsRouter);
@@ -43,6 +46,7 @@ apiRouter.use('/system', systemRouter);
 apiRouter.use('/dashboard', dashboardRouter);
 apiRouter.use('/paper-trading', paperTradingRouter);
 apiRouter.use('/live-trading', liveTradingRouter);
+apiRouter.use('/scanner', scannerRoutes);
 
 apiRouter.use('/journal', journalRouter);
 apiRouter.use('/analytics', analyticsRouter);
@@ -58,6 +62,7 @@ const combinedExecutionRouter = Router();
 console.log('Adapter routes:', executionAdapterRouter.stack.map(l => l.route?.path));
 combinedExecutionRouter.use(executionEngineRouter);
 combinedExecutionRouter.use(executionAdapterRouter);
+combinedExecutionRouter.use(manualExecutionRoutes);
 
 apiRouter.use('/execution', combinedExecutionRouter);
 apiRouter.use('/tradingview', tradingViewRouter);

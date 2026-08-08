@@ -13,69 +13,30 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { useScanner, ScannerTelemetry } from '../../hooks/useScanner';
+
 export const MarketScannerPanel: React.FC = () => {
-  const queryClient = useQueryClient();
   const [selectedAiSymbol, setSelectedAiSymbol] = useState<string | null>(null);
 
-  const { data: scannerResponse } = useQuery({
-    queryKey: ['scannerStatus'],
-    queryFn: scannerApi.getStatus,
-    refetchInterval: 2000,
-  });
+  const { telemetry, stats, scannerState, isConnected, isDeltaConnected, controlScanner } = useScanner();
 
-  const startMutation = useMutation({
-    mutationFn: scannerApi.start,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['scannerStatus'] }),
-  });
+  const latestAiDecision = null; // Mock for now until AI details are added to telemetry
 
-  const pauseMutation = useMutation({
-    mutationFn: scannerApi.pause,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['scannerStatus'] }),
-  });
+  const isRunning = scannerState === 'RUNNING';
+  const isPaused = scannerState === 'PAUSED';
+  // Note: we can map the isInTrade state if we want by tracking active trades,
+  // but for now we'll just use simple states to avoid breaking the UI.
+  const isInTrade = false; 
+  const isStopped = scannerState === 'STOPPED';
 
-  const resumeMutation = useMutation({
-    mutationFn: scannerApi.resume,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['scannerStatus'] }),
-  });
-
-  const stopMutation = useMutation({
-    mutationFn: scannerApi.stop,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['scannerStatus'] }),
-  });
-
-  const pausePairMutation = useMutation({
-    mutationFn: (symbol: string) => scannerApi.pausePair(symbol),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['scannerStatus'] }),
-  });
-
-  const resumePairMutation = useMutation({
-    mutationFn: (symbol: string) => scannerApi.resumePair(symbol),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['scannerStatus'] }),
-  });
-
-  const stopPairMutation = useMutation({
-    mutationFn: (symbol: string) => scannerApi.stopPair(symbol),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['scannerStatus'] }),
-  });
-
-  const scanner: ScannerStateDto = scannerResponse?.data || {
-    status: 'STOPPED',
-    symbols: ['BTCUSD.P', 'ETHUSD.P', 'SOLUSD.P', 'XRPUSD.P'],
-    timeframe: '1H',
-    activeTradeSymbol: null,
-    activeTradeId: null,
-    lastScanTime: new Date().toISOString(),
-    evaluatedTicksCount: 0,
-    signalsGeneratedCount: 0,
-    executedTradesCount: 0,
-    pairs: {},
-    latestAiDecision: null,
-  };
-
-  const isRunning = scanner.status === 'RUNNING';
-  const isPaused = scanner.status === 'PAUSED';
-  const isInTrade = scanner.status === 'IN_TRADE' || !!scanner.activeTradeSymbol;
-  const isStopped = scanner.status === 'STOPPED';
+  const startAll = () => controlScanner('start');
+  const pauseAll = () => controlScanner('pause');
+  const resumeAll = () => controlScanner('resume');
+  const stopAll = () => controlScanner('stop');
+  const startPair = (sym: string) => controlScanner('start', sym);
+  const pausePair = (sym: string) => controlScanner('pause', sym);
+  const resumePair = (sym: string) => controlScanner('resume', sym);
+  const stopPair = (sym: string) => controlScanner('stop', sym);
 
   return (
     <div className="bg-[#0B0E14] border border-[#1E293B] rounded-xl p-4 font-mono text-xs text-slate-300 space-y-4">
@@ -99,7 +60,7 @@ export const MarketScannerPanel: React.FC = () => {
                     : 'bg-slate-500/20 text-slate-400 border-slate-500/40'
                 }`}
               >
-                ● {scanner.status}
+                ● {scannerState}
               </span>
             </div>
             <p className="text-[11px] text-slate-500 font-sans mt-0.5">
@@ -112,8 +73,7 @@ export const MarketScannerPanel: React.FC = () => {
         <div className="flex items-center gap-2">
           {isStopped && (
             <button
-              onClick={() => startMutation.mutate()}
-              disabled={startMutation.isPending}
+              onClick={startAll}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition shadow-lg shadow-emerald-600/20"
             >
               <Play className="w-3.5 h-3.5" /> Start All
@@ -122,8 +82,7 @@ export const MarketScannerPanel: React.FC = () => {
 
           {isRunning && (
             <button
-              onClick={() => pauseMutation.mutate()}
-              disabled={pauseMutation.isPending}
+              onClick={pauseAll}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg transition"
             >
               <Pause className="w-3.5 h-3.5" /> Pause All
@@ -132,8 +91,7 @@ export const MarketScannerPanel: React.FC = () => {
 
           {isPaused && (
             <button
-              onClick={() => resumeMutation.mutate()}
-              disabled={resumeMutation.isPending}
+              onClick={resumeAll}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition"
             >
               <Play className="w-3.5 h-3.5" /> Resume All
@@ -142,8 +100,7 @@ export const MarketScannerPanel: React.FC = () => {
 
           {(isRunning || isPaused || isInTrade) && (
             <button
-              onClick={() => stopMutation.mutate()}
-              disabled={stopMutation.isPending}
+              onClick={stopAll}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600 border border-rose-500/40 text-rose-300 hover:text-white font-bold rounded-lg transition"
             >
               <Square className="w-3.5 h-3.5" /> Stop All
@@ -165,7 +122,7 @@ export const MarketScannerPanel: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2 font-bold text-white">
-                <span>ACTIVE TRADE POSITION LOCKED: {scanner.activeTradeSymbol}</span>
+                <span>ACTIVE TRADE POSITION LOCKED</span>
                 <span className="px-1.5 py-0.2 rounded text-[9px] bg-purple-500/30 text-purple-200 border border-purple-400/40">
                   SINGLE POSITION RULE
                 </span>
@@ -176,7 +133,7 @@ export const MarketScannerPanel: React.FC = () => {
             </div>
           </div>
           <span className="text-[11px] font-mono text-purple-300 bg-purple-900/40 px-3 py-1 rounded-lg border border-purple-500/30 shrink-0">
-            ID: {scanner.activeTradeId || 'LIVE-DELTA-EXECUTION'}
+            ID: LIVE-DELTA-EXECUTION
           </span>
         </motion.div>
       )}
@@ -185,15 +142,15 @@ export const MarketScannerPanel: React.FC = () => {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-[#0E121A] border border-[#1E293B] rounded-lg p-2.5">
           <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Ticks Processed</span>
-          <span className="text-sm font-bold text-white font-mono mt-0.5 block">{(scanner.evaluatedTicksCount || 0).toLocaleString()}</span>
+          <span className="text-sm font-bold text-white font-mono mt-0.5 block">{(stats.ticks || 0).toLocaleString()}</span>
         </div>
         <div className="bg-[#0E121A] border border-[#1E293B] rounded-lg p-2.5">
           <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Signals Triggered</span>
-          <span className="text-sm font-bold text-indigo-400 font-mono mt-0.5 block">{scanner.signalsGeneratedCount}</span>
+          <span className="text-sm font-bold text-indigo-400 font-mono mt-0.5 block">{stats.signals}</span>
         </div>
         <div className="bg-[#0E121A] border border-[#1E293B] rounded-lg p-2.5">
           <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Trades Executed</span>
-          <span className="text-sm font-bold text-emerald-400 font-mono mt-0.5 block">{scanner.executedTradesCount}</span>
+          <span className="text-sm font-bold text-emerald-400 font-mono mt-0.5 block">{stats.trades}</span>
         </div>
         <div className="bg-[#0E121A] border border-[#1E293B] rounded-lg p-2.5">
           <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Scan Matrix</span>
@@ -217,19 +174,19 @@ export const MarketScannerPanel: React.FC = () => {
           </thead>
           <tbody className="divide-y divide-[#1E293B]/60 text-[11px]">
             {['BTCUSD.P', 'ETHUSD.P', 'SOLUSD.P', 'XRPUSD.P'].map((sym) => {
-              const pair: ScannerPairTelemetry = scanner.pairs?.[sym] || {
+              const pair: ScannerTelemetry = telemetry.find(t => t.symbol === sym) || {
                 symbol: sym,
-                currentPrice: 0,
+                livePrice: 0,
                 activeOrderBlocksCount: 0,
-                scanState: 'SCANNING',
-                latestOBWidthPercent: undefined,
-                latestConfidenceScore: undefined,
-                lastTickAt: new Date().toISOString(),
+                scanState: 'IDLE',
+                orderBlockWidthPercent: 0,
+                latestConfidenceScore: 0,
+                lastScanAt: new Date().toISOString(),
                 userStatus: 'RUNNING',
               };
 
-              const pairUserStatus = pair.userStatus || scanner.pairStates?.[sym] || 'RUNNING';
-              const isTradeActive = scanner.activeTradeSymbol === sym;
+              const pairUserStatus = pair.userStatus || 'RUNNING';
+              const isTradeActive = false; // Add trade active tracking if needed later
               const isPairRunning = pairUserStatus === 'RUNNING';
               const isPairPaused = pairUserStatus === 'PAUSED';
               const isPairStopped = pairUserStatus === 'STOPPED';
@@ -251,13 +208,17 @@ export const MarketScannerPanel: React.FC = () => {
                     <span>{sym}</span>
                   </td>
                   <td className="py-2.5 px-3 font-mono font-semibold text-slate-200">
-                    ${pair.currentPrice ? pair.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '---'}
+                    ${pair.livePrice ? pair.livePrice.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '---'}
                   </td>
-                  <td className="py-2.5 px-3 font-mono text-slate-400">
-                    {pair.activeOrderBlocksCount ?? 0} Zones
+                  <td className="py-2.5 px-3 font-mono text-slate-400 text-center">
+                    {pair.activeOrderBlocksCount > 0 ? (
+                      <span className="text-[#F59E0B] font-bold">{pair.activeOrderBlocksCount} Zones</span>
+                    ) : (
+                      <span className="text-[#64748B]">0 Zones</span>
+                    )}
                   </td>
-                  <td className="py-2.5 px-3 font-mono text-slate-400">
-                    {pair.latestOBWidthPercent ? `${pair.latestOBWidthPercent.toFixed(2)}%` : '---'}
+                  <td className="py-2.5 px-3 font-mono text-slate-400 text-center">
+                    {pair.orderBlockWidthPercent > 0 ? `${pair.orderBlockWidthPercent.toFixed(2)}%` : '---'}
                   </td>
                   <td className="py-2.5 px-3">
                     {isTradeActive ? (
@@ -274,7 +235,7 @@ export const MarketScannerPanel: React.FC = () => {
                       </span>
                     ) : !isRunning ? (
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-slate-500/10 text-slate-400 border border-slate-500/20">
-                        ● ENGINE {scanner.status}
+                        ● ENGINE {scannerState}
                       </span>
                     ) : pair.scanState === 'SIGNAL_TRIGGERED' ? (
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 animate-pulse">
@@ -284,13 +245,17 @@ export const MarketScannerPanel: React.FC = () => {
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
                         ● EVALUATING
                       </span>
+                    ) : pair.scanState === 'ERROR' || pair.scanState === 'NO_DATA' ? (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                        ● {pair.scanState}
+                      </span>
                     ) : (
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
                         ● SCANNING
                       </span>
                     )}
                   </td>
-                  <td className="py-2.5 px-3 font-mono font-bold">
+                  <td className="py-2.5 px-3 font-mono font-bold text-center">
                     {pair.latestConfidenceScore ? (
                       <span
                         className={
@@ -311,16 +276,14 @@ export const MarketScannerPanel: React.FC = () => {
                       {isPairRunning ? (
                         <>
                           <button
-                            onClick={() => pausePairMutation.mutate(sym)}
-                            disabled={pausePairMutation.isPending}
+                            onClick={() => pausePair(sym)}
                             title={`Pause scanner for ${sym}`}
                             className="px-2 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-[10px] text-amber-300 font-semibold flex items-center gap-1 transition"
                           >
                             <Pause className="w-2.5 h-2.5" /> Pause
                           </button>
                           <button
-                            onClick={() => stopPairMutation.mutate(sym)}
-                            disabled={stopPairMutation.isPending}
+                            onClick={() => stopPair(sym)}
                             title={`Stop scanner for ${sym}`}
                             className="px-2 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-[10px] text-rose-300 font-semibold flex items-center gap-1 transition"
                           >
@@ -330,16 +293,14 @@ export const MarketScannerPanel: React.FC = () => {
                       ) : isPairPaused ? (
                         <>
                           <button
-                            onClick={() => resumePairMutation.mutate(sym)}
-                            disabled={resumePairMutation.isPending}
+                            onClick={() => resumePair(sym)}
                             title={`Resume scanner for ${sym}`}
                             className="px-2 py-1 rounded bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-[10px] text-emerald-300 font-semibold flex items-center gap-1 transition shadow-sm"
                           >
                             <Play className="w-2.5 h-2.5" /> Resume
                           </button>
                           <button
-                            onClick={() => stopPairMutation.mutate(sym)}
-                            disabled={stopPairMutation.isPending}
+                            onClick={() => stopPair(sym)}
                             title={`Stop scanner for ${sym}`}
                             className="px-2 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-[10px] text-rose-300 font-semibold flex items-center gap-1 transition"
                           >
@@ -348,8 +309,7 @@ export const MarketScannerPanel: React.FC = () => {
                         </>
                       ) : (
                         <button
-                          onClick={() => resumePairMutation.mutate(sym)}
-                          disabled={resumePairMutation.isPending}
+                          onClick={() => startPair(sym)}
                           title={`Start scanner for ${sym}`}
                           className="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-[10px] text-emerald-300 font-semibold flex items-center gap-1 transition shadow-sm"
                         >
@@ -397,13 +357,14 @@ export const MarketScannerPanel: React.FC = () => {
                 </button>
               </div>
 
-              {scanner.latestAiDecision ? (
+              {latestAiDecision ? (
                 <div className="space-y-3 font-sans">
                   <div className="bg-[#161D2A] border border-[#1E293B] rounded-lg p-3 flex items-center justify-between">
                     <div>
                       <span className="text-xs text-slate-400">Total Approval Score:</span>
                       <div className="text-xl font-bold font-mono text-white mt-0.5">
-                        {scanner.latestAiDecision.confidenceScore}%
+                        {/* @ts-ignore */}
+                        {latestAiDecision.confidenceScore}%
                         <span className="text-xs font-normal text-slate-400 ml-2">
                           (Req: $\ge 85\%$)
                         </span>
@@ -411,18 +372,22 @@ export const MarketScannerPanel: React.FC = () => {
                     </div>
                     <span
                       className={`px-2.5 py-1 rounded text-xs font-bold font-mono uppercase ${
-                        scanner.latestAiDecision.approved
+                        /* @ts-ignore */
+                        latestAiDecision.approved
                           ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                           : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
                       }`}
                     >
-                      {scanner.latestAiDecision.approved ? 'APPROVED FOR LIVE' : 'REJECTED BY AI'}
+                      {/* @ts-ignore */}
+                      {latestAiDecision.approved ? 'APPROVED FOR LIVE' : 'REJECTED BY AI'}
                     </span>
                   </div>
 
                   <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
-                    {scanner.latestAiDecision.breakdown &&
-                      Object.values(scanner.latestAiDecision.breakdown).map((factor: any, i: number) => (
+                    {/* @ts-ignore */}
+                    {latestAiDecision.breakdown &&
+                      /* @ts-ignore */
+                      Object.values(latestAiDecision.breakdown).map((factor: any, i: number) => (
                         <div
                           key={i}
                           className="bg-[#121722] border border-[#1E293B] rounded p-2 flex items-center justify-between text-xs"
@@ -448,6 +413,13 @@ export const MarketScannerPanel: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+      {/* Disconnected Warning */}
+      {!isDeltaConnected && (
+        <div className="mt-3 bg-[#F6465D]/10 border border-[#F6465D]/30 rounded-lg p-3 text-center">
+          <p className="text-[11px] text-[#F6465D] font-bold">Scanner Offline — Delta Disconnected</p>
+          <p className="text-[10px] text-[#94A3B8] mt-1">Add API keys in Settings to activate live scanning</p>
+        </div>
+      )}
     </div>
   );
 };

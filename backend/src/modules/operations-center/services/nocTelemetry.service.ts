@@ -1,6 +1,6 @@
 import { NocServiceHealthDto, SystemMetricsDto } from '@algoapp/shared';
 import os from 'os';
-import { marketScanner as MarketScannerService } from '../../live-trading/services/MarketScannerService.js';
+import { MarketScannerService } from '../../live-trading/services/MarketScannerService.js';
 import { deltaSyncService } from '../../delta-exchange/index.js';
 import { candleEngine } from '../../../engine/CandleEngine.js';
 
@@ -14,8 +14,10 @@ export class NocTelemetryService {
     const deltaStatus = isDeltaConfigured ? 'HEALTHY' : 'DEGRADED';
     
     // Check Market Scanner (Strategy/Decision)
-    const scannerStatus = MarketScannerService.getStatus();
-    const isScannerRunning = scannerStatus.status === 'RUNNING' || scannerStatus.status === 'IN_TRADE';
+    const state = MarketScannerService.getState();
+    const stats = MarketScannerService.getStats();
+    const telemetry = MarketScannerService.getTelemetry();
+    const isScannerRunning = state === 'RUNNING';
 
     const services = [
       {
@@ -42,8 +44,8 @@ export class NocTelemetryService {
         serviceName: 'Market Scanner Engine',
         health: isScannerRunning ? 'HEALTHY' : ('DEGRADED' as any),
         latencyMs: 8.2,
-        lastActivity: scannerStatus.lastScanTime,
-        processedEvents: scannerStatus.evaluatedTicksCount,
+        lastActivity: telemetry[0]?.lastScanAt || now,
+        processedEvents: stats.ticks,
         errorCount: 0,
         warningCount: 0,
         restartCount: 0,
@@ -53,7 +55,7 @@ export class NocTelemetryService {
         health: 'HEALTHY' as any,
         latencyMs: 120.4,
         lastActivity: now,
-        processedEvents: scannerStatus.signalsGeneratedCount,
+        processedEvents: stats.signals,
         errorCount: 0,
         warningCount: 0,
         restartCount: 0,
@@ -63,7 +65,7 @@ export class NocTelemetryService {
         health: 'HEALTHY' as any,
         latencyMs: 4.8,
         lastActivity: now,
-        processedEvents: scannerStatus.executedTradesCount,
+        processedEvents: stats.trades,
         errorCount: 0,
         warningCount: 0,
         restartCount: 0,
@@ -77,7 +79,7 @@ export class NocTelemetryService {
     const memory = process.memoryUsage();
     
     // Simulate some event load based on scanner ticks
-    const scannerStatus = MarketScannerService.getStatus();
+    const state = MarketScannerService.getState();
     
     // Calculate rough CPU usage using OS average load
     const cpus = os.cpus();
@@ -85,7 +87,7 @@ export class NocTelemetryService {
     const cpuUsagePercent = Math.min(100, Math.max(0, (loadAvg / (cpus.length || 1)) * 100));
 
     return {
-      eventsPerSecond: scannerStatus.status === 'RUNNING' ? 3.5 : 0.2, // Rough estimate
+      eventsPerSecond: state === 'RUNNING' ? 3.5 : 0.2, // Rough estimate
       avgPipelineLatencyMs: 14.2,
       maxPipelineLatencyMs: 42.8,
       memoryUsageMb: Number((memory.rss / (1024 * 1024)).toFixed(1)),

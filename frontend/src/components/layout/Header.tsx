@@ -84,11 +84,11 @@ export const Header: React.FC = () => {
     isDeveloperMode,
     toggleDeveloperMode,
     isAlgoRunning,
-    setIsAlgoRunning
+    toggleAlgo
   } = useTerminalStore();
 
-  const startScannerMutation = useMutation({ mutationFn: scannerApi.start, onSuccess: () => setIsAlgoRunning(true) });
-  const stopScannerMutation = useMutation({ mutationFn: scannerApi.stop, onSuccess: () => setIsAlgoRunning(false) });
+  const startScannerMutation = useMutation({ mutationFn: scannerApi.start });
+  const stopScannerMutation = useMutation({ mutationFn: scannerApi.stop });
 
   const { pairs } = useMarketPairs();
   const currentPair = pairs[activeSymbol];
@@ -143,6 +143,7 @@ export const Header: React.FC = () => {
         <div className="flex items-center space-x-2">
           <button
             onClick={() => {
+              toggleAlgo();
               if (isAlgoRunning) {
                 stopScannerMutation.mutate();
               } else {
@@ -228,6 +229,19 @@ export const Header: React.FC = () => {
             <span>{isDeveloperMode ? 'DEV MODE ON' : 'DEV MODE'}</span>
           </button>
         )}
+
+        {/* ALGO TRADING Toggle */}
+        <button
+          onClick={toggleAlgo}
+          className={`flex items-center space-x-1.5 px-3 py-1 rounded-md text-[11px] font-bold border shadow-sm transition-all ${
+            isAlgoRunning
+              ? 'bg-[#00C896] text-[#0B0E14] border-[#00C896] shadow-[#00C896]/20'
+              : 'bg-[#1E293B] text-[#94A3B8] border-[#334155] hover:text-white hover:bg-[#334155]'
+          }`}
+        >
+          <Radio className={`w-3.5 h-3.5 ${isAlgoRunning ? 'animate-pulse' : ''}`} />
+          <span>ALGO TRADING: {isAlgoRunning ? 'ON' : 'OFF'}</span>
+        </button>
 
         {/* Developer Mode Hard Reset DB Button */}
         {isDeveloperMode && (

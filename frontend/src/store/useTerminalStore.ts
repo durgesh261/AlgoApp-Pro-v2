@@ -54,6 +54,8 @@ interface TerminalState {
   systemStatus: SystemStatus;
   widgets: WidgetVisibilityState;
   isAlgoRunning: boolean;
+  toggleAlgo: () => void;
+  setAlgoRunning: (running: boolean) => void;
 
   setActivePage: (page: TerminalPage) => void;
   setActiveSymbol: (symbol: string) => void;
@@ -104,9 +106,11 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
   liveTradingRightColWidth: savedWidths.rtc,
   isCommandPaletteOpen: false,
   isDeveloperMode: false,
-  systemStatus: SystemStatus.HEALTHY,
+  systemStatus: SystemStatus.INITIALIZING,
   widgets: loadInitialWidgetState(),
-  isAlgoRunning: true,
+  isAlgoRunning: false,
+  toggleAlgo: () => set((state) => ({ isAlgoRunning: !state.isAlgoRunning })),
+  setAlgoRunning: (running) => set({ isAlgoRunning: running }),
 
   setActivePage: (page) => set({ activePage: page }),
   setActiveSymbol: (symbol) => set({ activeSymbol: symbol }),
