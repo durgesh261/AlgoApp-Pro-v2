@@ -34,11 +34,13 @@ import { deltaExchangeRouter } from '../modules/delta-exchange/index.js';
 import { portfolioRouter } from '../modules/portfolio/index.js';
 import { enterpriseApiRouter } from './api.js';
 import copilotRoutes from './copilot.routes.js';
+import healthRoutes from './health.routes.js';
 
 export const apiRouter = Router();
 
 import scannerRoutes from './scanner.routes.js';
 
+apiRouter.use('/health', healthRoutes);
 apiRouter.use('/portfolio', portfolioRouter);
 apiRouter.use('/delta', deltaExchangeRouter);
 apiRouter.use('/news', newsRouter);

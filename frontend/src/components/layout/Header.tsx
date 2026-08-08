@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useTerminalStore } from '../../store/useTerminalStore';
 import { useDeltaStore } from '../../store/useDeltaStore';
+import { useConnectionManager } from '../../hooks/useConnectionManager';
 
 export const Header: React.FC = () => {
   const { 
@@ -19,6 +20,7 @@ export const Header: React.FC = () => {
   } = useTerminalStore();
   
   const { isConnected } = useDeltaStore();
+  const { isBackendReachable, isDeltaReachable } = useConnectionManager();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const searchRef = useRef<HTMLDivElement>(null);
@@ -163,7 +165,7 @@ export const Header: React.FC = () => {
       </div>
 
       {/* ═══════════════════════════════════════════════
-          RIGHT SECTION: Dev Mode + Delta Status + Notifs
+          RIGHT SECTION: Dev Mode + Connection Pills + Notifs
           ═══════════════════════════════════════════════ */}
       <div className="flex items-center space-x-2">
         
@@ -179,8 +181,20 @@ export const Header: React.FC = () => {
           DEV MODE
         </button>
 
-        {/* Delta Exchange Connection Status */}
-        <div className={`flex items-center space-x-1.5 h-8 px-3 rounded-lg border text-[10px] font-bold uppercase ${
+        {/* Backend API Status Pill */}
+        <div className={`hidden md:flex items-center space-x-1.5 h-8 px-2.5 rounded-lg border text-[10px] font-bold uppercase ${
+          isBackendReachable
+            ? 'bg-[#00C896]/10 text-[#00C896] border-[#00C896]/30'
+            : 'bg-[#F6465D]/10 text-[#F6465D] border-[#F6465D]/30'
+        }`}>
+          <div className={`w-1.5 h-1.5 rounded-full ${
+            isBackendReachable ? 'bg-[#00C896]' : 'bg-[#F6465D] animate-pulse'
+          }`} />
+          <span>API {isBackendReachable ? 'ON' : 'OFF'}</span>
+        </div>
+
+        {/* Delta Exchange Status Pill */}
+        <div className={`hidden md:flex items-center space-x-1.5 h-8 px-2.5 rounded-lg border text-[10px] font-bold uppercase ${
           isConnected
             ? 'bg-[#00C896]/10 text-[#00C896] border-[#00C896]/30'
             : 'bg-[#1E293B] text-[#64748B] border-[#334155]'
@@ -192,7 +206,6 @@ export const Header: React.FC = () => {
         {/* Notifications */}
         <button className="w-8 h-8 rounded-lg bg-[#1E293B] hover:bg-[#334155] border border-[#334155] flex items-center justify-center transition-colors relative">
           <Bell className="w-4 h-4 text-[#94A3B8]" />
-          {/* Notification dot */}
           <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#F6465D]" />
         </button>
 

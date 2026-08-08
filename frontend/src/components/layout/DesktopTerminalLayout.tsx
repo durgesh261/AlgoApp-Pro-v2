@@ -7,6 +7,8 @@ import { StatusBar } from './StatusBar';
 import { CommandPalette } from './CommandPalette';
 import { ToastContainer } from './ToastContainer';
 import { GlobalNewsNotifier } from './GlobalNewsNotifier';
+import { ConnectionBanner } from './ConnectionBanner';
+import { OfflineOverlay } from './OfflineOverlay';
 
 interface DesktopTerminalLayoutProps {
   children: React.ReactNode;
@@ -17,8 +19,10 @@ export const DesktopTerminalLayout: React.FC<DesktopTerminalLayoutProps> = ({ ch
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#0B0E14] text-[#F8FAFC]">
       <GlobalNewsNotifier />
       <TopMarketTicker />
+      {/* Connection banner — only visible when offline/degraded */}
+      <ConnectionBanner />
       <Header />
-      
+
       <div className="flex flex-1 overflow-hidden relative">
         <Sidebar />
         <MarketWatchPanel />
@@ -30,6 +34,9 @@ export const DesktopTerminalLayout: React.FC<DesktopTerminalLayoutProps> = ({ ch
       <StatusBar />
       <CommandPalette />
       <ToastContainer />
+
+      {/* Full-screen overlay after persistent disconnect */}
+      <OfflineOverlay />
     </div>
   );
 };
