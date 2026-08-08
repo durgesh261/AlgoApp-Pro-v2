@@ -1,11 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toISTTime } from '../../utils/time';
-import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { 
-  tradeAccountingApi, 
-  executionApi,
-  scannerApi 
+  executionApi 
 } from '../../services/api';
 import { useTerminalStore } from '../../store/useTerminalStore';
 import { useMarketPairs, WATCHLIST_SYMBOLS } from '../../hooks/useMarketPairs';
@@ -102,17 +99,9 @@ export const LiveTradingPage: React.FC = () => {
   // WebSocket Live Data
   const { state: wsState } = useChartWebSocket(activeSymbol);
 
-  const { data: scannerResponse } = useQuery({
-    queryKey: ['scannerStatus'],
-    queryFn: scannerApi.getStatus,
-    refetchInterval: 3000,
-  });
 
-  const { data: ledgerData } = useQuery({
-    queryKey: ['tradeLedger'],
-    queryFn: () => tradeAccountingApi.getLedger(),
-    refetchInterval: 4000,
-  });
+
+
 
   const { data: journalData } = useQuery({
     queryKey: ['executionJournal'],
@@ -122,7 +111,6 @@ export const LiveTradingPage: React.FC = () => {
 
   const positions = portfolioSummary?.positions?.items || [];
   const orders = portfolioSummary?.orders?.items || [];
-  const ledgerEntries = ledgerData?.data || [];
   const journalEntries = journalData?.data || [];
 
   return (
@@ -138,7 +126,7 @@ export const LiveTradingPage: React.FC = () => {
         >
           <div className="flex items-center justify-between mb-3 border-b border-[#1E293B] pb-2">
             <span className="font-bold text-[#F8FAFC]">Watchlist</span>
-            <div className={`w-2 h-2 rounded-full ${wsState === 'connected' ? 'bg-[#00C896] animate-pulse' : 'bg-[#EF4444]'}`} />
+            <div className={`w-2 h-2 rounded-full ${wsState === 'CONNECTED' ? 'bg-[#00C896] animate-pulse' : 'bg-[#EF4444]'}`} />
           </div>
           
           <div className="flex-1 overflow-y-auto space-y-1 pr-1">

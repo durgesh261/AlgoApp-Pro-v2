@@ -5,6 +5,7 @@ import { candleEngine } from '../../../engine/CandleEngine.js';
 
 // In-memory store for active zones detected from live data
 let activeZonesStore = new Map<string, ZoneDto[]>(); // symbol -> zones
+let consumedZonesStore = new Map<string, Set<string>>(); // symbol -> set of "upperPrice-lowerPrice-type"
 
 export class ZoneDetectorService {
   /**
@@ -81,7 +82,51 @@ export class ZoneDetectorService {
       });
     }
 
-    const merged = ZoneMergerService.detectAndMergeZones(detectedZones);
+    const baseZones = detectedZones.map(z => ({
+      id: z.id,
+      symbol: z.symbol,
+      type: z.type as any,
+      timeframe: z.timeframe,
+      upperPrice: z.upperPrice,
+      lowerPrice: z.lowerPrice,
+      patStrength: 0,
+      smcStrength: 0,
+      mergedStrength: z.strength,
+      width: z.width,
+      freshness: z.freshness,
+      touchCount: z.touchCount,
+      age: 0,
+      confidence: z.strength,
+      status: z.status === ZoneStatus.FRESH ? 'NEW' : 'ACTIVE' as any,
+      source: 'MERGED' as const,
+      createdAt: z.createdAt,
+      updatedAt: z.updatedAt,
+    }));
+
+    const mergedBaseZones = ZoneMergerService.detectAndMergeZones(baseZones);
+    
+    const consumed = consumedZonesStore.get(symbol) || new Set<string>();
+
+    const merged: ZoneDto[] = mergedBaseZones.map(z => {
+      const key = `${z.upperPrice}-${z.lowerPrice}-${z.type}`;
+      const isConsumed = consumed.has(key);
+      return {
+        id: z.id,
+        symbol: z.symbol,
+        type: z.type as ZoneType,
+        timeframe: z.timeframe,
+        upperPrice: z.upperPrice,
+        lowerPrice: z.lowerPrice,
+        source: ZoneSource.MERGED,
+        strength: z.mergedStrength,
+        width: z.width,
+        freshness: isConsumed ? 0 : z.freshness,
+        touchCount: z.touchCount,
+        status: isConsumed ? ZoneStatus.CONSUMED : (z.status === 'NEW' ? ZoneStatus.FRESH : ZoneStatus.TOUCHED),
+        createdAt: z.createdAt,
+        updatedAt: z.updatedAt,
+      };
+    });
     
     // ── Strategy §12: Filter out permanently used/consumed blocks ──
     const activeZones = merged.filter(z => 
@@ -103,16 +148,60 @@ export class ZoneDetectorService {
     for (const zones of activeZonesStore.values()) {
       allZones.push(...zones);
     }
-    return ZoneMergerService.detectAndMergeZones(allZones);
+    
+    const allBaseZones = allZones.map(z => ({
+      id: z.id,
+      symbol: z.symbol,
+      type: z.type as any,
+      timeframe: z.timeframe,
+      upperPrice: z.upperPrice,
+      lowerPrice: z.lowerPrice,
+      patStrength: 0,
+      smcStrength: 0,
+      mergedStrength: z.strength,
+      width: z.width,
+      freshness: z.freshness,
+      touchCount: z.touchCount,
+      age: 0,
+      confidence: z.strength,
+      status: z.status === ZoneStatus.FRESH ? 'NEW' : 'ACTIVE' as any,
+      source: 'MERGED' as const,
+      createdAt: z.createdAt,
+      updatedAt: z.updatedAt,
+    }));
+
+    return ZoneMergerService.detectAndMergeZones(allBaseZones).map(z => ({
+      id: z.id,
+      symbol: z.symbol,
+      type: z.type as ZoneType,
+      timeframe: z.timeframe,
+      upperPrice: z.upperPrice,
+      lowerPrice: z.lowerPrice,
+      source: ZoneSource.MERGED,
+      strength: z.mergedStrength,
+      width: z.width,
+      freshness: z.freshness,
+      touchCount: z.touchCount,
+      status: z.status === 'NEW' ? ZoneStatus.FRESH : ZoneStatus.TOUCHED,
+      createdAt: z.createdAt,
+      updatedAt: z.updatedAt,
+    }));
   }
 
   public static markZoneUsed(zoneId: string): void {
-    for (const [_sym, zones] of activeZonesStore.entries()) {
+    for (const [sym, zones] of activeZonesStore.entries()) {
       const z = zones.find(zn => zn.id === zoneId);
       if (z) {
         z.status = ZoneStatus.CONSUMED;
         z.freshness = 0;
         z.updatedAt = new Date().toISOString();
+
+        let consumed = consumedZonesStore.get(sym);
+        if (!consumed) {
+          consumed = new Set<string>();
+          consumedZonesStore.set(sym, consumed);
+        }
+        consumed.add(`${z.upperPrice}-${z.lowerPrice}-${z.type}`);
         break;
       }
     }
@@ -121,8 +210,10 @@ export class ZoneDetectorService {
   public static clearZones(symbol?: string): void {
     if (symbol) {
       activeZonesStore.delete(symbol);
+      consumedZonesStore.delete(symbol);
     } else {
       activeZonesStore.clear();
+      consumedZonesStore.clear();
     }
   }
 }

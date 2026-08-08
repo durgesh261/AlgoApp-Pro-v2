@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '../services/api';
+import { apiClient as api } from '../services/api';
 
 export interface ScannerTelemetry {
   symbol: string;

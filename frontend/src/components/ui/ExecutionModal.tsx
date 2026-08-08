@@ -26,7 +26,7 @@ export const ExecutionModal: React.FC<ExecutionModalProps> = ({
   defaultSymbol = 'BTCUSD.P',
   defaultSide = 'buy',
 }) => {
-  const { placeOrderLegacy: placeOrder, isPlacing, validateOrder, isValidating, validationResult } = useExecution();
+  const { placeOrder, isPlacing, validateOrder, isValidating, validationResult } = useExecution();
   const { data: portfolioSummary } = usePortfolioSummary();
 
   const wallet = portfolioSummary?.wallet;

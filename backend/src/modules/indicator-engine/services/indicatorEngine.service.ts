@@ -5,13 +5,11 @@ import {
   SupplyZone,
   TradingTimeframe,
 } from '@algoapp/shared';
-// New Pine Script-exact engines
-import { SmcLegEngine } from '../engines/smcLegEngine.js';
-import { PatLegEngine } from '../engines/patLegEngine.js';
-import { TrendLineEngine as _TrendLineEngine } from '../engines/trendLineEngine.js'; // reserved for future use
-import { OrderBlockMergeEngine } from '../engines/orderBlockMergeEngine.js';
-// Zone post-processing pipeline (unchanged)
-import { ZoneMergeEngine } from '../engines/zoneMergeEngine.js';
+// New Pine Script Engine
+import { PineScriptEngine } from './pineScriptEngine.js';
+
+// Zone post-processing pipeline (unchanged parts)
+import { ZoneMergerService } from '../../strategy/services/zoneMerger.service.js';
 import { ZoneLifecycleEngine } from '../engines/zoneLifecycleEngine.js';
 import { FreshnessEngine } from '../engines/freshnessEngine.js';
 import { TouchEngine } from '../engines/touchEngine.js';
@@ -19,18 +17,6 @@ import { ZoneScoreEngine } from '../engines/zoneScoreEngine.js';
 import { PremiumDiscountEngine } from '../engines/premiumDiscountEngine.js';
 import { FvgEngine } from '../engines/fvgEngine.js';
 import { CandleStoreService } from '../../market-data/services/candleStore.service.js';
-import { StrategyProfileService } from '../../strategy-profile/services/strategyProfile.service.js';
-
-/** Internal config resolved from strategy profile or defaults */
-interface EngineConfig {
-  /** Pine Script leg(swingLen) — from smcConfig.swingLen or default 50 */
-  swingLen:    number;
-  /** Pine Script leg(internalLen) — from smcConfig.internalLen or default 5 */
-  internalLen: number;
-}
-
-const profileService = new StrategyProfileService();
-
 
 export class IndicatorEngineService {
 
@@ -41,7 +27,6 @@ export class IndicatorEngineService {
     symbol:    string,
     candles:   CandleDto[],
     timeframe: TradingTimeframe,
-    config:    EngineConfig = { swingLen: 50, internalLen: 5 }
   ): IndicatorEngineOutput {
     if (!candles || candles.length === 0) {
       return {
@@ -56,45 +41,16 @@ export class IndicatorEngineService {
 
     const latestCandle = candles[candles.length - 1]!;
 
-    // ── 1. SMC Leg Engine (LuxAlgo Pine Script exact) ──────────────────────────
-    // Q1: swingLen + internalLen from strategy profile (SQLite), fallback to defaults
-    const smc = SmcLegEngine.run(symbol, candles, timeframe, {
-      swingLen:    config.swingLen,
-      internalLen: config.internalLen,
-    });
+    // ── 1. Pine Script Engine (Combined LuxAlgo + UAlgo) ──────────────────────────
+    const pineResult = PineScriptEngine.computeFullIndicator(candles, symbol);
 
-    // ── 2. PAT Leg Engine (UAlgo Pine Script exact) ────────────────────────────
-    const pat = PatLegEngine.run(symbol, candles, timeframe);
-
-    // ── 3. OB Merge Engine (Q2) ────────────────────────────────────────────────
-    // Merge overlapping LuxAlgo (SMC) + UAlgo (PAT) OBs into a unified list.
-    // Stores source (SMC/PAT/MERGED) for analytics and debugging.
-    // The merged list is the sole input to zone scoring and AI decisions (Q2).
-    const { merged: mergedOrderBlocks } = OrderBlockMergeEngine.merge(
-      smc.orderBlocks,
-      pat.orderBlocks
-    );
-
-    // ── 4. Combine structure events from both engines ──────────────────────────
-    const allStructureEvents = [
-      ...smc.structureEvents,
-      ...pat.structureEvents.map(e => ({ ...e, isInternal: false })),
-    ].sort((a, b) => a.index - b.index);
-
-    // ── 5. Combine liquidity sweeps ────────────────────────────────────────────
-    const allSweeps = [...pat.liquiditySweeps];
-
-    // ── 7. FVG — DISABLED (FVG_ENABLED=false in fvgEngine.ts) ─────────────────
+    // ── 2. FVG — DISABLED (FVG_ENABLED=false in fvgEngine.ts) ─────────────────
     const fairValueGaps = FvgEngine.detectFvgs(symbol, candles, timeframe);
+    const equalHighLows: any[] = []; // Not provided directly by the new pine engine
 
-    // ── 8. EQH / EQL ─────────────────────────────────────────────────────────
-    const equalHighLows = smc.equalHighLows;
-
-
-    // ── 9. Build Supply/Demand zones from MERGED OBs (for zone scoring pipeline) ─
-    // Q2: Use merged list only — each OB is already overlap-resolved
-    const supplyZonesRaw: SupplyZone[] = mergedOrderBlocks
-      .filter(ob => ob.type === 'BEARISH' && !ob.isInvalidated)
+    // ── 3. Build Supply/Demand zones from PineScript OBs ──────────────────────────
+    const supplyZonesRaw: SupplyZone[] = pineResult.orderBlocks
+      .filter(ob => ob.type === 'BEARISH' && !ob.isBroken)
       .map(ob => ({
         id:            `ZONE-SUP-${ob.id}`,
         symbol,
@@ -102,46 +58,47 @@ export class IndicatorEngineService {
         type:          'SUPPLY' as const,
         upperPrice:    ob.upperPrice,
         lowerPrice:    ob.lowerPrice,
-        patStrength:   ob.source === 'PAT' ? 80.0 : 0.0,
-        smcStrength:   ob.source === 'SMC' ? 90.0 : 0.0,
-        mergedStrength: 85.0,
+        patStrength:   ob.source === 'UALGO' ? 80.0 : 0.0,
+        smcStrength:   ob.source === 'LUXALGO' ? 90.0 : 0.0,
+        mergedStrength: ob.strength,
         width:         Number((ob.upperPrice - ob.lowerPrice).toFixed(4)),
         freshness:     ob.isMitigated ? 40.0 : 100.0,
-        touchCount:    ob.touchCount,
-        age:           candles.length - 1 - ob.breakCandleIndex,
-        confidence:    85.0,
-        status:        ob.isMitigated ? 'TRADED' as const : 'NEW' as const,
-        source:        ob.source,
-        createdAt:     ob.createdAt,
-        updatedAt:     ob.createdAt,
+        touchCount:    0,
+        age:           candles.length - 1 - ob.barIndex,
+        confidence:    ob.strength,
+        status:        ob.isMitigated ? ('TRADED' as any) : ('NEW' as any),
+        source:        ob.source as any,
+        createdAt:     new Date(ob.barTime).toISOString(),
+        updatedAt:     new Date(ob.barTime).toISOString(),
       }));
 
-    const demandZonesRaw: DemandZone[] = mergedOrderBlocks
-      .filter((ob: { type: string; isInvalidated: boolean }) => ob.type === 'BULLISH' && !ob.isInvalidated)
-      .map((ob: any) => ({
+    const demandZonesRaw: DemandZone[] = pineResult.orderBlocks
+      .filter(ob => ob.type === 'BULLISH' && !ob.isBroken)
+      .map(ob => ({
         id:            `ZONE-DEM-${ob.id}`,
         symbol,
         timeframe,
         type:          'DEMAND' as const,
         upperPrice:    ob.upperPrice,
         lowerPrice:    ob.lowerPrice,
-        patStrength:   ob.source === 'PAT' ? 80.0 : 0.0,
-        smcStrength:   ob.source === 'SMC' ? 90.0 : 0.0,
-        mergedStrength: 85.0,
+        patStrength:   ob.source === 'UALGO' ? 80.0 : 0.0,
+        smcStrength:   ob.source === 'LUXALGO' ? 90.0 : 0.0,
+        mergedStrength: ob.strength,
         width:         Number((ob.upperPrice - ob.lowerPrice).toFixed(4)),
         freshness:     ob.isMitigated ? 40.0 : 100.0,
-        touchCount:    ob.touchCount,
-        age:           candles.length - 1 - ob.breakCandleIndex,
-        confidence:    85.0,
-        status:        ob.isMitigated ? 'TRADED' as const : 'NEW' as const,
-        source:        ob.source,
-        createdAt:     ob.createdAt,
-        updatedAt:     ob.createdAt,
+        touchCount:    0,
+        age:           candles.length - 1 - ob.barIndex,
+        confidence:    ob.strength,
+        status:        ob.isMitigated ? ('TRADED' as any) : ('NEW' as any),
+        source:        ob.source as any,
+        createdAt:     new Date(ob.barTime).toISOString(),
+        updatedAt:     new Date(ob.barTime).toISOString(),
       }));
 
-    // ── 10. Zone pipeline ──────────────────────────────────────────────────────
-    const mergedSupply = ZoneMergeEngine.mergeZones<SupplyZone>(supplyZonesRaw);
-    const mergedDemand = ZoneMergeEngine.mergeZones<DemandZone>(demandZonesRaw);
+    // ── 4. Zone pipeline ──────────────────────────────────────────────────────
+    // Use new deduplication ZoneMergerService provided by user
+    const mergedSupply = ZoneMergerService.detectAndMergeZones(supplyZonesRaw) as SupplyZone[];
+    const mergedDemand = ZoneMergerService.detectAndMergeZones(demandZonesRaw) as DemandZone[];
 
     const lifecycleSupply = ZoneLifecycleEngine.updateLifecycle(mergedSupply, latestCandle);
     const lifecycleDemand = ZoneLifecycleEngine.updateLifecycle(mergedDemand, latestCandle);
@@ -152,20 +109,20 @@ export class IndicatorEngineService {
     const finalSupply = TouchEngine.evaluateTouches(freshSupply, latestCandle);
     const finalDemand = TouchEngine.evaluateTouches(freshDemand, latestCandle);
 
-    // ── 11. Market Structure ───────────────────────────────────────────────────
-    const liquiditySwept = allSweeps.length > 0;
+    // ── 5. Market Structure ───────────────────────────────────────────────────
+    const liquiditySwept = pineResult.liquiditySweeps.length > 0;
     const marketStructure = {
       symbol,
       timeframe,
-      trend:         smc.swingTrend,
-      internalTrend: smc.internalTrend,
-      swingTrend:    smc.swingTrend,
+      trend:         pineResult.marketStructure.trend as any,
+      internalTrend: pineResult.marketStructure.trend as any,
+      swingTrend:    pineResult.marketStructure.trend as any,
       liquiditySwept,
-      lastBosTime:   allStructureEvents.filter(e => e.type === 'BOS').at(-1)?.time,
-      lastChochTime: allStructureEvents.filter(e => e.type === 'CHOCH').at(-1)?.time,
+      lastBosTime:   pineResult.marketStructure.lastBOS ? new Date(pineResult.marketStructure.lastBOS.barTime).toISOString() : undefined,
+      lastChochTime: pineResult.marketStructure.lastCHoCH ? new Date(pineResult.marketStructure.lastCHoCH.barTime).toISOString() : undefined,
     };
 
-    // ── 12. Zone Scoring ───────────────────────────────────────────────────────
+    // ── 6. Zone Scoring ───────────────────────────────────────────────────────
     const supplyScores = ZoneScoreEngine.scoreZones(finalSupply, marketStructure);
     const demandScores = ZoneScoreEngine.scoreZones(finalDemand, marketStructure);
     const zoneScores = { ...supplyScores, ...demandScores };
@@ -180,16 +137,55 @@ export class IndicatorEngineService {
       zoneScores,
       marketStructure,
       premiumDiscountZones,
-      pivotsInternal:      smc.pivotsInternal,
-      pivotsSwing:         smc.pivotsSwing,
-      zigzagLegs:          pat.zigzagLegs,
-      structureEvents:     allStructureEvents,
-      orderBlocks:         mergedOrderBlocks,
-      liquiditySweeps:     allSweeps,
+      pivotsInternal:      [], // Handled inside pine engine now
+      pivotsSwing:         [], // Handled inside pine engine now
+      zigzagLegs:          [],
+      structureEvents:     pineResult.structures.map(s => ({
+        index: s.barIndex,
+        time: new Date(s.barTime).toISOString(),
+        type: s.type,
+        direction: s.direction,
+        brokenLevel: s.level,
+        isInternal: s.internal,
+        confirmationCandleIndex: s.barIndex
+      })),
+      orderBlocks:         pineResult.orderBlocks.map(ob => ({
+        id: ob.id,
+        symbol: ob.symbol,
+        timeframe,
+        type: ob.type,
+        upperPrice: ob.upperPrice,
+        lowerPrice: ob.lowerPrice,
+        widthPercent: ((ob.upperPrice - ob.lowerPrice) / ob.upperPrice) * 100,
+        entryPrice: ob.type === 'BULLISH' ? ob.upperPrice : ob.lowerPrice,
+        stopLossPrice: ob.type === 'BULLISH' ? ob.lowerPrice : ob.upperPrice,
+        takeProfitPrice: ob.type === 'BULLISH' ? ob.upperPrice * 1.05 : ob.lowerPrice * 0.95,
+        calculatedLeverage: 10,
+        baseCandleIndex: ob.barIndex,
+        breakCandleIndex: ob.barIndex,
+        isMitigated: ob.isMitigated,
+        isInvalidated: ob.isBroken,
+        isUsed: false,
+        touchCount: 0,
+        source: ob.source === 'LUXALGO' ? 'SMC' : 'PAT',
+        createdAt: new Date(ob.barTime).toISOString()
+      })),
+      liquiditySweeps:     pineResult.liquiditySweeps.map(ls => ({
+        id: `SWEEP-${symbol}-${ls.barTime}`,
+        symbol,
+        timeframe,
+        sweepType: ls.type,
+        sweptLevel: ls.value,
+        sweepPrice: ls.value,
+        candleIndex: 0,
+        candleTime: new Date(ls.barTime).toISOString(),
+        isSwingSweep: false,
+        wickRatio: 0
+      })),
       fairValueGaps,
       equalHighLows,
-      atr14:               Number(pat.atr14.toFixed(4)),
-      atr200:              Number(smc.atr200.toFixed(4)),
+      atr14:               0,
+      atr200:              0,
       evaluatedAt:         new Date().toISOString(),
     };
   }
@@ -208,26 +204,15 @@ export class IndicatorEngineService {
 
   /**
    * Async variant — used by the indicator controller.
-   * Q1: Reads swingLen + internalLen from the active strategy profile stored in SQLite.
    */
   public async evaluateSymbol(
     symbol:        string           = 'BTCUSD.P',
     timeframe:     TradingTimeframe = '1H',
-    profileId?:    string,
+    _profileId?:   string,
     inputCandles?: CandleDto[]
   ): Promise<IndicatorEngineOutput> {
     const candles = inputCandles ?? (await CandleStoreService.getCandles(symbol, timeframe, 500));
 
-    // Q1: Load strategy profile to get configurable SMC lengths
-    const profile = await profileService
-      .getProfileById(profileId ?? 'DEF-1H-PROF')
-      .catch(() => null);
-
-    const engineConfig: EngineConfig = {
-      swingLen:    profile?.smcConfig?.swingLen    ?? 50,
-      internalLen: profile?.smcConfig?.internalLen ?? 5,
-    };
-
-    return IndicatorEngineService.runPipeline(symbol, candles, timeframe, engineConfig);
+    return IndicatorEngineService.runPipeline(symbol, candles, timeframe);
   }
 }

@@ -33,6 +33,7 @@ import { newsRouter } from '../modules/news/news.routes.js';
 import { deltaExchangeRouter } from '../modules/delta-exchange/index.js';
 import { portfolioRouter } from '../modules/portfolio/index.js';
 import { enterpriseApiRouter } from './api.js';
+import copilotRoutes from './copilot.routes.js';
 
 export const apiRouter = Router();
 
@@ -47,6 +48,7 @@ apiRouter.use('/dashboard', dashboardRouter);
 apiRouter.use('/paper-trading', paperTradingRouter);
 apiRouter.use('/live-trading', liveTradingRouter);
 apiRouter.use('/scanner', scannerRoutes);
+apiRouter.use('/copilot', copilotRoutes);
 
 apiRouter.use('/journal', journalRouter);
 apiRouter.use('/analytics', analyticsRouter);

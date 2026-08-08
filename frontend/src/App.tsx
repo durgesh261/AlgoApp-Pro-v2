@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { DesktopTerminalLayout } from './components/layout/DesktopTerminalLayout';
 import { DashboardPage } from './features/dashboard/DashboardPage';
-import { PortfolioDashboardPage } from './features/portfolio/PortfolioDashboardPage';
+import { LivePortfolio } from './features/portfolio/LivePortfolio';
 import { LiveTradingPage } from './features/live-trading/LiveTradingPage';
 import { OrdersPage } from './features/orders/OrdersPage';
 import { PositionsPage } from './features/positions/PositionsPage';
@@ -36,7 +36,7 @@ export const App: React.FC = () => {
         <Routes>
           {/* Primary Live Trading Routes */}
           <Route path="/" element={<DashboardPage />} />
-          <Route path="/portfolio" element={<PortfolioDashboardPage />} />
+          <Route path="/portfolio" element={<LivePortfolio />} />
           <Route path="/live-trading" element={<LiveTradingPage />} />
           <Route path="/news" element={<LiveNewsCenterPage />} />
           <Route path="/orders" element={<OrdersPage />} />

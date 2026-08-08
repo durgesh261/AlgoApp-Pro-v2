@@ -4,7 +4,9 @@ import { logger } from './logger/index.js';
 import { JournalAutomationService } from './modules/journal/services/journalAutomation.service.js';
 import { MarketScannerService } from './modules/live-trading/services/MarketScannerService.js';
 import { WebSocketServer } from './websocket/WebSocketServer.js';
-
+import { Server as SocketIOServer } from 'socket.io';
+import { setupNewsWebSocket } from './modules/news/services/wsNews.service.js';
+import { NewsAggregatorService } from './modules/news/services/newsAggregator.service.js';
 const app = createApp();
 
 JournalAutomationService.initialize();
@@ -52,6 +54,17 @@ const server = app.listen(config.port, () => {
 const wsServer = new WebSocketServer(server);
 wsServer.initialize();
 
+// ── NEW: Socket.io Server for News ───────────────────────────────
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+});
+setupNewsWebSocket(io);
+
+// Start News Aggregator
+NewsAggregatorService.start();
 function handleShutdown(signal: string): void {
   logger.info(`Received ${signal}. Initiating graceful shutdown...`);
   wsServer.shutdown();

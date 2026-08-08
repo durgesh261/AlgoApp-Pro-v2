@@ -778,7 +778,17 @@ export const scannerApi = {
 
 export const newsApi = {
   getNews: async (params?: { category?: string | undefined; importance?: string | undefined; symbol?: string | undefined; limit?: number | undefined; forceRefresh?: boolean }) => {
-    const res = await apiClient.get('/news', { params });
+    const res = await apiClient.get('/news/live', { params });
+    if (res.data?.success && Array.isArray(res.data.data)) {
+      res.data.data = res.data.data.map((item: any) => ({
+        ...item,
+        headline: item.title,
+        summary: item.description,
+        symbols: item.tickers || [],
+        importance: item.category === 'MACRO' || item.category === 'REGULATION' ? 'HIGH' : 'MEDIUM',
+        sentiment: 'NEUTRAL'
+      }));
+    }
     return res.data;
   },
   getCalendar: async (forceRefresh = false) => {

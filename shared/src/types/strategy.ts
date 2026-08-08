@@ -14,8 +14,9 @@ export enum ZoneStatus {
 }
 
 export enum ZoneSource {
-  PIT_LITE = 'PIT_LITE',
+  INDICATOR_NATIVE = 'INDICATOR_NATIVE',
   LUXALGO = 'LUXALGO',
+  UALGO = 'UALGO',
   MERGED = 'MERGED',
 }
 

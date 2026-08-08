@@ -1,7 +1,4 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { scannerApi } from '../../services/api';
-import { ScannerStateDto, ScannerPairTelemetry } from '@algoapp/shared';
 import {
   Radar,
   Play,
@@ -18,7 +15,7 @@ import { useScanner, ScannerTelemetry } from '../../hooks/useScanner';
 export const MarketScannerPanel: React.FC = () => {
   const [selectedAiSymbol, setSelectedAiSymbol] = useState<string | null>(null);
 
-  const { telemetry, stats, scannerState, isConnected, isDeltaConnected, controlScanner } = useScanner();
+  const { telemetry, stats, scannerState, isDeltaConnected, controlScanner } = useScanner();
 
   const latestAiDecision = null; // Mock for now until AI details are added to telemetry
 

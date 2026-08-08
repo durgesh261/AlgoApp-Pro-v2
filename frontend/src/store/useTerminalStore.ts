@@ -106,7 +106,7 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
   liveTradingRightColWidth: savedWidths.rtc,
   isCommandPaletteOpen: false,
   isDeveloperMode: false,
-  systemStatus: SystemStatus.INITIALIZING,
+  systemStatus: SystemStatus.HEALTHY,
   widgets: loadInitialWidgetState(),
   isAlgoRunning: false,
   toggleAlgo: () => set((state) => ({ isAlgoRunning: !state.isAlgoRunning })),
